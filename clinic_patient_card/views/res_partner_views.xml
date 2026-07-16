@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Contact form: add the Patient Card                            -->
+    <!-- ============================================================ -->
+    <record id="view_partner_form_patient_card" model="ir.ui.view">
+        <field name="name">res.partner.form.patient.card</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <!-- "Is a Patient" toggle + patient reference, above the notebook -->
+            <xpath expr="//notebook" position="before">
+                <group>
+                    <group>
+                        <field name="is_patient"/>
+                    </group>
+                    <group>
+                        <field name="patient_ref" invisible="not is_patient"/>
+                    </group>
+                </group>
+            </xpath>
+
+            <!-- Patient Card notebook page -->
+            <xpath expr="//notebook" position="inside">
+                <page name="patient_card" string="Patient Card"
+                      invisible="not is_patient">
+
+                    <!-- 1.1 Basic information -->
+                    <group string="Basic Information">
+                        <group>
+                            <field name="name_latin" invisible="not is_foreign"/>
+                            <field name="personal_id"/>
+                            <field name="birthdate"/>
+                            <field name="age"/>
+                            <field name="gender"/>
+                        </group>
+                        <group>
+                            <field name="registration_date"/>
+                            <field name="referral_source"/>
+                            <field name="referral_source_other"
+                                   invisible="referral_source != 'other'"/>
+                            <field name="is_foreign"/>
+                            <field name="nationality_country_id" invisible="not is_foreign"/>
+                            <field name="is_first_visit"/>
+                        </group>
+                    </group>
+
+                    <!-- 1.2 Contact information -->
+                    <group string="Contact Information">
+                        <field name="patient_phone_ids">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="phone"/>
+                                <field name="phone_type"/>
+                                <field name="owner_name"/>
+                                <field name="is_foreign_number"/>
+                                <field name="note"/>
+                            </list>
+                        </field>
+                        <group>
+                            <field name="preferred_comm_channel"/>
+                        </group>
+                        <group string="Emergency Contact">
+                            <field name="emergency_contact_name"/>
+                            <field name="emergency_contact_relation"/>
+                            <field name="emergency_contact_phone"/>
+                        </group>
+                    </group>
+
+                    <!-- 1.3 Medical history -->
+                    <group string="Medical History">
+                        <field name="allergy_ids">
+                            <list editable="bottom">
+                                <field name="allergy_type"/>
+                                <field name="name"/>
+                                <field name="reaction"/>
+                                <field name="severity"/>
+                                <field name="note"/>
+                            </list>
+                        </field>
+                        <group>
+                            <field name="chronic_diseases"/>
+                            <field name="current_medications"/>
+                            <field name="pregnancy_status" invisible="gender != 'female'"/>
+                        </group>
+                        <group>
+                            <field name="has_bleeding_disorder"/>
+                            <field name="has_cardio_risk"/>
+                            <field name="medical_risk_notes"/>
+                        </group>
+                        <group string="Last Update" col="2">
+                            <field name="medical_update_date"/>
+                            <field name="medical_update_uid"/>
+                        </group>
+                    </group>
+
+                    <!-- 1.4 Dental history -->
+                    <group string="Dental History">
+                        <group>
+                            <field name="last_dental_visit_date"/>
+                            <field name="treatment_plan_status"/>
+                        </group>
+                        <group>
+                            <field name="has_bruxism"/>
+                            <field name="periodontitis_risk"/>
+                        </group>
+                        <field name="dental_other_notes"/>
+                        <field name="procedure_history_ids">
+                            <list editable="bottom">
+                                <field name="procedure_date"/>
+                                <field name="name"/>
+                                <field name="doctor_id"/>
+                                <field name="tooth"/>
+                                <field name="note"/>
+                            </list>
+                        </field>
+                    </group>
+
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Search: filter patients                                       -->
+    <!-- ============================================================ -->
+    <record id="view_res_partner_filter_patient" model="ir.ui.view">
+        <field name="name">res.partner.search.patient</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter name="filter_is_patient" string="Patients"
+                        domain="[('is_patient', '=', True)]"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

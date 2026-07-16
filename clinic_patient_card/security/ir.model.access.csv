@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_clinic_patient_phone_user,clinic.patient.phone.user,model_clinic_patient_phone,base.group_user,1,1,1,1
+access_clinic_patient_allergy_user,clinic.patient.allergy.user,model_clinic_patient_allergy,base.group_user,1,1,1,1
+access_clinic_procedure_history_user,clinic.procedure.history.user,model_clinic_procedure_history,base.group_user,1,1,1,1

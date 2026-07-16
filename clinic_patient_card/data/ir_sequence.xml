@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_clinic_patient_ref" model="ir.sequence">
+        <field name="name">Clinic Patient Reference</field>
+        <field name="code">clinic.patient.ref</field>
+        <field name="prefix">P</field>
+        <field name="padding">6</field>
+        <field name="number_increment">1</field>
+        <field name="number_next">1</field>
+        <field name="implementation">standard</field>
+    </record>
+</odoo>

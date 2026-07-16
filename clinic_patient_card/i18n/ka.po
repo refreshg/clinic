@@ -1,0 +1,263 @@
+# Translation of clinic_patient_card (Georgian).
+msgid ""
+msgstr ""
+"Project-Id-Version: clinic_patient_card 19.0.1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: refreshg\n"
+"Language-Team: Georgian\n"
+"Language: ka\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+# --- Pages / groups ---
+msgid "Patient Card"
+msgstr "პაციენტის ბარათი"
+
+msgid "Basic Information"
+msgstr "ძირითადი ინფორმაცია"
+
+msgid "Contact Information"
+msgstr "საკონტაქტო ინფორმაცია"
+
+msgid "Emergency Contact"
+msgstr "საგანგებო კონტაქტი"
+
+msgid "Relationship"
+msgstr "ნათესაობა"
+
+msgid "Emergency Phone"
+msgstr "საგანგებო ტელეფონი"
+
+msgid "Medical History"
+msgstr "სამედიცინო ანამნეზი"
+
+msgid "Last Update"
+msgstr "ბოლო განახლება"
+
+msgid "Dental History"
+msgstr "სტომატოლოგიური ანამნეზი"
+
+msgid "Patients"
+msgstr "პაციენტები"
+
+# --- 1.1 Basic information ---
+msgid "Is a Patient"
+msgstr "პაციენტია"
+
+msgid "Name (Latin)"
+msgstr "სახელი (ლათინურად)"
+
+msgid "Personal ID No."
+msgstr "პირადი ნომერი"
+
+msgid "Date of Birth"
+msgstr "დაბადების თარიღი"
+
+msgid "Age"
+msgstr "ასაკი"
+
+msgid "Gender"
+msgstr "სქესი"
+
+msgid "Male"
+msgstr "მამრობითი"
+
+msgid "Female"
+msgstr "მდედრობითი"
+
+msgid "Other"
+msgstr "სხვა"
+
+msgid "Patient ID / History No."
+msgstr "პაციენტის ID / ისტორიის ნომერი"
+
+msgid "Registration Date"
+msgstr "რეგისტრაციის თარიღი"
+
+msgid "Referral Source"
+msgstr "მომართვის წყარო"
+
+msgid "Recommendation"
+msgstr "რეკომენდაცია"
+
+msgid "Social / Google"
+msgstr "სოც. ქსელი / Google"
+
+msgid "Insurance"
+msgstr "დაზღვევა"
+
+msgid "Referral Source (Other)"
+msgstr "მომართვის წყარო (სხვა)"
+
+msgid "Foreign Patient"
+msgstr "უცხოელი პაციენტი"
+
+msgid "Country"
+msgstr "ქვეყანა"
+
+msgid "First Visit"
+msgstr "პირველადი ვიზიტი"
+
+# --- 1.2 Contact information ---
+msgid "Phone Numbers"
+msgstr "ტელეფონები"
+
+msgid "Preferred Channel"
+msgstr "სასურველი არხი"
+
+msgid "Call"
+msgstr "ზარი"
+
+msgid "Priority"
+msgstr "პრიორიტეტი"
+
+msgid "Phone"
+msgstr "ტელეფონი"
+
+msgid "Type"
+msgstr "ტიპი"
+
+msgid "Mobile"
+msgstr "მობილური"
+
+msgid "Home"
+msgstr "სახლი"
+
+msgid "Work"
+msgstr "სამსახური"
+
+msgid "Parent / Guardian"
+msgstr "მშობელი / მეურვე"
+
+msgid "Owner / Guardian Name"
+msgstr "მფლობელი / მეურვე"
+
+msgid "Foreign Number"
+msgstr "უცხოური ნომერი"
+
+msgid "Note"
+msgstr "შენიშვნა"
+
+# --- 1.3 Medical history ---
+msgid "Allergies"
+msgstr "ალერგიები"
+
+msgid "Medication"
+msgstr "მედიკამენტი"
+
+msgid "Material (e.g. latex)"
+msgstr "მასალა (მაგ. ლატექსი)"
+
+msgid "Food"
+msgstr "საკვები"
+
+msgid "Substance"
+msgstr "ნივთიერება"
+
+msgid "Reaction"
+msgstr "რეაქცია"
+
+msgid "Severity"
+msgstr "სიმძიმე"
+
+msgid "Mild"
+msgstr "მსუბუქი"
+
+msgid "Moderate"
+msgstr "საშუალო"
+
+msgid "Severe"
+msgstr "მძიმე"
+
+msgid "Chronic Diseases"
+msgstr "ქრონიკული დაავადებები"
+
+msgid "Current Medications"
+msgstr "მიმდინარე მედიკამენტები"
+
+msgid "Pregnancy Status"
+msgstr "ორსულობის სტატუსი"
+
+msgid "N/A"
+msgstr "არ ეხება"
+
+msgid "Pregnant"
+msgstr "ორსული"
+
+msgid "Not Pregnant"
+msgstr "არ არის ორსული"
+
+msgid "Breastfeeding"
+msgstr "ძუძუთი კვება"
+
+msgid "Bleeding / Coagulation Problems"
+msgstr "სისხლის შედედების პრობლემები"
+
+msgid "Cardiovascular Risk"
+msgstr "კარდიოვასკულური რისკი"
+
+msgid "Risk Notes"
+msgstr "რისკის შენიშვნები"
+
+msgid "Medical History Updated On"
+msgstr "სამედიცინო ანამნეზის განახლების თარიღი"
+
+msgid "Medical History Updated By"
+msgstr "სამედიცინო ანამნეზი განაახლა"
+
+# --- 1.4 Dental history ---
+msgid "Last Dental Visit"
+msgstr "ბოლო სტომატოლოგიური ვიზიტი"
+
+msgid "Treatment Plan Status"
+msgstr "მკურნალობის გეგმის სტატუსი"
+
+msgid "None"
+msgstr "არ არის"
+
+msgid "Active"
+msgstr "აქტიური"
+
+msgid "On Hold"
+msgstr "შეჩერებული"
+
+msgid "Completed"
+msgstr "დასრულებული"
+
+msgid "Procedure History"
+msgstr "პროცედურების ისტორია"
+
+msgid "Bruxism"
+msgstr "ბრუქსიზმი"
+
+msgid "Periodontitis Risk"
+msgstr "პაროდონტიტის რისკი"
+
+msgid "Low"
+msgstr "დაბალი"
+
+msgid "Medium"
+msgstr "საშუალო"
+
+msgid "High"
+msgstr "მაღალი"
+
+msgid "Other Predispositions"
+msgstr "სხვა მიდრეკილებები"
+
+msgid "Date"
+msgstr "თარიღი"
+
+msgid "Procedure"
+msgstr "პროცედურა"
+
+msgid "Performed By"
+msgstr "შემსრულებელი"
+
+msgid "Tooth (FDI)"
+msgstr "კბილი (FDI)"
+
+msgid "Notes"
+msgstr "შენიშვნები"
