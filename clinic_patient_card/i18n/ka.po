@@ -94,8 +94,8 @@ msgstr "მომართვის წყარო (სხვა)"
 msgid "Foreign Patient"
 msgstr "უცხოელი პაციენტი"
 
-msgid "Country"
-msgstr "ქვეყანა"
+msgid "Nationality"
+msgstr "მოქალაქეობა"
 
 msgid "First Visit"
 msgstr "პირველადი ვიზიტი"

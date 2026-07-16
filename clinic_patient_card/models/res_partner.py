@@ -62,7 +62,7 @@ class ResPartner(models.Model):
     )
     referral_source_other = fields.Char(string="Referral Source (Other)")
     is_foreign = fields.Boolean(string="Foreign Patient")
-    nationality_country_id = fields.Many2one("res.country", string="Country")
+    nationality_country_id = fields.Many2one("res.country", string="Nationality")
     is_first_visit = fields.Boolean(string="First Visit", default=True)
 
     # ==================================================================
