@@ -238,6 +238,10 @@ class ResPartner(models.Model):
             for k in colors
         )
 
+        caption = _(
+            "FDI numbering: the 1st digit is the quadrant (1-4), the 2nd is the "
+            "tooth position (1-8). 32 teeth in total."
+        )
         for partner in self:
             by_num = {
                 (t.tooth_number or "").strip(): t.status
@@ -245,6 +249,7 @@ class ResPartner(models.Model):
             }
             partner.odontogram_html = (
                 '<div style="overflow-x:auto;">'
+                f'<div style="font-size:11px;color:#666;margin-bottom:6px;">{caption}</div>'
                 '<table style="border-collapse:collapse;margin-bottom:8px;">'
                 f'{row(self._ODONTO_UPPER, by_num)}{row(self._ODONTO_LOWER, by_num)}'
                 '</table>'
