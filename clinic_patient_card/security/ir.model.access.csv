@@ -3,3 +3,4 @@ access_clinic_patient_phone_user,clinic.patient.phone.user,model_clinic_patient_
 access_clinic_patient_allergy_user,clinic.patient.allergy.user,model_clinic_patient_allergy,base.group_user,1,1,1,1
 access_clinic_procedure_history_user,clinic.procedure.history.user,model_clinic_procedure_history,base.group_user,1,1,1,1
 access_clinic_patient_tooth_user,clinic.patient.tooth.user,model_clinic_patient_tooth,base.group_user,1,1,1,1
+access_clinic_patient_document_user,clinic.patient.document.user,model_clinic_patient_document,base.group_user,1,1,1,1

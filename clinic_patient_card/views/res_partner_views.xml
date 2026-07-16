@@ -38,6 +38,26 @@
                       autofocus="autofocus"
                       invisible="not is_patient">
 
+                    <!-- 1.9 Quick actions (placeholder buttons for now) -->
+                    <div class="d-flex flex-wrap gap-1 mb-3" name="quick_actions">
+                        <button name="action_clinic_todo" type="object"
+                                string="Create Booking" class="btn-primary"/>
+                        <button name="action_clinic_todo" type="object"
+                                string="Add Note" class="btn-secondary"/>
+                        <button name="action_clinic_todo" type="object"
+                                string="Send Reminder" class="btn-secondary"/>
+                        <button name="action_clinic_todo" type="object"
+                                string="Open Oral Chart" class="btn-secondary"/>
+                        <button name="action_clinic_todo" type="object"
+                                string="Create Invoice" class="btn-secondary"/>
+                        <button name="action_clinic_todo" type="object"
+                                string="Generate Form-100" class="btn-secondary"/>
+                        <button name="action_clinic_todo" type="object"
+                                string="Sync EHR" class="btn-secondary"/>
+                        <button name="action_clinic_todo" type="object"
+                                string="Make Payment / To Debt" class="btn-secondary"/>
+                    </div>
+
                     <!-- 1.1 Basic information (patient-specific) -->
                     <group string="Basic Information">
                         <group>
@@ -127,6 +147,81 @@
                                 <field name="note"/>
                             </list>
                         </field>
+                    </group>
+
+                    <!-- 1.5 Financial status -->
+                    <group string="Financial Status">
+                        <group string="Balance">
+                            <field name="credit" string="Receivable (debt)"/>
+                            <field name="debit" string="Payable (advance)"/>
+                            <field name="total_invoiced"/>
+                            <field name="property_payment_term_id"/>
+                            <field name="preferred_payment_method"/>
+                        </group>
+                        <group string="Discounts and Loyalty">
+                            <field name="discount_percent"/>
+                            <field name="discount_fixed"/>
+                            <field name="loyalty_status"/>
+                        </group>
+                        <group string="Insurance">
+                            <field name="insurance_provider"/>
+                            <field name="insurance_policy_no"/>
+                            <field name="insurance_valid_until"/>
+                            <field name="insurance_notes"/>
+                        </group>
+                        <separator string="Invoices and Payments" colspan="2"/>
+                        <field name="invoice_ids" colspan="2" nolabel="1" readonly="1">
+                            <list>
+                                <field name="name"/>
+                                <field name="invoice_date"/>
+                                <field name="move_type"/>
+                                <field name="amount_total"/>
+                                <field name="payment_state"/>
+                                <field name="state"/>
+                            </list>
+                        </field>
+                    </group>
+
+                    <!-- 1.6 Documents -->
+                    <group string="Documents">
+                        <field name="document_ids" colspan="2" nolabel="1">
+                            <list>
+                                <field name="doc_type"/>
+                                <field name="name"/>
+                                <field name="date"/>
+                                <field name="attachment" filename="filename" widget="binary"/>
+                                <field name="filename" column_invisible="1"/>
+                                <field name="note"/>
+                            </list>
+                            <form>
+                                <group>
+                                    <group>
+                                        <field name="doc_type"/>
+                                        <field name="name"/>
+                                        <field name="date"/>
+                                        <field name="attachment" filename="filename" widget="binary"/>
+                                        <field name="filename" invisible="1"/>
+                                        <field name="note"/>
+                                    </group>
+                                </group>
+                                <separator string="Signature"
+                                           invisible="doc_type != 'consent'"/>
+                                <field name="signature" widget="signature"
+                                       invisible="doc_type != 'consent'"/>
+                            </form>
+                        </field>
+                    </group>
+
+                    <!-- 1.7 Patient profile -->
+                    <group string="Patient Profile">
+                        <group>
+                            <field name="no_show_rate"/>
+                            <field name="ltv_forecast"/>
+                        </group>
+                        <group>
+                            <field name="risk_level"/>
+                            <field name="risk_notes"/>
+                        </group>
                     </group>
 
                 </page>

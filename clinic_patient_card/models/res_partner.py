@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 
 # Fields that, when changed, bump the "medical history last updated" stamp.
@@ -122,6 +122,61 @@ class ResPartner(models.Model):
     )
     dental_other_notes = fields.Text(string="Other Predispositions")
 
+    # ==================================================================
+    # 1.5 Financial status
+    #   Balance / invoices / payments reuse the standard `account` module
+    #   (credit, debit, total_invoiced, invoice_ids, property_payment_term_id).
+    # ==================================================================
+    preferred_payment_method = fields.Selection(
+        [
+            ("cash", "Cash"),
+            ("card", "Card"),
+            ("transfer", "Bank Transfer"),
+            ("insurance", "Insurance"),
+        ],
+        string="Preferred Payment Method",
+    )
+    discount_percent = fields.Float(string="Discount (%)")
+    discount_fixed = fields.Float(string="Discount (amount)")
+    loyalty_status = fields.Selection(
+        [
+            ("none", "None"),
+            ("silver", "Silver"),
+            ("gold", "Gold"),
+            ("platinum", "Platinum"),
+        ],
+        string="Loyalty Status",
+        default="none",
+    )
+    insurance_provider = fields.Char(string="Insurance Provider")
+    insurance_policy_no = fields.Char(string="Policy No.")
+    insurance_valid_until = fields.Date(string="Insurance Valid Until")
+    insurance_notes = fields.Text(string="Insurance Notes")
+
+    # ==================================================================
+    # 1.6 Documents
+    # ==================================================================
+    document_ids = fields.One2many(
+        "clinic.patient.document", "partner_id", string="Documents",
+    )
+
+    # ==================================================================
+    # 1.7 Patient profile / analytics
+    #   Auto-computation lands with the appointment module (Phase 3);
+    #   for now these are entered manually.
+    # ==================================================================
+    no_show_rate = fields.Float(string="No-show Rate (%)")
+    ltv_forecast = fields.Float(string="LTV Forecast")
+    risk_level = fields.Selection(
+        [
+            ("low", "Low"),
+            ("medium", "Medium"),
+            ("high", "High"),
+        ],
+        string="Risk Level",
+    )
+    risk_notes = fields.Char(string="Risk Details")
+
     # ------------------------------------------------------------------
     # Compute
     # ------------------------------------------------------------------
@@ -162,3 +217,21 @@ class ResPartner(models.Model):
             vals["medical_update_date"] = fields.Datetime.now()
             vals["medical_update_uid"] = self.env.uid
         return super().write(vals)
+
+    # ------------------------------------------------------------------
+    # 1.9 Quick actions
+    #   Placeholder buttons — they intentionally do nothing yet, for the
+    #   features whose functionality is not built (booking, Form-100, EHR…).
+    # ------------------------------------------------------------------
+    def action_clinic_todo(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Coming soon"),
+                "message": _("This quick action is not available yet."),
+                "type": "info",
+                "sticky": False,
+            },
+        }
