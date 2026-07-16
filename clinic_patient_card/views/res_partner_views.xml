@@ -2,7 +2,8 @@
 <odoo>
 
     <!-- ============================================================ -->
-    <!-- Contact form: add the Patient Card                            -->
+    <!-- Contact form: patient header (always visible) + Patient Card  -->
+    <!-- as the FIRST tab                                              -->
     <!-- ============================================================ -->
     <record id="view_partner_form_patient_card" model="ir.ui.view">
         <field name="name">res.partner.form.patient.card</field>
@@ -10,37 +11,44 @@
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
 
-            <!-- "Is a Patient" toggle + patient reference, above the notebook -->
+            <!-- Relabel the standard Tax ID as the personal number -->
+            <field name="vat" position="attributes">
+                <attribute name="string">Personal No.</attribute>
+                <attribute name="placeholder"/>
+            </field>
+
+            <!-- Header block: Personal No. (vat, moved up), birthdate, age,
+                 gender + patient toggle. Always visible, even for non-patients. -->
             <xpath expr="//notebook" position="before">
                 <group>
                     <group>
-                        <field name="is_patient"/>
+                        <field name="vat" position="move"/>
+                        <field name="birthdate"/>
+                        <field name="age"/>
+                        <field name="gender"/>
                     </group>
                     <group>
+                        <field name="is_patient"/>
                         <field name="patient_ref" invisible="not is_patient"/>
                     </group>
                 </group>
             </xpath>
 
-            <!-- Patient Card notebook page -->
-            <xpath expr="//notebook" position="inside">
+            <!-- Patient Card page inserted BEFORE the first existing tab -->
+            <xpath expr="//notebook/page[1]" position="before">
                 <page name="patient_card" string="Patient Card"
                       invisible="not is_patient">
 
-                    <!-- 1.1 Basic information -->
+                    <!-- 1.1 Basic information (patient-specific) -->
                     <group string="Basic Information">
                         <group>
                             <field name="name_latin" invisible="not is_foreign"/>
-                            <field name="personal_id"/>
-                            <field name="birthdate"/>
-                            <field name="age"/>
-                            <field name="gender"/>
-                        </group>
-                        <group>
                             <field name="registration_date"/>
                             <field name="referral_source"/>
                             <field name="referral_source_other"
                                    invisible="referral_source != 'other'"/>
+                        </group>
+                        <group>
                             <field name="is_foreign"/>
                             <field name="nationality_country_id" invisible="not is_foreign"/>
                             <field name="is_first_visit"/>
@@ -49,29 +57,24 @@
 
                     <!-- 1.2 Contact information -->
                     <group string="Contact Information">
-                        <field name="patient_phone_ids">
+                        <field name="patient_phone_ids" colspan="2" nolabel="1">
                             <list editable="bottom">
                                 <field name="sequence" widget="handle"/>
                                 <field name="phone"/>
                                 <field name="phone_type"/>
+                                <field name="channel"/>
                                 <field name="owner_name"/>
-                                <field name="is_foreign_number"/>
-                                <field name="note"/>
+                                <field name="is_emergency"/>
+                                <field name="relation"/>
+                                <field name="is_foreign_number" optional="show"/>
+                                <field name="note" optional="hide"/>
                             </list>
                         </field>
-                        <group>
-                            <field name="preferred_comm_channel"/>
-                        </group>
-                        <group string="Emergency Contact">
-                            <field name="emergency_contact_name"/>
-                            <field name="emergency_contact_relation"/>
-                            <field name="emergency_contact_phone"/>
-                        </group>
                     </group>
 
                     <!-- 1.3 Medical history -->
                     <group string="Medical History">
-                        <field name="allergy_ids">
+                        <field name="allergy_ids" colspan="2" nolabel="1">
                             <list editable="bottom">
                                 <field name="allergy_type"/>
                                 <field name="name"/>
@@ -83,7 +86,7 @@
                         <group>
                             <field name="chronic_diseases"/>
                             <field name="current_medications"/>
-                            <field name="pregnancy_status" invisible="gender != 'female'"/>
+                            <field name="is_pregnant" invisible="gender != 'female'"/>
                         </group>
                         <group>
                             <field name="has_bleeding_disorder"/>
@@ -106,13 +109,22 @@
                             <field name="has_bruxism"/>
                             <field name="periodontitis_risk"/>
                         </group>
-                        <field name="dental_other_notes"/>
-                        <field name="procedure_history_ids">
+                        <field name="dental_other_notes" colspan="2"/>
+                        <separator string="Procedure History" colspan="2"/>
+                        <field name="procedure_history_ids" colspan="2" nolabel="1">
                             <list editable="bottom">
                                 <field name="procedure_date"/>
                                 <field name="name"/>
                                 <field name="doctor_id"/>
                                 <field name="tooth"/>
+                                <field name="note"/>
+                            </list>
+                        </field>
+                        <separator string="Dental Chart (FDI)" colspan="2"/>
+                        <field name="tooth_ids" colspan="2" nolabel="1">
+                            <list editable="bottom">
+                                <field name="tooth_number"/>
+                                <field name="status"/>
                                 <field name="note"/>
                             </list>
                         </field>

@@ -23,7 +23,19 @@ class ClinicPatientPhone(models.Model):
         string="Type",
         default="mobile",
     )
+    # Preferred communication channel for THIS number.
+    channel = fields.Selection(
+        [
+            ("sms", "SMS"),
+            ("call", "Call"),
+            ("whatsapp", "WhatsApp"),
+        ],
+        string="Channel",
+    )
     # For minors: the phone may belong to a parent/guardian.
     owner_name = fields.Char(string="Owner / Guardian Name")
+    # Emergency contact marked directly on the phone row.
+    is_emergency = fields.Boolean(string="Emergency")
+    relation = fields.Char(string="Relationship")
     is_foreign_number = fields.Boolean(string="Foreign Number")
     note = fields.Char(string="Note")

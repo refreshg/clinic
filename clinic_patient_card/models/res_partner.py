@@ -7,7 +7,7 @@ MEDICAL_TRACKED_FIELDS = {
     "allergy_ids",
     "chronic_diseases",
     "current_medications",
-    "pregnancy_status",
+    "is_pregnant",
     "has_bleeding_disorder",
     "has_cardio_risk",
     "medical_risk_notes",
@@ -29,7 +29,7 @@ class ResPartner(models.Model):
         string="Name (Latin)",
         help="Latinized full name, used for foreign patients.",
     )
-    personal_id = fields.Char(string="Personal ID No.", index=True)
+    # Personal number reuses the standard `vat` (Tax ID) field — no custom field.
     birthdate = fields.Date(string="Date of Birth")
     age = fields.Integer(string="Age", compute="_compute_age", store=False)
     gender = fields.Selection(
@@ -68,21 +68,10 @@ class ResPartner(models.Model):
     # ==================================================================
     # 1.2 Contact information
     # ==================================================================
+    # Phones carry per-row channel, emergency flag and relationship (see model).
     patient_phone_ids = fields.One2many(
         "clinic.patient.phone", "partner_id", string="Phone Numbers",
     )
-    preferred_comm_channel = fields.Selection(
-        [
-            ("sms", "SMS"),
-            ("call", "Call"),
-            ("whatsapp", "WhatsApp"),
-            ("email", "Email"),
-        ],
-        string="Preferred Channel",
-    )
-    emergency_contact_name = fields.Char(string="Emergency Contact")
-    emergency_contact_relation = fields.Char(string="Relationship")
-    emergency_contact_phone = fields.Char(string="Emergency Phone")
 
     # ==================================================================
     # 1.3 Medical history
@@ -92,16 +81,7 @@ class ResPartner(models.Model):
     )
     chronic_diseases = fields.Text(string="Chronic Diseases")
     current_medications = fields.Text(string="Current Medications")
-    pregnancy_status = fields.Selection(
-        [
-            ("na", "N/A"),
-            ("pregnant", "Pregnant"),
-            ("not_pregnant", "Not Pregnant"),
-            ("breastfeeding", "Breastfeeding"),
-        ],
-        string="Pregnancy Status",
-        default="na",
-    )
+    is_pregnant = fields.Boolean(string="Pregnant")
     has_bleeding_disorder = fields.Boolean(string="Bleeding / Coagulation Problems")
     has_cardio_risk = fields.Boolean(string="Cardiovascular Risk")
     medical_risk_notes = fields.Text(string="Risk Notes")
@@ -126,6 +106,10 @@ class ResPartner(models.Model):
     )
     procedure_history_ids = fields.One2many(
         "clinic.procedure.history", "partner_id", string="Procedure History",
+    )
+    # 1.4 Dental chart (FDI tooth numbering) — table for now, graphic later.
+    tooth_ids = fields.One2many(
+        "clinic.patient.tooth", "partner_id", string="Dental Chart",
     )
     has_bruxism = fields.Boolean(string="Bruxism")
     periodontitis_risk = fields.Selection(
