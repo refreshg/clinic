@@ -15,6 +15,12 @@
                  the header below as the personal number (single field). -->
             <xpath expr="//field[@name='vat']" position="replace"/>
 
+            <!-- The base "Contacts & Addresses" page is autofocused by default;
+                 drop it so only the Patient Card page opens by default. -->
+            <xpath expr="//page[@name='contact_addresses']" position="attributes">
+                <attribute name="autofocus"/>
+            </xpath>
+
             <!-- Header block: Personal No. (vat), birthdate, age, gender +
                  patient toggle. Always visible, even for non-patients. -->
             <xpath expr="//notebook" position="before">
@@ -140,6 +146,7 @@
                             </list>
                         </field>
                         <separator string="Dental Chart (FDI)" colspan="2"/>
+                        <field name="odontogram_html" colspan="2" nolabel="1" readonly="1"/>
                         <field name="tooth_ids" colspan="2" nolabel="1">
                             <list editable="bottom">
                                 <field name="tooth_number"/>

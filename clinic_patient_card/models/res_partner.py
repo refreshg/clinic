@@ -107,9 +107,13 @@ class ResPartner(models.Model):
     procedure_history_ids = fields.One2many(
         "clinic.procedure.history", "partner_id", string="Procedure History",
     )
-    # 1.4 Dental chart (FDI tooth numbering) — table for now, graphic later.
+    # 1.4 Dental chart (FDI tooth numbering).
     tooth_ids = fields.One2many(
         "clinic.patient.tooth", "partner_id", string="Dental Chart",
+    )
+    # Visual odontogram rendered from tooth_ids (server-side, read-only).
+    odontogram_html = fields.Html(
+        string="Odontogram", compute="_compute_odontogram_html", sanitize=False,
     )
     has_bruxism = fields.Boolean(string="Bruxism")
     periodontitis_risk = fields.Selection(
@@ -191,6 +195,62 @@ class ResPartner(models.Model):
                 )
             else:
                 partner.age = 0
+
+    # FDI permanent-teeth layout (two quadrants per jaw).
+    _ODONTO_UPPER = ["18", "17", "16", "15", "14", "13", "12", "11",
+                     "21", "22", "23", "24", "25", "26", "27", "28"]
+    _ODONTO_LOWER = ["48", "47", "46", "45", "44", "43", "42", "41",
+                     "31", "32", "33", "34", "35", "36", "37", "38"]
+    _ODONTO_COLORS = {
+        "healthy": "#ffffff", "caries": "#e74c3c", "filled": "#3498db",
+        "crown": "#f1c40f", "root_canal": "#9b59b6", "implant": "#95a5a6",
+        "missing": "#2c3e50", "to_extract": "#e67e22", "other": "#bdc3c7",
+    }
+
+    @api.depends("tooth_ids.tooth_number", "tooth_ids.status")
+    def _compute_odontogram_html(self):
+        colors = self._ODONTO_COLORS
+        labels = dict(
+            self.env["clinic.patient.tooth"].fields_get(["status"])["status"]["selection"]
+        )
+        dark = {"missing", "root_canal", "crown"}
+
+        def cell(num, status):
+            bg = colors.get(status, "#ffffff")
+            fg = "#ffffff" if status in dark else "#333333"
+            title = labels.get(status, "")
+            return (
+                '<td style="border:1px solid #bbb;width:32px;height:38px;'
+                'text-align:center;vertical-align:middle;font-size:11px;'
+                f'background:{bg};color:{fg};" title="{title}">{num}</td>'
+            )
+
+        def row(nums, by_num):
+            left = "".join(cell(n, by_num.get(n, "healthy")) for n in nums[:8])
+            right = "".join(cell(n, by_num.get(n, "healthy")) for n in nums[8:])
+            return f'<tr>{left}<td style="width:12px;border:0;"></td>{right}</tr>'
+
+        legend = "".join(
+            '<span style="display:inline-block;margin:0 10px 4px 0;white-space:nowrap;">'
+            f'<span style="display:inline-block;width:12px;height:12px;background:{colors[k]};'
+            'border:1px solid #bbb;vertical-align:middle;"></span> '
+            f'{labels.get(k, k)}</span>'
+            for k in colors
+        )
+
+        for partner in self:
+            by_num = {
+                (t.tooth_number or "").strip(): t.status
+                for t in partner.tooth_ids if t.tooth_number
+            }
+            partner.odontogram_html = (
+                '<div style="overflow-x:auto;">'
+                '<table style="border-collapse:collapse;margin-bottom:8px;">'
+                f'{row(self._ODONTO_UPPER, by_num)}{row(self._ODONTO_LOWER, by_num)}'
+                '</table>'
+                f'<div style="font-size:11px;line-height:1.8;">{legend}</div>'
+                '</div>'
+            )
 
     # ------------------------------------------------------------------
     # CRUD overrides
