@@ -11,18 +11,16 @@
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
 
-            <!-- Relabel the standard Tax ID as the personal number -->
-            <field name="vat" position="attributes">
-                <attribute name="string">Personal No.</attribute>
-                <attribute name="placeholder"/>
-            </field>
+            <!-- Remove the standard Tax ID from its default spot; re-added in
+                 the header below as the personal number (single field). -->
+            <xpath expr="//field[@name='vat']" position="replace"/>
 
-            <!-- Header block: Personal No. (vat, moved up), birthdate, age,
-                 gender + patient toggle. Always visible, even for non-patients. -->
+            <!-- Header block: Personal No. (vat), birthdate, age, gender +
+                 patient toggle. Always visible, even for non-patients. -->
             <xpath expr="//notebook" position="before">
                 <group>
                     <group>
-                        <field name="vat" position="move"/>
+                        <field name="vat" string="Personal No." placeholder=""/>
                         <field name="birthdate"/>
                         <field name="age"/>
                         <field name="gender"/>
@@ -37,6 +35,7 @@
             <!-- Patient Card page inserted BEFORE the first existing tab -->
             <xpath expr="//notebook/page[1]" position="before">
                 <page name="patient_card" string="Patient Card"
+                      autofocus="autofocus"
                       invisible="not is_patient">
 
                     <!-- 1.1 Basic information (patient-specific) -->
