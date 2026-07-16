@@ -2,15 +2,9 @@
 {
     "name": "Clinic Patient Card",
     "summary": "Patient card on the contact form (dental clinic)",
-    "description": """
-Clinic Patient Card
-===================
-Extends the Contact (res.partner) form with a full patient card:
-basic info, contacts, medical & dental history, financials, documents,
-patient analytics, timeline and quick actions.
-
-Built incrementally, phase by phase.
-""",
+    "description": "Extends the Contact (res.partner) form with a full patient "
+                   "card: basic info, contacts, medical and dental history. "
+                   "Built incrementally, phase by phase.",
     "author": "refreshg",
     "website": "https://github.com/refreshg/clinic",
     "category": "Healthcare",

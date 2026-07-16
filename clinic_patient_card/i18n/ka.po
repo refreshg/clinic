@@ -1,263 +1,565 @@
-# Translation of clinic_patient_card (Georgian).
+# Translation of clinic_patient_card into Georgian.
+# This file contains the translation of the following modules:
+# 	* clinic_patient_card
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: clinic_patient_card 19.0.1.0.0\n"
+"Project-Id-Version: Odoo Server 19.0-20260630\n"
 "Report-Msgid-Bugs-To: \n"
-"Last-Translator: refreshg\n"
+"POT-Creation-Date: 2026-07-16 15:51+0000\n"
+"PO-Revision-Date: 2026-07-16 15:51+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "Language-Team: Georgian\n"
 "Language: ka\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-# --- Pages / groups ---
-msgid "Patient Card"
-msgstr "პაციენტის ბარათი"
-
-msgid "Basic Information"
-msgstr "ძირითადი ინფორმაცია"
-
-msgid "Contact Information"
-msgstr "საკონტაქტო ინფორმაცია"
-
-msgid "Emergency Contact"
-msgstr "საგანგებო კონტაქტი"
-
-msgid "Relationship"
-msgstr "ნათესაობა"
-
-msgid "Emergency Phone"
-msgstr "საგანგებო ტელეფონი"
-
-msgid "Medical History"
-msgstr "სამედიცინო ანამნეზი"
-
-msgid "Last Update"
-msgstr "ბოლო განახლება"
-
-msgid "Dental History"
-msgstr "სტომატოლოგიური ანამნეზი"
-
-msgid "Patients"
-msgstr "პაციენტები"
-
-# --- 1.1 Basic information ---
-msgid "Is a Patient"
-msgstr "პაციენტია"
-
-msgid "Name (Latin)"
-msgstr "სახელი (ლათინურად)"
-
-msgid "Personal ID No."
-msgstr "პირადი ნომერი"
-
-msgid "Date of Birth"
-msgstr "დაბადების თარიღი"
-
-msgid "Age"
-msgstr "ასაკი"
-
-msgid "Gender"
-msgstr "სქესი"
-
-msgid "Male"
-msgstr "მამრობითი"
-
-msgid "Female"
-msgstr "მდედრობითი"
-
-msgid "Other"
-msgstr "სხვა"
-
-msgid "Patient ID / History No."
-msgstr "პაციენტის ID / ისტორიის ნომერი"
-
-msgid "Registration Date"
-msgstr "რეგისტრაციის თარიღი"
-
-msgid "Referral Source"
-msgstr "მომართვის წყარო"
-
-msgid "Recommendation"
-msgstr "რეკომენდაცია"
-
-msgid "Social / Google"
-msgstr "სოც. ქსელი / Google"
-
-msgid "Insurance"
-msgstr "დაზღვევა"
-
-msgid "Referral Source (Other)"
-msgstr "მომართვის წყარო (სხვა)"
-
-msgid "Foreign Patient"
-msgstr "უცხოელი პაციენტი"
-
-msgid "Nationality"
-msgstr "მოქალაქეობა"
-
-msgid "First Visit"
-msgstr "პირველადი ვიზიტი"
-
-# --- 1.2 Contact information ---
-msgid "Phone Numbers"
-msgstr "ტელეფონები"
-
-msgid "Preferred Channel"
-msgstr "სასურველი არხი"
-
-msgid "Call"
-msgstr "ზარი"
-
-msgid "Priority"
-msgstr "პრიორიტეტი"
-
-msgid "Phone"
-msgstr "ტელეფონი"
-
-msgid "Type"
-msgstr "ტიპი"
-
-msgid "Mobile"
-msgstr "მობილური"
-
-msgid "Home"
-msgstr "სახლი"
-
-msgid "Work"
-msgstr "სამსახური"
-
-msgid "Parent / Guardian"
-msgstr "მშობელი / მეურვე"
-
-msgid "Owner / Guardian Name"
-msgstr "მფლობელი / მეურვე"
-
-msgid "Foreign Number"
-msgstr "უცხოური ნომერი"
-
-msgid "Note"
-msgstr "შენიშვნა"
-
-# --- 1.3 Medical history ---
-msgid "Allergies"
-msgstr "ალერგიები"
-
-msgid "Medication"
-msgstr "მედიკამენტი"
-
-msgid "Material (e.g. latex)"
-msgstr "მასალა (მაგ. ლატექსი)"
-
-msgid "Food"
-msgstr "საკვები"
-
-msgid "Substance"
-msgstr "ნივთიერება"
-
-msgid "Reaction"
-msgstr "რეაქცია"
-
-msgid "Severity"
-msgstr "სიმძიმე"
-
-msgid "Mild"
-msgstr "მსუბუქი"
-
-msgid "Moderate"
-msgstr "საშუალო"
-
-msgid "Severe"
-msgstr "მძიმე"
-
-msgid "Chronic Diseases"
-msgstr "ქრონიკული დაავადებები"
-
-msgid "Current Medications"
-msgstr "მიმდინარე მედიკამენტები"
-
-msgid "Pregnancy Status"
-msgstr "ორსულობის სტატუსი"
-
-msgid "N/A"
-msgstr "არ ეხება"
-
-msgid "Pregnant"
-msgstr "ორსული"
-
-msgid "Not Pregnant"
-msgstr "არ არის ორსული"
-
-msgid "Breastfeeding"
-msgstr "ძუძუთი კვება"
-
-msgid "Bleeding / Coagulation Problems"
-msgstr "სისხლის შედედების პრობლემები"
-
-msgid "Cardiovascular Risk"
-msgstr "კარდიოვასკულური რისკი"
-
-msgid "Risk Notes"
-msgstr "რისკის შენიშვნები"
-
-msgid "Medical History Updated On"
-msgstr "სამედიცინო ანამნეზის განახლების თარიღი"
-
-msgid "Medical History Updated By"
-msgstr "სამედიცინო ანამნეზი განაახლა"
-
-# --- 1.4 Dental history ---
-msgid "Last Dental Visit"
-msgstr "ბოლო სტომატოლოგიური ვიზიტი"
-
-msgid "Treatment Plan Status"
-msgstr "მკურნალობის გეგმის სტატუსი"
-
-msgid "None"
-msgstr "არ არის"
-
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__treatment_plan_status__active
 msgid "Active"
 msgstr "აქტიური"
 
-msgid "On Hold"
-msgstr "შეჩერებული"
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__age
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__age
+msgid "Age"
+msgstr "ასაკი"
 
-msgid "Completed"
-msgstr "დასრულებული"
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__allergy_ids
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__allergy_ids
+msgid "Allergies"
+msgstr "ალერგიები"
 
-msgid "Procedure History"
-msgstr "პროცედურების ისტორია"
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_partner_form_patient_card
+msgid "Basic Information"
+msgstr "ძირითადი ინფორმაცია"
 
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__has_bleeding_disorder
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__has_bleeding_disorder
+msgid "Bleeding / Coagulation Problems"
+msgstr "სისხლის შედედების პრობლემები"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__pregnancy_status__breastfeeding
+msgid "Breastfeeding"
+msgstr "ძუძუთი კვება"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__has_bruxism
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__has_bruxism
 msgid "Bruxism"
 msgstr "ბრუქსიზმი"
 
-msgid "Periodontitis Risk"
-msgstr "პაროდონტიტის რისკი"
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__preferred_comm_channel__call
+msgid "Call"
+msgstr "ზარი"
 
-msgid "Low"
-msgstr "დაბალი"
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__has_cardio_risk
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__has_cardio_risk
+msgid "Cardiovascular Risk"
+msgstr "კარდიოვასკულური რისკი"
 
-msgid "Medium"
-msgstr "საშუალო"
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__chronic_diseases
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__chronic_diseases
+msgid "Chronic Diseases"
+msgstr "ქრონიკული დაავადებები"
 
-msgid "High"
-msgstr "მაღალი"
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__treatment_plan_status__completed
+msgid "Completed"
+msgstr "დასრულებული"
 
-msgid "Other Predispositions"
-msgstr "სხვა მიდრეკილებები"
+#. module: clinic_patient_card
+#: model:ir.model,name:clinic_patient_card.model_res_partner
+msgid "Contact"
+msgstr ""
 
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_partner_form_patient_card
+msgid "Contact Information"
+msgstr "საკონტაქტო ინფორმაცია"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__create_uid
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__create_uid
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__create_date
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__create_date
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__current_medications
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__current_medications
+msgid "Current Medications"
+msgstr "მიმდინარე მედიკამენტები"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__procedure_date
 msgid "Date"
 msgstr "თარიღი"
 
-msgid "Procedure"
-msgstr "პროცედურა"
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__birthdate
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__birthdate
+msgid "Date of Birth"
+msgstr "დაბადების თარიღი"
 
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_partner_form_patient_card
+msgid "Dental History"
+msgstr "სტომატოლოგიური ანამნეზი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__display_name
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__display_name
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__display_name
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__preferred_comm_channel__email
+msgid "Email"
+msgstr "ელ. ფოსტა"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__emergency_contact_name
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__emergency_contact_name
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_partner_form_patient_card
+msgid "Emergency Contact"
+msgstr "საგანგებო კონტაქტი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__emergency_contact_phone
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__emergency_contact_phone
+msgid "Emergency Phone"
+msgstr "საგანგებო ტელეფონი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__gender__female
+msgid "Female"
+msgstr "მდედრობითი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__is_first_visit
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__is_first_visit
+msgid "First Visit"
+msgstr "პირველადი ვიზიტი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_allergy__allergy_type__food
+msgid "Food"
+msgstr "საკვები"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__is_foreign_number
+msgid "Foreign Number"
+msgstr "უცხოური ნომერი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__is_foreign
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__is_foreign
+msgid "Foreign Patient"
+msgstr "უცხოელი პაციენტი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__gender
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__gender
+msgid "Gender"
+msgstr "სქესი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__periodontitis_risk__high
+msgid "High"
+msgstr "მაღალი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_phone__phone_type__home
+msgid "Home"
+msgstr "სახლი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__id
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__id
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__id
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__id
+msgid "ID"
+msgstr ""
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__referral_source__insurance
+msgid "Insurance"
+msgstr "დაზღვევა"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__is_patient
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__is_patient
+msgid "Is a Patient"
+msgstr "პაციენტია"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__last_dental_visit_date
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__last_dental_visit_date
+msgid "Last Dental Visit"
+msgstr "ბოლო სტომატოლოგიური ვიზიტი"
+
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_partner_form_patient_card
+msgid "Last Update"
+msgstr "ბოლო განახლება"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__write_uid
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__write_uid
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__write_date
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__write_date
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,help:clinic_patient_card.field_res_partner__name_latin
+#: model:ir.model.fields,help:clinic_patient_card.field_res_users__name_latin
+msgid "Latinized full name, used for foreign patients."
+msgstr "ლათინური სრული სახელი, გამოიყენება უცხოელი პაციენტებისთვის."
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__periodontitis_risk__low
+msgid "Low"
+msgstr "დაბალი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__gender__male
+msgid "Male"
+msgstr "მამრობითი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_allergy__allergy_type__material
+msgid "Material (e.g. latex)"
+msgstr "მასალა (მაგ. ლატექსი)"
+
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_partner_form_patient_card
+msgid "Medical History"
+msgstr "სამედიცინო ანამნეზი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__medical_update_uid
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__medical_update_uid
+msgid "Medical History Updated By"
+msgstr "სამედიცინო ანამნეზი განაახლა"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__medical_update_date
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__medical_update_date
+msgid "Medical History Updated On"
+msgstr "სამედიცინო ანამნეზის განახლების თარიღი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_allergy__allergy_type__medication
+msgid "Medication"
+msgstr "მედიკამენტი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__periodontitis_risk__medium
+msgid "Medium"
+msgstr "საშუალო"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_allergy__severity__mild
+msgid "Mild"
+msgstr "მსუბუქი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_phone__phone_type__mobile
+msgid "Mobile"
+msgstr "მობილური"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_allergy__severity__moderate
+msgid "Moderate"
+msgstr "საშუალო"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__pregnancy_status__na
+msgid "N/A"
+msgstr "არ ეხება"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__name_latin
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__name_latin
+msgid "Name (Latin)"
+msgstr "სახელი (ლათინურად)"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__nationality_country_id
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__nationality_country_id
+msgid "Nationality"
+msgstr "მოქალაქეობა"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__treatment_plan_status__none
+msgid "None"
+msgstr "არ არის"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__pregnancy_status__not_pregnant
+msgid "Not Pregnant"
+msgstr "არ არის ორსული"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__note
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__note
+msgid "Note"
+msgstr "შენიშვნა"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__note
+msgid "Notes"
+msgstr "შენიშვნები"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__treatment_plan_status__on_hold
+msgid "On Hold"
+msgstr "შეჩერებული"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_allergy__allergy_type__other
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_phone__phone_type__other
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__gender__other
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__referral_source__other
+msgid "Other"
+msgstr "სხვა"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__dental_other_notes
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__dental_other_notes
+msgid "Other Predispositions"
+msgstr "სხვა მიდრეკილებები"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__owner_name
+msgid "Owner / Guardian Name"
+msgstr "მფლობელი / მეურვე"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_phone__phone_type__parent
+msgid "Parent / Guardian"
+msgstr "მშობელი / მეურვე"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__partner_id
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__partner_id
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__partner_id
+msgid "Patient"
+msgstr "პაციენტი"
+
+#. module: clinic_patient_card
+#: model:ir.model,name:clinic_patient_card.model_clinic_patient_allergy
+msgid "Patient Allergy"
+msgstr "პაციენტის ალერგია"
+
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_partner_form_patient_card
+msgid "Patient Card"
+msgstr "პაციენტის ბარათი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__patient_ref
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__patient_ref
+msgid "Patient ID / History No."
+msgstr "პაციენტის ID / ისტორიის ნომერი"
+
+#. module: clinic_patient_card
+#: model:ir.model,name:clinic_patient_card.model_clinic_patient_phone
+msgid "Patient Phone Number"
+msgstr "პაციენტის ტელეფონი"
+
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_res_partner_filter_patient
+msgid "Patients"
+msgstr "პაციენტები"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__doctor_id
 msgid "Performed By"
 msgstr "შემსრულებელი"
 
+#. module: clinic_patient_card
+#: model:ir.model,name:clinic_patient_card.model_clinic_procedure_history
+msgid "Performed Procedure History"
+msgstr "ჩატარებული პროცედურების ისტორია"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__periodontitis_risk
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__periodontitis_risk
+msgid "Periodontitis Risk"
+msgstr "პაროდონტიტის რისკი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__personal_id
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__personal_id
+msgid "Personal ID No."
+msgstr "პირადი ნომერი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__phone
+msgid "Phone"
+msgstr "ტელეფონი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__patient_phone_ids
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__patient_phone_ids
+msgid "Phone Numbers"
+msgstr "ტელეფონები"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__preferred_comm_channel
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__preferred_comm_channel
+msgid "Preferred Channel"
+msgstr "სასურველი არხი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__pregnancy_status
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__pregnancy_status
+msgid "Pregnancy Status"
+msgstr "ორსულობის სტატუსი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__pregnancy_status__pregnant
+msgid "Pregnant"
+msgstr "ორსული"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__sequence
+msgid "Priority"
+msgstr "პრიორიტეტი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__name
+msgid "Procedure"
+msgstr "პროცედურა"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__procedure_history_ids
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__procedure_history_ids
+msgid "Procedure History"
+msgstr "პროცედურების ისტორია"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__reaction
+msgid "Reaction"
+msgstr "რეაქცია"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__referral_source__recommendation
+msgid "Recommendation"
+msgstr "რეკომენდაცია"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__referral_source
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__referral_source
+msgid "Referral Source"
+msgstr "მომართვის წყარო"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__referral_source_other
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__referral_source_other
+msgid "Referral Source (Other)"
+msgstr "მომართვის წყარო (სხვა)"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__registration_date
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__registration_date
+msgid "Registration Date"
+msgstr "რეგისტრაციის თარიღი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__emergency_contact_relation
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__emergency_contact_relation
+msgid "Relationship"
+msgstr "ნათესაობა"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__medical_risk_notes
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__medical_risk_notes
+msgid "Risk Notes"
+msgstr "რისკის შენიშვნები"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__preferred_comm_channel__sms
+msgid "SMS"
+msgstr ""
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_allergy__severity__severe
+msgid "Severe"
+msgstr "მძიმე"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__severity
+msgid "Severity"
+msgstr "სიმძიმე"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__referral_source__social_google
+msgid "Social / Google"
+msgstr "სოც. ქსელი / Google"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__name
+msgid "Substance"
+msgstr "ნივთიერება"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__tooth
 msgid "Tooth (FDI)"
 msgstr "კბილი (FDI)"
 
-msgid "Notes"
-msgstr "შენიშვნები"
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__treatment_plan_status
+#: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__treatment_plan_status
+msgid "Treatment Plan Status"
+msgstr "მკურნალობის გეგმის სტატუსი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__allergy_type
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__phone_type
+msgid "Type"
+msgstr "ტიპი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,help:clinic_patient_card.field_res_partner__patient_ref
+#: model:ir.model.fields,help:clinic_patient_card.field_res_users__patient_ref
+msgid "Unique patient identifier, also used as the medical history number."
+msgstr "პაციენტის უნიკალური იდენტიფიკატორი, გამოიყენება ისტორიის ნომრადაც."
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__preferred_comm_channel__whatsapp
+msgid "WhatsApp"
+msgstr ""
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_phone__phone_type__work
+msgid "Work"
+msgstr "სამსახური"
