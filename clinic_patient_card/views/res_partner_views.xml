@@ -3,7 +3,7 @@
 
     <!-- ============================================================ -->
     <!-- Contact form: patient header (always visible) + Patient Card  -->
-    <!-- as the FIRST tab                                              -->
+    <!-- as the FIRST tab, organised into 4 blocks                    -->
     <!-- ============================================================ -->
     <record id="view_partner_form_patient_card" model="ir.ui.view">
         <field name="name">res.partner.form.patient.card</field>
@@ -64,173 +64,216 @@
                                 string="Make Payment / To Debt" class="btn-secondary"/>
                     </div>
 
-                    <!-- 1.1 Basic information (patient-specific) -->
-                    <group string="Basic Information">
-                        <group>
-                            <field name="name_latin" invisible="not is_foreign"/>
-                            <field name="registration_date"/>
-                            <field name="referral_source"/>
-                            <field name="referral_source_other"
-                                   invisible="referral_source != 'other'"/>
-                        </group>
-                        <group>
-                            <field name="is_foreign"/>
-                            <field name="nationality_country_id" invisible="not is_foreign"/>
-                            <field name="is_first_visit"/>
-                        </group>
-                    </group>
+                    <!-- ===== 4 blocks ===== -->
+                    <notebook>
 
-                    <!-- 1.2 Contact information -->
-                    <group string="Contact Information">
-                        <field name="patient_phone_ids" colspan="2" nolabel="1">
-                            <list editable="bottom">
-                                <field name="sequence" widget="handle"/>
-                                <field name="phone"/>
-                                <field name="phone_type"/>
-                                <field name="channel"/>
-                                <field name="owner_name"/>
-                                <field name="is_emergency"/>
-                                <field name="relation"/>
-                                <field name="is_foreign_number" optional="show"/>
-                                <field name="note" optional="hide"/>
-                            </list>
-                        </field>
-                    </group>
-
-                    <!-- 1.3 Medical history -->
-                    <group string="Medical History">
-                        <field name="allergy_ids" colspan="2" nolabel="1">
-                            <list editable="bottom">
-                                <field name="allergy_type"/>
-                                <field name="name"/>
-                                <field name="reaction"/>
-                                <field name="severity"/>
-                                <field name="note"/>
-                            </list>
-                        </field>
-                        <group>
-                            <field name="chronic_diseases"/>
-                            <field name="current_medications"/>
-                            <field name="is_pregnant" invisible="gender != 'female'"/>
-                        </group>
-                        <group>
-                            <field name="has_bleeding_disorder"/>
-                            <field name="has_cardio_risk"/>
-                            <field name="medical_risk_notes"/>
-                        </group>
-                        <group string="Last Update" col="2">
-                            <field name="medical_update_date"/>
-                            <field name="medical_update_uid"/>
-                        </group>
-                    </group>
-
-                    <!-- 1.4 Dental history -->
-                    <group string="Dental History">
-                        <group>
-                            <field name="last_dental_visit_date"/>
-                            <field name="treatment_plan_status"/>
-                        </group>
-                        <group>
-                            <field name="has_bruxism"/>
-                            <field name="periodontitis_risk"/>
-                        </group>
-                        <field name="dental_other_notes" colspan="2"/>
-                        <separator string="Procedure History" colspan="2"/>
-                        <field name="procedure_history_ids" colspan="2" nolabel="1">
-                            <list editable="bottom">
-                                <field name="procedure_date"/>
-                                <field name="name"/>
-                                <field name="doctor_id"/>
-                                <field name="tooth"/>
-                                <field name="note"/>
-                            </list>
-                        </field>
-                        <separator string="Dental Chart (FDI)" colspan="2"/>
-                        <field name="odontogram_html" colspan="2" nolabel="1" readonly="1"/>
-                        <field name="tooth_ids" colspan="2" nolabel="1">
-                            <list editable="bottom">
-                                <field name="tooth_number"/>
-                                <field name="status"/>
-                                <field name="note"/>
-                            </list>
-                        </field>
-                    </group>
-
-                    <!-- 1.5 Financial status -->
-                    <group string="Financial Status">
-                        <group string="Balance">
-                            <field name="credit" string="Receivable (debt)"/>
-                            <field name="debit" string="Payable (advance)"/>
-                            <field name="total_invoiced"/>
-                            <field name="property_payment_term_id"/>
-                            <field name="preferred_payment_method"/>
-                        </group>
-                        <group string="Discounts and Loyalty">
-                            <field name="discount_percent"/>
-                            <field name="discount_fixed"/>
-                            <field name="loyalty_status"/>
-                        </group>
-                        <group string="Insurance">
-                            <field name="insurance_provider"/>
-                            <field name="insurance_policy_no"/>
-                            <field name="insurance_valid_until"/>
-                            <field name="insurance_notes"/>
-                        </group>
-                        <separator string="Invoices and Payments" colspan="2"/>
-                        <field name="invoice_ids" colspan="2" nolabel="1" readonly="1">
-                            <list>
-                                <field name="name"/>
-                                <field name="invoice_date"/>
-                                <field name="move_type"/>
-                                <field name="amount_total"/>
-                                <field name="payment_state"/>
-                                <field name="state"/>
-                            </list>
-                        </field>
-                    </group>
-
-                    <!-- 1.6 Documents -->
-                    <group string="Documents">
-                        <field name="document_ids" colspan="2" nolabel="1">
-                            <list>
-                                <field name="doc_type"/>
-                                <field name="name"/>
-                                <field name="date"/>
-                                <field name="attachment" filename="filename" widget="binary"/>
-                                <field name="filename" column_invisible="1"/>
-                                <field name="note"/>
-                            </list>
-                            <form>
+                        <!-- BLOCK 1 — Basic -->
+                        <page name="block_basic" string="Basic">
+                            <group string="Basic Information">
                                 <group>
-                                    <group>
+                                    <field name="name_latin"/>
+                                    <field name="nationality_country_id"/>
+                                    <field name="registration_date"/>
+                                    <field name="referral_source"/>
+                                    <field name="referral_source_other"
+                                           invisible="referral_source != 'other'"/>
+                                </group>
+                                <group>
+                                    <field name="is_foreign"/>
+                                    <field name="is_first_visit"/>
+                                    <field name="is_repeat"/>
+                                    <field name="is_regular"/>
+                                    <field name="is_minor" readonly="1"/>
+                                    <field name="guardian_id"/>
+                                </group>
+                            </group>
+
+                            <group string="Contact Information">
+                                <field name="patient_phone_ids" colspan="2" nolabel="1">
+                                    <list editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="is_primary"/>
+                                        <field name="phone"/>
+                                        <field name="country_code"/>
+                                        <field name="phone_type"/>
+                                        <field name="channel"/>
+                                        <field name="is_foreign_number"/>
+                                        <field name="is_emergency"/>
+                                        <field name="relation"/>
+                                        <field name="owner_name" optional="hide"/>
+                                        <field name="note" optional="hide"/>
+                                    </list>
+                                </field>
+                            </group>
+
+                            <group string="Note">
+                                <field name="patient_note" nolabel="1" colspan="2"
+                                       placeholder="Free note about the patient..."/>
+                            </group>
+                        </page>
+
+                        <!-- BLOCK 2 — Medical -->
+                        <page name="block_medical" string="Medical">
+                            <group string="Medical History">
+                                <field name="allergy_ids" colspan="2" nolabel="1">
+                                    <list editable="bottom">
+                                        <field name="allergy_type"/>
+                                        <field name="name"/>
+                                        <field name="reaction"/>
+                                        <field name="severity"/>
+                                        <field name="test_done"/>
+                                        <field name="test_result"/>
+                                        <field name="note" optional="hide"/>
+                                    </list>
+                                </field>
+                                <field name="anamnesis_general" colspan="2"/>
+                                <group>
+                                    <field name="chronic_diseases"/>
+                                    <field name="current_medications"/>
+                                    <field name="family_history"/>
+                                    <field name="is_pregnant" invisible="gender != 'female'"/>
+                                </group>
+                                <group>
+                                    <field name="smoker"/>
+                                    <field name="alcohol"/>
+                                    <field name="has_bleeding_disorder"/>
+                                    <field name="has_cardio_risk"/>
+                                    <field name="medical_risk_notes"/>
+                                </group>
+                                <group string="Imaging (X-ray / CT)">
+                                    <field name="has_xray"/>
+                                    <field name="has_ct"/>
+                                    <field name="imaging_source"/>
+                                </group>
+                                <group string="Last Update" col="2">
+                                    <field name="medical_update_date"/>
+                                    <field name="medical_update_uid"/>
+                                </group>
+                            </group>
+
+                            <group string="Dental">
+                                <group>
+                                    <field name="last_dental_visit_date"/>
+                                    <field name="treatment_plan_status" widget="badge"
+                                           decoration-success="treatment_plan_status == 'in_progress'"
+                                           decoration-warning="treatment_plan_status == 'planned'"
+                                           decoration-danger="treatment_plan_status in ('postponed','cancelled')"/>
+                                </group>
+                                <group>
+                                    <field name="has_bruxism"/>
+                                    <field name="periodontitis_risk"/>
+                                </group>
+                                <field name="dental_other_notes" colspan="2"/>
+                                <separator string="Dental Chart (FDI)" colspan="2"/>
+                                <field name="odontogram_html" colspan="2" nolabel="1" readonly="1"/>
+                                <field name="tooth_ids" colspan="2" nolabel="1">
+                                    <list editable="bottom">
+                                        <field name="tooth_number"/>
+                                        <field name="status"/>
+                                        <field name="note"/>
+                                    </list>
+                                </field>
+                            </group>
+                        </page>
+
+                        <!-- BLOCK 3 — Financial -->
+                        <page name="block_financial" string="Financial">
+                            <group string="Financial Status">
+                                <group string="Balance">
+                                    <field name="credit" string="Receivable (debt)"/>
+                                    <field name="debit" string="Payable (advance)"/>
+                                    <field name="total_invoiced"/>
+                                    <field name="property_payment_term_id"/>
+                                    <field name="preferred_payment_method"/>
+                                </group>
+                                <group string="Discounts and Loyalty">
+                                    <field name="discount_percent"/>
+                                    <field name="discount_fixed"/>
+                                    <field name="loyalty_status"/>
+                                </group>
+                                <group string="Insurance">
+                                    <field name="insurance_company_id"/>
+                                    <field name="insurance_policy_no"/>
+                                    <field name="insurance_valid_until"/>
+                                    <field name="insurance_notes"/>
+                                </group>
+                                <separator string="Invoices and Payments" colspan="2"/>
+                                <field name="invoice_ids" colspan="2" nolabel="1" readonly="1">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="invoice_date"/>
+                                        <field name="move_type"/>
+                                        <field name="amount_total"/>
+                                        <field name="payment_state"/>
+                                        <field name="state"/>
+                                    </list>
+                                </field>
+                            </group>
+                        </page>
+
+                        <!-- BLOCK 4 — History -->
+                        <page name="block_history" string="History">
+                            <group string="Procedures (planned and performed)">
+                                <field name="procedure_history_ids" colspan="2" nolabel="1">
+                                    <list editable="bottom">
+                                        <field name="status" widget="badge"
+                                               decoration-success="status == 'done'"
+                                               decoration-info="status == 'in_progress'"
+                                               decoration-warning="status == 'planned'"
+                                               decoration-danger="status in ('postponed','cancelled')"/>
+                                        <field name="procedure_id"/>
+                                        <field name="name" optional="hide"/>
+                                        <field name="planned_date"/>
+                                        <field name="procedure_date"/>
+                                        <field name="doctor_id"/>
+                                        <field name="tooth"/>
+                                        <field name="note" optional="hide"/>
+                                    </list>
+                                </field>
+                            </group>
+
+                            <group string="Documents">
+                                <field name="document_ids" colspan="2" nolabel="1">
+                                    <list>
                                         <field name="doc_type"/>
                                         <field name="name"/>
                                         <field name="date"/>
                                         <field name="attachment" filename="filename" widget="binary"/>
-                                        <field name="filename" invisible="1"/>
+                                        <field name="filename" column_invisible="1"/>
                                         <field name="note"/>
-                                    </group>
+                                    </list>
+                                    <form>
+                                        <group>
+                                            <group>
+                                                <field name="doc_type"/>
+                                                <field name="name"/>
+                                                <field name="date"/>
+                                                <field name="attachment" filename="filename" widget="binary"/>
+                                                <field name="filename" invisible="1"/>
+                                                <field name="note"/>
+                                            </group>
+                                        </group>
+                                        <separator string="Signature"
+                                                   invisible="doc_type != 'consent'"/>
+                                        <field name="signature" widget="signature"
+                                               invisible="doc_type != 'consent'"/>
+                                    </form>
+                                </field>
+                            </group>
+
+                            <group string="Patient Profile">
+                                <group>
+                                    <field name="no_show_rate"/>
+                                    <field name="ltv_forecast"/>
                                 </group>
-                                <separator string="Signature"
-                                           invisible="doc_type != 'consent'"/>
-                                <field name="signature" widget="signature"
-                                       invisible="doc_type != 'consent'"/>
-                            </form>
-                        </field>
-                    </group>
+                                <group>
+                                    <field name="risk_level"/>
+                                    <field name="risk_notes"/>
+                                </group>
+                            </group>
+                        </page>
 
-                    <!-- 1.7 Patient profile -->
-                    <group string="Patient Profile">
-                        <group>
-                            <field name="no_show_rate"/>
-                            <field name="ltv_forecast"/>
-                        </group>
-                        <group>
-                            <field name="risk_level"/>
-                            <field name="risk_notes"/>
-                        </group>
-                    </group>
-
+                    </notebook>
                 </page>
             </xpath>
         </field>

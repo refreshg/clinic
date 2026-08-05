@@ -29,9 +29,14 @@ class ClinicPatientPhone(models.Model):
             ("sms", "SMS"),
             ("call", "Call"),
             ("whatsapp", "WhatsApp"),
+            ("email", "Email"),
         ],
         string="Channel",
     )
+    # Country dialing code (e.g. +995, +49) — useful for foreign numbers.
+    country_code = fields.Char(string="Country Code")
+    # Mark the primary Georgian and primary foreign numbers.
+    is_primary = fields.Boolean(string="Primary")
     # For minors: the phone may belong to a parent/guardian.
     owner_name = fields.Char(string="Owner / Guardian Name")
     # Emergency contact marked directly on the phone row.

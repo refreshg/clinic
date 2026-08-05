@@ -32,4 +32,7 @@ class ClinicPatientAllergy(models.Model):
         string="Severity",
         default="moderate",
     )
+    # Allergy test (skin/sensitivity test).
+    test_done = fields.Boolean(string="Allergy Test Done")
+    test_result = fields.Char(string="Test Result")
     note = fields.Char(string="Note")

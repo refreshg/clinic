@@ -11,6 +11,13 @@ MEDICAL_TRACKED_FIELDS = {
     "has_bleeding_disorder",
     "has_cardio_risk",
     "medical_risk_notes",
+    "anamnesis_general",
+    "smoker",
+    "alcohol",
+    "family_history",
+    "has_xray",
+    "has_ct",
+    "imaging_source",
 }
 
 
@@ -40,13 +47,13 @@ class ResPartner(models.Model):
         ],
         string="Gender",
     )
+    # History number: auto-assigned by default, but can be set/overridden manually.
     patient_ref = fields.Char(
         string="Patient ID / History No.",
         copy=False,
-        readonly=True,
         index=True,
         default=lambda self: "New",
-        help="Unique patient identifier, also used as the medical history number.",
+        help="Patient / medical history number. Auto-assigned, editable manually.",
     )
     registration_date = fields.Date(
         string="Registration Date", default=fields.Date.context_today,
@@ -54,8 +61,13 @@ class ResPartner(models.Model):
     referral_source = fields.Selection(
         [
             ("recommendation", "Recommendation"),
-            ("social_google", "Social / Google"),
+            ("doctor_referral", "Doctor Referral"),
+            ("facebook", "Facebook"),
+            ("instagram", "Instagram"),
+            ("google", "Google / Search"),
             ("insurance", "Insurance"),
+            ("returning", "Returning Patient"),
+            ("walk_in", "Walk-in"),
             ("other", "Other"),
         ],
         string="Referral Source",
@@ -63,7 +75,15 @@ class ResPartner(models.Model):
     referral_source_other = fields.Char(string="Referral Source (Other)")
     is_foreign = fields.Boolean(string="Foreign Patient")
     nationality_country_id = fields.Many2one("res.country", string="Nationality")
+    # Patient differentiation flags (management).
     is_first_visit = fields.Boolean(string="First Visit", default=True)
+    is_repeat = fields.Boolean(string="Repeat Patient")
+    is_regular = fields.Boolean(string="Regular Patient")
+    # Guardian for minors.
+    is_minor = fields.Boolean(string="Minor", compute="_compute_is_minor", store=True)
+    guardian_id = fields.Many2one("res.partner", string="Guardian / Parent")
+    # Free note about the patient, visible up front.
+    patient_note = fields.Text(string="Patient Note")
 
     # ==================================================================
     # 1.2 Contact information
@@ -79,12 +99,26 @@ class ResPartner(models.Model):
     allergy_ids = fields.One2many(
         "clinic.patient.allergy", "partner_id", string="Allergies",
     )
+    anamnesis_general = fields.Text(string="General Anamnesis")
     chronic_diseases = fields.Text(string="Chronic Diseases")
     current_medications = fields.Text(string="Current Medications")
     is_pregnant = fields.Boolean(string="Pregnant")
+    smoker = fields.Boolean(string="Smoker")
+    alcohol = fields.Boolean(string="Alcohol")
+    family_history = fields.Text(string="Family History")
     has_bleeding_disorder = fields.Boolean(string="Bleeding / Coagulation Problems")
     has_cardio_risk = fields.Boolean(string="Cardiovascular Risk")
     medical_risk_notes = fields.Text(string="Risk Notes")
+    # Imaging (X-ray / CT): whether present and taken here or brought in.
+    has_xray = fields.Boolean(string="Has X-ray")
+    has_ct = fields.Boolean(string="Has CT")
+    imaging_source = fields.Selection(
+        [
+            ("here", "Taken here"),
+            ("brought", "Brought"),
+        ],
+        string="Imaging Source",
+    )
     medical_update_date = fields.Datetime(string="Medical History Updated On", readonly=True)
     medical_update_uid = fields.Many2one(
         "res.users", string="Medical History Updated By", readonly=True,
@@ -97,9 +131,11 @@ class ResPartner(models.Model):
     treatment_plan_status = fields.Selection(
         [
             ("none", "None"),
-            ("active", "Active"),
-            ("on_hold", "On Hold"),
+            ("planned", "Planned"),
+            ("in_progress", "In Progress"),
             ("completed", "Completed"),
+            ("postponed", "Postponed"),
+            ("cancelled", "Cancelled"),
         ],
         string="Treatment Plan Status",
         default="none",
@@ -137,6 +173,7 @@ class ResPartner(models.Model):
             ("card", "Card"),
             ("transfer", "Bank Transfer"),
             ("insurance", "Insurance"),
+            ("mixed", "Mixed"),
         ],
         string="Preferred Payment Method",
     )
@@ -152,7 +189,9 @@ class ResPartner(models.Model):
         string="Loyalty Status",
         default="none",
     )
-    insurance_provider = fields.Char(string="Insurance Provider")
+    insurance_company_id = fields.Many2one(
+        "clinic.insurance.company", string="Insurance Company",
+    )
     insurance_policy_no = fields.Char(string="Policy No.")
     insurance_valid_until = fields.Date(string="Insurance Valid Until")
     insurance_notes = fields.Text(string="Insurance Notes")
@@ -195,6 +234,19 @@ class ResPartner(models.Model):
                 )
             else:
                 partner.age = 0
+
+    @api.depends("birthdate")
+    def _compute_is_minor(self):
+        today = fields.Date.context_today(self)
+        for partner in self:
+            bd = partner.birthdate
+            if bd:
+                age = today.year - bd.year - (
+                    (today.month, today.day) < (bd.month, bd.day)
+                )
+                partner.is_minor = age < 18
+            else:
+                partner.is_minor = False
 
     # FDI permanent-teeth layout (two quadrants per jaw).
     _ODONTO_UPPER = ["18", "17", "16", "15", "14", "13", "12", "11",

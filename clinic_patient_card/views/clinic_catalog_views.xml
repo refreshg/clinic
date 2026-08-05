@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===================== Procedure catalog ===================== -->
+    <record id="view_clinic_procedure_catalog_list" model="ir.ui.view">
+        <field name="name">clinic.procedure.catalog.list</field>
+        <field name="model">clinic.procedure.catalog</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="default_price"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_clinic_procedure_catalog" model="ir.actions.act_window">
+        <field name="name">Procedures</field>
+        <field name="res_model">clinic.procedure.catalog</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================== Insurance companies ===================== -->
+    <record id="view_clinic_insurance_company_list" model="ir.ui.view">
+        <field name="name">clinic.insurance.company.list</field>
+        <field name="model">clinic.insurance.company</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="name"/>
+                <field name="note"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_clinic_insurance_company" model="ir.actions.act_window">
+        <field name="name">Insurance Companies</field>
+        <field name="res_model">clinic.insurance.company</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================== Menus ===================== -->
+    <menuitem id="menu_clinic_root" name="Clinic" sequence="90"/>
+    <menuitem id="menu_clinic_config" name="Configuration"
+              parent="menu_clinic_root" sequence="10"/>
+    <menuitem id="menu_clinic_procedure_catalog" name="Procedures"
+              parent="menu_clinic_config" action="action_clinic_procedure_catalog" sequence="10"/>
+    <menuitem id="menu_clinic_insurance_company" name="Insurance Companies"
+              parent="menu_clinic_config" action="action_clinic_insurance_company" sequence="20"/>
+
+</odoo>

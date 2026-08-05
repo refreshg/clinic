@@ -157,8 +157,19 @@ computed: `age`, `odontogram_html`. write()-ში: `patient_ref` მინი�
   ტელეფონის არხი/საგანგებო ცხრილში, ორსულობა bool, კბილის ცხრილი.
 - **Phase 2 — ✅** `account` install; 1.5 ფინანსები, 1.6 დოკუმენტები, 1.7 პროფილი,
   1.9 ღილაკები (placeholder), ვიზუალური ოდონტოგრამა.
-- **Phase 3 — 🔜** `clinic.appointment` (calendar) → 1.4 ბოლო ვიზიტი auto, 1.7 auto-გამოთვლა;
-  1.8 თაიმლაინი; 1.9 ღილაკების გაცოცხლება; Form-100; EHR; დაწკაპუნებადი ოდონტოგრამა.
+- **Rev-A — 🟡 კოდი მზადაა (v19.0.3.0.0), deploy-ს ელოდება** (რეცენზენტების feedback #1):
+  patient_ref ხელით/ავტო; მოქალაქეობა/ლათინური ყოველთვის; ალმები is_repeat/is_regular;
+  მეურვე (guardian_id + is_minor); referral გაფართოება; NOTE (patient_note); ანამნეზი
+  ვრცლად (smoker/alcohol/family_history/anamnesis); რენტ./კტ (has_xray/has_ct/imaging_source);
+  ალერგიული სინჯი; treatment_plan_status გაფართოება + badge ფერები; payment „mixed";
+  დაზღვევა → `clinic.insurance.company` (m2o); პროცედურა → `clinic.procedure.catalog` (m2o)
+  + status/planned_date (დაგეგმ.+ჩატარებ.); ტელეფონი country_code/is_primary + channel=email;
+  `mail` depend (chatter/კომუნიკაცია); **view 4 ბლოკად** (ძირითადი/სამედიცინო/ფინანსები/ისტორია).
+  *დარჩა (server offline იყო): ცოცხალი deploy + `-u` + ka.po regen + verify.*
+- **Rev-B — 🔜 როლები/წვდომა:** Clinic Doctor vs Administrator (res.groups + ACL + ir.rule +
+  field `groups=`): სამედ./კბილი/პროცედურა = ექიმი; ფინანს./საბანკო შეზღუდული.
+- **Phase 3 — 🔜** `clinic.appointment` (calendar) → 1.4 ბოლო ვიზიტი auto, 1.7 auto-გამოთვლა,
+  პროცედურის auto-შევსება; 1.8 თაიმლაინი; ავტ. შეხსენებები; Form-100; EHR; დაწკაპ. ოდონტოგრამა.
 
 ## 8. გადაწყვეტილებების ჟურნალი
 - პირადი ნომერი → სტანდარტული `vat` (მომხმარებლის არჩევანი, დუბლის თავიდან ასაცილებლად).
