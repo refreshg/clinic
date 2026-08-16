@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Odoo 19 security: ir.module.category -> res.groups.privilege -> res.groups;
+         users link groups via group_ids (not groups_id). -->
+    <record id="module_category_clinic" model="ir.module.category">
+        <field name="name">Clinic</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <record id="privilege_clinic" model="res.groups.privilege">
+        <field name="name">Clinic Role</field>
+        <field name="category_id" ref="module_category_clinic"/>
+        <field name="sequence">20</field>
+    </record>
+
+    <!-- Clinic Doctor: edits medical / dental / procedures / clinical steps -->
+    <record id="group_clinic_doctor" model="res.groups">
+        <field name="name">Clinic Doctor</field>
+        <field name="privilege_id" ref="privilege_clinic"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- Clinic Administrator: reception / financial / all appointments -->
+    <record id="group_clinic_admin" model="res.groups">
+        <field name="name">Clinic Administrator</field>
+        <field name="privilege_id" ref="privilege_clinic"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- The main administrator is granted both clinic roles by the module's
+         post_init_hook (base.user_admin is noupdate, so an XML write is skipped). -->
+</odoo>

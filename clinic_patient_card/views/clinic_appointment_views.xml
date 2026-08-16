@@ -10,18 +10,25 @@
             <form string="Appointment">
                 <header>
                     <button name="action_confirm" type="object" string="Confirm"
+                            groups="clinic_patient_card.group_clinic_admin"
                             class="btn-primary" invisible="clinic_state not in ('requested','booked')"/>
                     <button name="action_arrive" type="object" string="Arrived"
+                            groups="clinic_patient_card.group_clinic_admin"
                             class="btn-primary" invisible="clinic_state not in ('booked','confirmed')"/>
                     <button name="action_start" type="object" string="Start"
+                            groups="clinic_patient_card.group_clinic_doctor"
                             class="btn-primary" invisible="clinic_state != 'arrived'"/>
                     <button name="action_done" type="object" string="Done"
+                            groups="clinic_patient_card.group_clinic_doctor"
                             class="btn-primary" invisible="clinic_state != 'in_progress'"/>
                     <button name="action_pay" type="object" string="Register Payment"
+                            groups="clinic_patient_card.group_clinic_admin"
                             class="btn-primary" invisible="clinic_state != 'done'"/>
                     <button name="action_cancel" type="object" string="Cancel"
+                            groups="clinic_patient_card.group_clinic_admin"
                             invisible="clinic_state in ('paid','cancelled','no_show')"/>
                     <button name="action_no_show" type="object" string="No-Show"
+                            groups="clinic_patient_card.group_clinic_admin"
                             invisible="clinic_state not in ('booked','confirmed','arrived')"/>
                     <field name="clinic_state" widget="statusbar"
                            statusbar_visible="booked,confirmed,arrived,in_progress,done,paid"/>

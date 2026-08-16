@@ -238,6 +238,15 @@ class ResPartner(models.Model):
             else:
                 partner.age = 0
 
+    # Role helpers for view-level access (see security/clinic_groups.xml).
+    can_edit_medical = fields.Boolean(compute="_compute_clinic_access")
+
+    @api.depends_context("uid")
+    def _compute_clinic_access(self):
+        is_doctor = self.env.user.has_group("clinic_patient_card.group_clinic_doctor")
+        for partner in self:
+            partner.can_edit_medical = is_doctor
+
     @api.depends("birthdate")
     def _compute_is_minor(self):
         today = fields.Date.context_today(self)

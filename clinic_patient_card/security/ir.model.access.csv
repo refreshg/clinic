@@ -1,9 +1,12 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_clinic_patient_phone_user,clinic.patient.phone.user,model_clinic_patient_phone,base.group_user,1,1,1,1
-access_clinic_patient_allergy_user,clinic.patient.allergy.user,model_clinic_patient_allergy,base.group_user,1,1,1,1
-access_clinic_procedure_history_user,clinic.procedure.history.user,model_clinic_procedure_history,base.group_user,1,1,1,1
-access_clinic_patient_tooth_user,clinic.patient.tooth.user,model_clinic_patient_tooth,base.group_user,1,1,1,1
 access_clinic_patient_document_user,clinic.patient.document.user,model_clinic_patient_document,base.group_user,1,1,1,1
+access_clinic_patient_allergy_user,clinic.patient.allergy.user,model_clinic_patient_allergy,base.group_user,1,0,0,0
+access_clinic_patient_allergy_doctor,clinic.patient.allergy.doctor,model_clinic_patient_allergy,group_clinic_doctor,1,1,1,1
+access_clinic_procedure_history_user,clinic.procedure.history.user,model_clinic_procedure_history,base.group_user,1,0,0,0
+access_clinic_procedure_history_doctor,clinic.procedure.history.doctor,model_clinic_procedure_history,group_clinic_doctor,1,1,1,1
+access_clinic_patient_tooth_user,clinic.patient.tooth.user,model_clinic_patient_tooth,base.group_user,1,0,0,0
+access_clinic_patient_tooth_doctor,clinic.patient.tooth.doctor,model_clinic_patient_tooth,group_clinic_doctor,1,1,1,1
 access_clinic_room_user,clinic.room.user,model_clinic_room,base.group_user,1,0,0,0
 access_clinic_room_manager,clinic.room.manager,model_clinic_room,base.group_system,1,1,1,1
 access_clinic_appointment_type_user,clinic.appointment.type.user,model_clinic_appointment_type,base.group_user,1,0,0,0

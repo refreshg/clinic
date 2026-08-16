@@ -34,6 +34,7 @@
                     <group>
                         <field name="is_patient"/>
                         <field name="patient_ref" invisible="not is_patient"/>
+                        <field name="can_edit_medical" invisible="1"/>
                     </group>
                 </group>
             </xpath>
@@ -113,9 +114,9 @@
                             </group>
                         </page>
 
-                        <!-- BLOCK 2 — Medical -->
+                        <!-- BLOCK 2 — Medical (editable by doctors only) -->
                         <page name="block_medical" string="Medical">
-                            <group string="Medical History">
+                            <group string="Medical History" readonly="not can_edit_medical">
                                 <field name="allergy_ids" colspan="2" nolabel="1">
                                     <list editable="bottom">
                                         <field name="allergy_type"/>
@@ -152,7 +153,7 @@
                                 </group>
                             </group>
 
-                            <group string="Dental">
+                            <group string="Dental" readonly="not can_edit_medical">
                                 <group>
                                     <field name="last_dental_visit_date"/>
                                     <field name="treatment_plan_status" widget="badge"
@@ -177,8 +178,9 @@
                             </group>
                         </page>
 
-                        <!-- BLOCK 3 — Financial -->
-                        <page name="block_financial" string="Financial">
+                        <!-- BLOCK 3 — Financial (visible to clinic administrators) -->
+                        <page name="block_financial" string="Financial"
+                              groups="clinic_patient_card.group_clinic_admin">
                             <group string="Financial Status">
                                 <group string="Balance">
                                     <field name="credit" string="Receivable (debt)"/>
@@ -214,7 +216,8 @@
 
                         <!-- BLOCK 4 — History -->
                         <page name="block_history" string="History">
-                            <group string="Procedures (planned and performed)">
+                            <group string="Procedures (planned and performed)"
+                                   readonly="not can_edit_medical">
                                 <field name="procedure_history_ids" colspan="2" nolabel="1">
                                     <list editable="bottom">
                                         <field name="status" widget="badge"
