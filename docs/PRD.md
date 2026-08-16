@@ -7,8 +7,9 @@
 | **პლატფორმა** | Odoo **19.0 Community** (server build `19.0-20260630`) |
 | **ლიცენზია** | LGPL-3 |
 | **რეპოზიტორი** | https://github.com/refreshg/clinic (branch `main`) |
-| **სტატუსი** | Phase 1–2 დასრულებული, Phase 3 იგეგმება |
-| **ბოლო განახლება** | 2026-07-16 |
+| **ვერსია** | 19.0.4.0.0 |
+| **სტატუსი** | Phase 1–2 + Rev-A + Phase 3A დასრულებული (ჯავშნის ბირთვი); Phase 3B/3C/4 იგეგმება |
+| **ბოლო განახლება** | 2026-08-16 |
 
 > ეს დოკუმენტი პროექტის **source of truth**-ია. კოდის ან scope-ის ცვლილებისას ეს ფაილიც განახლდეს.
 > ორიგინალი მოთხოვნები: `პაციენტის ბარათი- 04.07.26 (1).doc` (რეპოს root-ში).
@@ -131,6 +132,32 @@
 | EHR სინქრონიზაცია | გარე ინტეგრაცია |
 | გადახდა / დავალიანებაში | `account.payment` (std) |
 
+### 1.10 ვიზიტის / ჯავშნის ლაივ-ციკლი (Phase 3)
+წყარო: `docs/ჯავშანივიზიტი - 12.07.26.docx`; 6 პატერნი → **`docs/booking-visit-patterns.md`**.
+ჯავშანი = სტანდარტული `calendar.event` (`is_clinic=True`), გაფართოებული კლინიკური workflow-ით
+(Community-ს Enterprise appointment/gantt არ აქვს → სტანდარტული calendar ძრავი + custom visual).
+
+**სტატუსების ლაივ-ციკლი (`clinic_state`):** მოთხოვნილი → დაჯავშნილი → დადასტურებული →
+მოსული (checkin_time) → პროცესში (treat_start) → დასრულებული (treat_end) → გადახდილი;
++ გაუქმებული (მიზეზი სავალდებ.), გაცდენა/No-Show. header statusbar + workflow ღილაკები.
+
+**6 პატერნი (`booking-visit-patterns.md`):** (1) state machine; (2) სავალდებ. კარიბჭეები/guards;
+(3) ეტაპობრივი დროის აღრიცხვა (მოცდის/სავარძლის დრო); (4) მოვლენაზე-შეტყობინებები (ხმა+toast,
+რიმაინდერები delivery-სტატუსით); (5) გეგმა→ფაქტი→ინვოისი შეჯერება; (6) თანხმობა/უსაფრთხოების ფენა.
+
+| მოთხოვნა | რეალიზაცია | სტ. |
+|---|---|---|
+| ჯავშნის შექმნა + კალენდარი | `calendar.event` + calendar/list view + Clinic→Appointments; „Create Booking" ღილაკი | ✅ 3A |
+| სტატუსები + workflow ღილაკები | `clinic_state` statusbar + action_confirm/arrive/start/done/pay/cancel/no_show | ✅ 3A |
+| ოთახი / ტიპი (ფერი) | `clinic.room`, `clinic.appointment.type` (color, default_duration) | ✅ 3A |
+| ეტაპობრივი დროის აღრიცხვა | checkin/start/end + waiting/chair minutes | ✅ 3A |
+| ექიმის ხმა+ვიზუალი (checkin) | `bus.bus` + OWL sound/toast | 🔜 3C |
+| ექიმის კალენდარი | calendar filter dentist=uid + custom OWL visual | 🔜 3C |
+| პროცედურის auto-შევსება | done → `clinic.procedure.history` | 🔜 3C |
+| follow-up / გრძელვადიანი | `parent_appointment_id` | 🟡 ველი (ლოგიკა 3C) |
+| გადახდა (ადმინი) | `action_pay` → `account` | 🔜 3C |
+| როლები (ექიმი vs ადმინი) | `res.groups` + ACL + record rules | 🔜 3B |
+
 ## 5. მონაცემთა მოდელი
 
 **`res.partner` (inherit):** `is_patient` (მთავარი ალამი) + ყველა ზემოთ ჩამოთვლილი ველი.
@@ -142,7 +169,11 @@ computed: `age`, `odontogram_html`. write()-ში: `patient_ref` მინი�
 - `clinic.procedure.history` — ჩატარებული პროცედურები (`doctor_id`-ით).
 - `clinic.patient.tooth` — კბილები (FDI `tooth_number` + `status`).
 - `clinic.patient.document` — დოკუმენტები (typed + attachment + signature).
-- 🔜 `clinic.appointment` — ჯავშნები/ვიზიტები (`calendar`-ზე).
+- `clinic.procedure.catalog`, `clinic.insurance.company` — Rev-A каталოგები.
+- `clinic.room`, `clinic.appointment.type` — ✅ 3A (ოთახები, ჯავშნის ტიპები/ფერი).
+- **`calendar.event` (inherit)** — ✅ 3A ჯავშანი/ვიზიტი: is_clinic, patient_id, dentist_id,
+  room_id, appointment_type_id, clinic_state, checkin/start/end + waiting/chair minutes,
+  parent_appointment_id, cancel_reason.
 
 ## 6. არა-ფუნქციური მოთხოვნები
 - Odoo **19.0 Community**, Python 3.10+, PostgreSQL.
@@ -157,19 +188,22 @@ computed: `age`, `odontogram_html`. write()-ში: `patient_ref` მინი�
   ტელეფონის არხი/საგანგებო ცხრილში, ორსულობა bool, კბილის ცხრილი.
 - **Phase 2 — ✅** `account` install; 1.5 ფინანსები, 1.6 დოკუმენტები, 1.7 პროფილი,
   1.9 ღილაკები (placeholder), ვიზუალური ოდონტოგრამა.
-- **Rev-A — 🟡 კოდი მზადაა (v19.0.3.0.0), deploy-ს ელოდება** (რეცენზენტების feedback #1):
-  patient_ref ხელით/ავტო; მოქალაქეობა/ლათინური ყოველთვის; ალმები is_repeat/is_regular;
-  მეურვე (guardian_id + is_minor); referral გაფართოება; NOTE (patient_note); ანამნეზი
-  ვრცლად (smoker/alcohol/family_history/anamnesis); რენტ./კტ (has_xray/has_ct/imaging_source);
-  ალერგიული სინჯი; treatment_plan_status გაფართოება + badge ფერები; payment „mixed";
-  დაზღვევა → `clinic.insurance.company` (m2o); პროცედურა → `clinic.procedure.catalog` (m2o)
-  + status/planned_date (დაგეგმ.+ჩატარებ.); ტელეფონი country_code/is_primary + channel=email;
-  `mail` depend (chatter/კომუნიკაცია); **view 4 ბლოკად** (ძირითადი/სამედიცინო/ფინანსები/ისტორია).
-  *დარჩა (server offline იყო): ცოცხალი deploy + `-u` + ka.po regen + verify.*
-- **Rev-B — 🔜 როლები/წვდომა:** Clinic Doctor vs Administrator (res.groups + ACL + ir.rule +
-  field `groups=`): სამედ./კბილი/პროცედურა = ექიმი; ფინანს./საბანკო შეზღუდული.
-- **Phase 3 — 🔜** `clinic.appointment` (calendar) → 1.4 ბოლო ვიზიტი auto, 1.7 auto-გამოთვლა,
-  პროცედურის auto-შევსება; 1.8 თაიმლაინი; ავტ. შეხსენებები; Form-100; EHR; დაწკაპ. ოდონტოგრამა.
+- **Rev-A — ✅ (v19.0.3.0.0, deployed)** რეცენზენტების feedback #1: patient_ref ხელით/ავტო;
+  მოქალაქეობა/ლათინური ყოველთვის; is_repeat/is_regular; მეურვე (guardian_id + is_minor);
+  referral გაფართოება; NOTE; ვრცელი ანამნეზი; რენტ./კტ; ალერგიული სინჯი; treatment_plan_status
+  + badge; payment „mixed"; `clinic.insurance.company`/`clinic.procedure.catalog` (m2o);
+  ტელეფონი country_code/is_primary; `mail` depend; **view 4 ბლოკად**.
+- **Phase 3A — ✅ (v19.0.4.0.0, deployed)** ჯავშნის ბირთვი: `calendar.event` გაფართოება
+  (clinic_state state machine + workflow ღილაკები), `clinic.room`, `clinic.appointment.type`,
+  calendar/list/form view-ები, Clinic→Appointments მენიუ, „Create Booking" ღილაკი,
+  დროის აღრიცხვა. `calendar` install. → იხ. 1.10 + `booking-visit-patterns.md`.
+- **Phase 3B — 🔜 როლები/წვდომა:** Clinic Doctor vs Administrator (res.groups + ACL + ir.rule +
+  field `groups=`): სამედ./კბილი/პროცედურა/ჯავშანი = ექიმი; ფინანს./საბანკო/გადახდა = ადმინი.
+- **Phase 3C — 🔜:** ექიმის bus+ხმა+toast შეტყობინება (checkin), ექიმის კალენდარი + OWL visual
+  (screenshot-ის იერი), პროცედურის auto-შევსება (done→history), follow-up ლოგიკა, გადახდა
+  (account), 1.4 ბოლო ვიზიტი auto, 1.7 auto-გამოთვლა, 1.8 თაიმლაინი (chatter), ავტ. შეხსენებები.
+- **Phase 4 — 🔜 მარაგები/შეკვეთა:** `stock`+`purchase`+`website_sale` (shop reuse) → მარაგი,
+  reordering, მაღაზიის UI → `purchase.order` ხიდი, vendor confirm. + Form-100, EHR, დაწკაპ. ოდონტოგრამა.
 
 ## 8. გადაწყვეტილებების ჟურნალი
 - პირადი ნომერი → სტანდარტული `vat` (მომხმარებლის არჩევანი, დუბლის თავიდან ასაცილებლად).

@@ -352,3 +352,20 @@ class ResPartner(models.Model):
                 "sticky": False,
             },
         }
+
+    def action_create_booking(self):
+        """Quick action: open a new clinic appointment for this patient."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("New Appointment"),
+            "res_model": "calendar.event",
+            "view_mode": "form",
+            "target": "current",
+            "context": {
+                "default_is_clinic": True,
+                "default_patient_id": self.id,
+                "default_partner_ids": [(4, self.id)],
+                "default_name": self.name,
+            },
+        }

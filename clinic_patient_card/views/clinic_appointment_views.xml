@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===================== Appointment form ===================== -->
+    <record id="view_clinic_appointment_form" model="ir.ui.view">
+        <field name="name">clinic.appointment.form</field>
+        <field name="model">calendar.event</field>
+        <field name="priority">32</field>
+        <field name="arch" type="xml">
+            <form string="Appointment">
+                <header>
+                    <button name="action_confirm" type="object" string="Confirm"
+                            class="btn-primary" invisible="clinic_state not in ('requested','booked')"/>
+                    <button name="action_arrive" type="object" string="Arrived"
+                            class="btn-primary" invisible="clinic_state not in ('booked','confirmed')"/>
+                    <button name="action_start" type="object" string="Start"
+                            class="btn-primary" invisible="clinic_state != 'arrived'"/>
+                    <button name="action_done" type="object" string="Done"
+                            class="btn-primary" invisible="clinic_state != 'in_progress'"/>
+                    <button name="action_pay" type="object" string="Register Payment"
+                            class="btn-primary" invisible="clinic_state != 'done'"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="clinic_state in ('paid','cancelled','no_show')"/>
+                    <button name="action_no_show" type="object" string="No-Show"
+                            invisible="clinic_state not in ('booked','confirmed','arrived')"/>
+                    <field name="clinic_state" widget="statusbar"
+                           statusbar_visible="booked,confirmed,arrived,in_progress,done,paid"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="is_clinic" invisible="1"/>
+                            <field name="patient_id"/>
+                            <field name="appointment_type_id"/>
+                            <field name="name" string="Subject"/>
+                            <field name="cancel_reason"
+                                   invisible="clinic_state != 'cancelled'"
+                                   required="clinic_state == 'cancelled'"/>
+                        </group>
+                        <group>
+                            <field name="dentist_id"/>
+                            <field name="room_id"/>
+                            <field name="start"/>
+                            <field name="stop"/>
+                        </group>
+                    </group>
+                    <group string="Time Tracking" col="4">
+                        <field name="checkin_time"/>
+                        <field name="waiting_minutes"/>
+                        <field name="treat_start_time"/>
+                        <field name="chair_minutes"/>
+                        <field name="treat_end_time"/>
+                        <field name="parent_appointment_id"/>
+                    </group>
+                    <field name="description" placeholder="Notes..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ===================== Appointment list ===================== -->
+    <record id="view_clinic_appointment_list" model="ir.ui.view">
+        <field name="name">clinic.appointment.list</field>
+        <field name="model">calendar.event</field>
+        <field name="priority">32</field>
+        <field name="arch" type="xml">
+            <list string="Appointments">
+                <field name="start"/>
+                <field name="patient_id"/>
+                <field name="appointment_type_id"/>
+                <field name="dentist_id"/>
+                <field name="room_id"/>
+                <field name="clinic_state" widget="badge"
+                       decoration-info="clinic_state in ('confirmed','arrived')"
+                       decoration-warning="clinic_state in ('booked','requested','in_progress')"
+                       decoration-success="clinic_state in ('done','paid')"
+                       decoration-danger="clinic_state in ('cancelled','no_show')"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ===================== Appointment calendar ===================== -->
+    <record id="view_clinic_appointment_calendar" model="ir.ui.view">
+        <field name="name">clinic.appointment.calendar</field>
+        <field name="model">calendar.event</field>
+        <field name="priority">32</field>
+        <field name="arch" type="xml">
+            <calendar string="Appointments" date_start="start" date_stop="stop"
+                      color="appointment_type_id" mode="day" quick_create="0">
+                <field name="patient_id" filters="1"/>
+                <field name="dentist_id" filters="1" avatar_field="image_128"/>
+                <field name="room_id" filters="1"/>
+                <field name="appointment_type_id" filters="1"/>
+                <field name="clinic_state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- ===================== Appointment search ===================== -->
+    <record id="view_clinic_appointment_search" model="ir.ui.view">
+        <field name="name">clinic.appointment.search</field>
+        <field name="model">calendar.event</field>
+        <field name="arch" type="xml">
+            <search string="Appointments">
+                <field name="patient_id"/>
+                <field name="dentist_id"/>
+                <field name="room_id"/>
+                <filter name="my_appointments" string="My Appointments"
+                        domain="[('dentist_id', '=', uid)]"/>
+                <group>
+                    <filter name="g_dentist" string="Dentist" domain="[]" context="{'group_by': 'dentist_id'}"/>
+                    <filter name="g_room" string="Room" domain="[]" context="{'group_by': 'room_id'}"/>
+                    <filter name="g_state" string="Status" domain="[]" context="{'group_by': 'clinic_state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ===================== Appointment action ===================== -->
+    <record id="action_clinic_appointment" model="ir.actions.act_window">
+        <field name="name">Appointments</field>
+        <field name="res_model">calendar.event</field>
+        <field name="view_mode">calendar,list,form</field>
+        <field name="domain">[('is_clinic', '=', True)]</field>
+        <field name="context">{'default_is_clinic': True}</field>
+        <field name="search_view_id" ref="view_clinic_appointment_search"/>
+    </record>
+    <!-- Bind our primary views to this action -->
+    <record id="action_clinic_appointment_view_calendar" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">calendar</field>
+        <field name="view_id" ref="view_clinic_appointment_calendar"/>
+        <field name="act_window_id" ref="action_clinic_appointment"/>
+    </record>
+    <record id="action_clinic_appointment_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_clinic_appointment_list"/>
+        <field name="act_window_id" ref="action_clinic_appointment"/>
+    </record>
+    <record id="action_clinic_appointment_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="3"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_clinic_appointment_form"/>
+        <field name="act_window_id" ref="action_clinic_appointment"/>
+    </record>
+
+    <!-- ===================== Rooms ===================== -->
+    <record id="view_clinic_room_list" model="ir.ui.view">
+        <field name="name">clinic.room.list</field>
+        <field name="model">clinic.room</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="note"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_clinic_room" model="ir.actions.act_window">
+        <field name="name">Rooms</field>
+        <field name="res_model">clinic.room</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- ===================== Appointment types ===================== -->
+    <record id="view_clinic_appointment_type_list" model="ir.ui.view">
+        <field name="name">clinic.appointment.type.list</field>
+        <field name="model">clinic.appointment.type</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="name"/>
+                <field name="default_duration"/>
+                <field name="procedure_id"/>
+                <field name="color" widget="color_picker"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_clinic_appointment_type" model="ir.actions.act_window">
+        <field name="name">Appointment Types</field>
+        <field name="res_model">clinic.appointment.type</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- ===================== Menus ===================== -->
+    <menuitem id="menu_clinic_appointments" name="Appointments"
+              parent="menu_clinic_root" action="action_clinic_appointment" sequence="1"/>
+    <menuitem id="menu_clinic_rooms" name="Rooms"
+              parent="menu_clinic_config" action="action_clinic_room" sequence="30"/>
+    <menuitem id="menu_clinic_appointment_types" name="Appointment Types"
+              parent="menu_clinic_config" action="action_clinic_appointment_type" sequence="40"/>
+
+</odoo>

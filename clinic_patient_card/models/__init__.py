@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from . import clinic_procedure_catalog
 from . import clinic_insurance_company
+from . import clinic_room
+from . import clinic_appointment_type
+from . import clinic_appointment
 from . import clinic_patient_phone
 from . import clinic_patient_allergy
 from . import clinic_procedure_history

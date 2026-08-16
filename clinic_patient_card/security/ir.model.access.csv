@@ -8,3 +8,7 @@ access_clinic_procedure_catalog_user,clinic.procedure.catalog.user,model_clinic_
 access_clinic_procedure_catalog_manager,clinic.procedure.catalog.manager,model_clinic_procedure_catalog,base.group_system,1,1,1,1
 access_clinic_insurance_company_user,clinic.insurance.company.user,model_clinic_insurance_company,base.group_user,1,0,0,0
 access_clinic_insurance_company_manager,clinic.insurance.company.manager,model_clinic_insurance_company,base.group_system,1,1,1,1
+access_clinic_room_user,clinic.room.user,model_clinic_room,base.group_user,1,0,0,0
+access_clinic_room_manager,clinic.room.manager,model_clinic_room,base.group_system,1,1,1,1
+access_clinic_appointment_type_user,clinic.appointment.type.user,model_clinic_appointment_type,base.group_user,1,0,0,0
+access_clinic_appointment_type_manager,clinic.appointment.type.manager,model_clinic_appointment_type,base.group_system,1,1,1,1
