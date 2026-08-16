@@ -189,8 +189,11 @@ class ResPartner(models.Model):
         string="Loyalty Status",
         default="none",
     )
+    # Insurance company = a standard contact (organization), not a custom model.
+    is_insurance_company = fields.Boolean(string="Is an Insurance Company")
     insurance_company_id = fields.Many2one(
-        "clinic.insurance.company", string="Insurance Company",
+        "res.partner", string="Insurance Company",
+        domain="[('is_insurance_company', '=', True)]",
     )
     insurance_policy_no = fields.Char(string="Policy No.")
     insurance_valid_until = fields.Date(string="Insurance Valid Until")

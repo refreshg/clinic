@@ -10,8 +10,11 @@ class ClinicProcedureHistory(models.Model):
     partner_id = fields.Many2one(
         "res.partner", string="Patient", required=True, ondelete="cascade", index=True,
     )
-    # Procedure picked from the catalog; `name` is a free-text label/fallback.
-    procedure_id = fields.Many2one("clinic.procedure.catalog", string="Procedure")
+    # Procedure = a standard service product; `name` is a free-text label/fallback.
+    procedure_id = fields.Many2one(
+        "product.product", string="Procedure",
+        domain="[('is_clinic_procedure', '=', True)]",
+    )
     name = fields.Char(string="Procedure (label)")
     # Planned vs performed — one list shows both, distinguished by status.
     status = fields.Selection(

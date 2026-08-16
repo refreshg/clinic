@@ -1,52 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ===================== Procedure catalog ===================== -->
-    <record id="view_clinic_procedure_catalog_list" model="ir.ui.view">
-        <field name="name">clinic.procedure.catalog.list</field>
-        <field name="model">clinic.procedure.catalog</field>
+    <!-- ============ Procedures = standard service products ============ -->
+    <record id="view_clinic_procedure_list" model="ir.ui.view">
+        <field name="name">clinic.procedure.product.list</field>
+        <field name="model">product.template</field>
         <field name="arch" type="xml">
-            <list editable="bottom">
-                <field name="code"/>
+            <list>
+                <field name="default_code" optional="show"/>
                 <field name="name"/>
-                <field name="default_price"/>
-                <field name="active" widget="boolean_toggle"/>
+                <field name="list_price"/>
+                <field name="type"/>
+                <field name="is_clinic_procedure" column_invisible="1"/>
             </list>
         </field>
     </record>
 
-    <record id="action_clinic_procedure_catalog" model="ir.actions.act_window">
+    <record id="action_clinic_procedures" model="ir.actions.act_window">
         <field name="name">Procedures</field>
-        <field name="res_model">clinic.procedure.catalog</field>
+        <field name="res_model">product.template</field>
         <field name="view_mode">list,form</field>
+        <field name="domain">[('is_clinic_procedure', '=', True)]</field>
+        <field name="context">{'default_is_clinic_procedure': True, 'default_type': 'service'}</field>
+        <field name="view_id" ref="view_clinic_procedure_list"/>
     </record>
 
-    <!-- ===================== Insurance companies ===================== -->
-    <record id="view_clinic_insurance_company_list" model="ir.ui.view">
-        <field name="name">clinic.insurance.company.list</field>
-        <field name="model">clinic.insurance.company</field>
-        <field name="arch" type="xml">
-            <list editable="bottom">
-                <field name="name"/>
-                <field name="note"/>
-                <field name="active" widget="boolean_toggle"/>
-            </list>
-        </field>
-    </record>
-
-    <record id="action_clinic_insurance_company" model="ir.actions.act_window">
+    <!-- ============ Insurance companies = standard contacts ============ -->
+    <record id="action_clinic_insurance_companies" model="ir.actions.act_window">
         <field name="name">Insurance Companies</field>
-        <field name="res_model">clinic.insurance.company</field>
+        <field name="res_model">res.partner</field>
         <field name="view_mode">list,form</field>
+        <field name="domain">[('is_insurance_company', '=', True)]</field>
+        <field name="context">{'default_is_insurance_company': True, 'default_is_company': True}</field>
     </record>
 
     <!-- ===================== Menus ===================== -->
     <menuitem id="menu_clinic_root" name="Clinic" sequence="90"/>
     <menuitem id="menu_clinic_config" name="Configuration"
               parent="menu_clinic_root" sequence="10"/>
-    <menuitem id="menu_clinic_procedure_catalog" name="Procedures"
-              parent="menu_clinic_config" action="action_clinic_procedure_catalog" sequence="10"/>
-    <menuitem id="menu_clinic_insurance_company" name="Insurance Companies"
-              parent="menu_clinic_config" action="action_clinic_insurance_company" sequence="20"/>
+    <menuitem id="menu_clinic_procedures" name="Procedures"
+              parent="menu_clinic_config" action="action_clinic_procedures" sequence="10"/>
+    <menuitem id="menu_clinic_insurance" name="Insurance Companies"
+              parent="menu_clinic_config" action="action_clinic_insurance_companies" sequence="20"/>
 
 </odoo>

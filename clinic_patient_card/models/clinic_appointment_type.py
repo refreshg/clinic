@@ -14,6 +14,7 @@ class ClinicAppointmentType(models.Model):
         help="Pre-fills the appointment duration.",
     )
     procedure_id = fields.Many2one(
-        "clinic.procedure.catalog", string="Default Procedure",
+        "product.product", string="Default Procedure",
+        domain="[('is_clinic_procedure', '=', True)]",
     )
     active = fields.Boolean(default=True)
