@@ -8,4 +8,14 @@
     <menuitem id="menu_clinic_supply_shop" name="Supply Shop"
               parent="menu_clinic_root" action="action_clinic_supply_shop" sequence="15"
               groups="clinic_patient_card.group_clinic_admin"/>
+
+    <!-- Supplier side: publish products + see own orders -->
+    <record id="action_clinic_supplier_portal" model="ir.actions.client">
+        <field name="name">My Products</field>
+        <field name="tag">clinic_supplier_portal</field>
+    </record>
+
+    <menuitem id="menu_clinic_supplier_portal" name="My Products (Supplier)"
+              parent="menu_clinic_root" action="action_clinic_supplier_portal" sequence="16"
+              groups="clinic_patient_card.group_clinic_supplier"/>
 </odoo>

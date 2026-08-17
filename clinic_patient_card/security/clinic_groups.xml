@@ -37,6 +37,43 @@
         ]"/>
     </record>
 
+    <!-- Clinic Supplier: an external vendor who publishes products into the
+         clinic Supply Shop and confirms the RFQs sent to them. Gets standard
+         Purchase User access; record rules limit them to their OWN orders. -->
+    <record id="group_clinic_supplier" model="res.groups">
+        <field name="name">Clinic Supplier</field>
+        <field name="privilege_id" ref="privilege_clinic"/>
+        <field name="implied_ids" eval="[
+            (4, ref('base.group_user')),
+            (4, ref('purchase.group_purchase_user')),
+        ]"/>
+    </record>
+
+    <!-- A supplier sees only the purchase orders addressed to their own
+         company (their RFQs to confirm), not other vendors' orders. -->
+    <record id="rule_clinic_supplier_own_po" model="ir.rule">
+        <field name="name">Clinic Supplier: own purchase orders only</field>
+        <field name="model_id" ref="purchase.model_purchase_order"/>
+        <field name="groups" eval="[(4, ref('group_clinic_supplier'))]"/>
+        <field name="domain_force">
+            [('partner_id.commercial_partner_id', '=', user.partner_id.commercial_partner_id.id)]
+        </field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- ...and only their own vendor pricelist lines. -->
+    <record id="rule_clinic_supplier_own_supplierinfo" model="ir.rule">
+        <field name="name">Clinic Supplier: own supplierinfo only</field>
+        <field name="model_id" ref="product.model_product_supplierinfo"/>
+        <field name="groups" eval="[(4, ref('group_clinic_supplier'))]"/>
+        <field name="domain_force">
+            [('partner_id.commercial_partner_id', '=', user.partner_id.commercial_partner_id.id)]
+        </field>
+    </record>
+
     <!-- The main administrator is granted both clinic roles by the module's
          post_init_hook (base.user_admin is noupdate, so an XML write is skipped). -->
 </odoo>

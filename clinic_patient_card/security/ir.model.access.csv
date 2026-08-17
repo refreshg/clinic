@@ -12,3 +12,7 @@ access_clinic_payment_wizard_user,clinic.payment.wizard.user,model_clinic_paymen
 access_clinic_room_manager,clinic.room.manager,model_clinic_room,base.group_system,1,1,1,1
 access_clinic_appointment_type_user,clinic.appointment.type.user,model_clinic_appointment_type,base.group_user,1,0,0,0
 access_clinic_appointment_type_manager,clinic.appointment.type.manager,model_clinic_appointment_type,base.group_system,1,1,1,1
+access_clinic_supplier_product_template,clinic.supplier.product.template,product.model_product_template,clinic_patient_card.group_clinic_supplier,1,1,1,0
+access_clinic_supplier_product_product,clinic.supplier.product.product,product.model_product_product,clinic_patient_card.group_clinic_supplier,1,1,1,0
+access_clinic_supplier_supplierinfo,clinic.supplier.supplierinfo,product.model_product_supplierinfo,clinic_patient_card.group_clinic_supplier,1,1,1,1
+access_clinic_supplier_product_category,clinic.supplier.product.category,product.model_product_category,clinic_patient_card.group_clinic_supplier,1,0,0,0

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="clinic_patient_card.ClinicSupplierPortal">
+        <div class="clinic_sp">
+
+            <div class="csp_top">
+                <div class="me-auto">
+                    <h4 class="csp_title">My Products</h4>
+                    <small class="csp_sub">
+                        <t t-if="state.vendor">
+                            Published by <b t-esc="state.vendor.name"/> — visible in the clinic Supply Shop.
+                        </t>
+                        <t t-else="">No supplier company linked to your user.</t>
+                    </small>
+                </div>
+                <button class="btn btn-light me-2" t-on-click="() => this.openOrders()">📦 My Orders</button>
+                <button class="btn btn-primary" t-on-click="() => this.newProduct()">+ New Product</button>
+            </div>
+
+            <t t-if="state.loading">
+                <div class="csp_empty">Loading…</div>
+            </t>
+            <t t-else="">
+                <div t-if="!state.products.length" class="csp_empty">
+                    You haven't published any products yet. Click "+ New Product" to add one.
+                </div>
+                <div t-else="" class="csp_grid">
+                    <t t-foreach="state.products" t-as="p" t-key="p.id">
+                        <div class="csp_card">
+                            <div class="csp_img">
+                                <img t-if="p.image_128" t-att-src="'data:image/png;base64,' + p.image_128" alt=""/>
+                                <span t-else="" class="csp_noimg">📦</span>
+                            </div>
+                            <div class="csp_name" t-esc="p.name"/>
+                            <div class="csp_cat" t-esc="p.categ_name"/>
+                            <div class="csp_price"><t t-esc="p.price.toFixed(2)"/> ₾</div>
+                            <div class="csp_delay">Lead time: <t t-esc="p.delay"/> days</div>
+                            <div class="csp_actions">
+                                <button class="btn btn-sm btn-outline-primary" t-on-click="() => this.editProduct(p)">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger" t-on-click="() => this.unpublish(p)">Remove</button>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </t>
+
+            <!-- editor modal -->
+            <div t-if="state.editing" class="csp_backdrop" t-on-click="() => this.cancelEdit()">
+                <div class="csp_modal" t-on-click.stop="() => {}">
+                    <div class="csp_modal_head">
+                        <b t-esc="state.editing.id ? 'Edit product' : 'New product'"/>
+                        <button class="csp_x" t-on-click="() => this.cancelEdit()">✕</button>
+                    </div>
+                    <div class="csp_modal_body">
+                        <div class="csp_form">
+                            <label>Name</label>
+                            <input type="text" class="form-control"
+                                   t-att-value="state.editing.name"
+                                   t-on-input="(ev) => this.onField('name', ev)"/>
+
+                            <div class="csp_row">
+                                <div>
+                                    <label>Price (₾)</label>
+                                    <input type="number" min="0" step="0.01" class="form-control"
+                                           t-att-value="state.editing.price"
+                                           t-on-input="(ev) => this.onField('price', ev)"/>
+                                </div>
+                                <div>
+                                    <label>Lead time (days)</label>
+                                    <input type="number" min="0" class="form-control"
+                                           t-att-value="state.editing.delay"
+                                           t-on-input="(ev) => this.onField('delay', ev)"/>
+                                </div>
+                            </div>
+
+                            <label>Category</label>
+                            <select class="form-select" t-on-change="(ev) => this.onField('categ_id', ev)">
+                                <t t-foreach="state.categories" t-as="c" t-key="c.id">
+                                    <option t-att-value="c.id" t-att-selected="c.id === state.editing.categ_id"
+                                            t-esc="c.display_name"/>
+                                </t>
+                            </select>
+
+                            <label>Image</label>
+                            <input type="file" accept="image/*" class="form-control"
+                                   t-on-change="(ev) => this.onImage(ev)"/>
+                        </div>
+                        <div class="csp_preview">
+                            <img t-if="state.editing.image_preview" t-att-src="state.editing.image_preview" alt=""/>
+                            <span t-else="" class="csp_noimg">📦</span>
+                        </div>
+                    </div>
+                    <div class="csp_modal_foot">
+                        <button class="btn btn-light" t-on-click="() => this.cancelEdit()">Cancel</button>
+                        <button class="btn btn-primary" t-on-click="() => this.save()">Save &amp; publish</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>
