@@ -8,6 +8,7 @@ access_clinic_procedure_history_doctor,clinic.procedure.history.doctor,model_cli
 access_clinic_patient_tooth_user,clinic.patient.tooth.user,model_clinic_patient_tooth,base.group_user,1,0,0,0
 access_clinic_patient_tooth_doctor,clinic.patient.tooth.doctor,model_clinic_patient_tooth,group_clinic_doctor,1,1,1,1
 access_clinic_room_user,clinic.room.user,model_clinic_room,base.group_user,1,0,0,0
+access_clinic_payment_wizard_user,clinic.payment.wizard.user,model_clinic_payment_wizard,base.group_user,1,1,1,1
 access_clinic_room_manager,clinic.room.manager,model_clinic_room,base.group_system,1,1,1,1
 access_clinic_appointment_type_user,clinic.appointment.type.user,model_clinic_appointment_type,base.group_user,1,0,0,0
 access_clinic_appointment_type_manager,clinic.appointment.type.manager,model_clinic_appointment_type,base.group_system,1,1,1,1

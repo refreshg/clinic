@@ -30,7 +30,7 @@ class ClinicProcedureHistory(models.Model):
             ("cancelled", "Cancelled"),
         ],
         string="Status",
-        default="planned",
+        default="done",
         required=True,
     )
     qty = fields.Float(string="Qty", default=1.0)

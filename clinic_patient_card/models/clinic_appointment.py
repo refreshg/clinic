@@ -56,6 +56,16 @@ class CalendarEvent(models.Model):
     procedure_line_ids = fields.One2many(
         "clinic.procedure.history", "appointment_id", string="Procedures",
     )
+    payment_method = fields.Selection(
+        [
+            ("cash", "Cash"),
+            ("card", "Card"),
+            ("transfer", "Bank Transfer"),
+            ("insurance", "Insurance"),
+            ("mixed", "Mixed"),
+        ],
+        string="Payment Method",
+    )
 
     @api.depends("checkin_time", "treat_start_time", "treat_end_time")
     def _compute_durations(self):
@@ -119,11 +129,16 @@ class CalendarEvent(models.Model):
                 ev.patient_id.last_dental_visit_date = today
 
     def action_pay(self):
-        # R14 — administrator closes with payment: draft a customer invoice from
-        # the visit's procedure products (reuses standard `account`).
-        for ev in self:
-            ev._create_invoice_from_procedures()
-            ev.write({"clinic_state": "paid"})
+        # R14 — open the payment wizard (shows amount + payment method).
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Register Payment"),
+            "res_model": "clinic.payment.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {"default_appointment_id": self.id},
+        }
 
     def action_cancel(self):
         for ev in self:

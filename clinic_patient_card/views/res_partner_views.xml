@@ -230,6 +230,7 @@
                                         <field name="name" optional="hide"/>
                                         <field name="planned_date"/>
                                         <field name="procedure_date"/>
+                                        <field name="appointment_id" string="Visit"/>
                                         <field name="doctor_id"/>
                                         <field name="tooth"/>
                                         <field name="note" optional="hide"/>
