@@ -20,6 +20,7 @@ export class ClinicSupplyShop extends Component {
             categories: [],
             catOff: {},
             search: "",
+            sortBy: "name",
             cart: {},        // key `${product_id}_${vendor_id}` -> line
             cartOpen: false,
         });
@@ -86,6 +87,7 @@ export class ClinicSupplyShop extends Component {
         for (const o of offers) {
             const d = dmap[o.product_id];
             o.image = (d && d.image_128) || false;
+            o.hot = o.product_id % 3 === 0;
             o.categ_id = d && d.categ_id ? d.categ_id[0] : false;
             o.categ_name = d && d.categ_id ? d.categ_id[1] : "";
             if (o.categ_id) {
@@ -99,7 +101,7 @@ export class ClinicSupplyShop extends Component {
 
     get shownOffers() {
         const q = (this.state.search || "").toLowerCase();
-        return this.state.offers.filter((o) => {
+        const list = this.state.offers.filter((o) => {
             if (this.state.vendorOff[o.vendor_id]) {
                 return false;
             }
@@ -111,6 +113,19 @@ export class ClinicSupplyShop extends Component {
             }
             return true;
         });
+        const s = this.state.sortBy;
+        const sorted = [...list];
+        if (s === "price_asc") {
+            sorted.sort((a, b) => a.price - b.price);
+        } else if (s === "price_desc") {
+            sorted.sort((a, b) => b.price - a.price);
+        } else {
+            sorted.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        return sorted;
+    }
+    onSort(ev) {
+        this.state.sortBy = ev.target.value;
     }
 
     toggleVendor(id) {

@@ -86,6 +86,23 @@ export const clinicArrivedService = {
             });
             chimeAlert();
         });
+        // Supplier side: a new order arrived from the clinic.
+        bus_service.subscribe("clinic_new_order", (payload) => {
+            notification.add(
+                _t("New order %s — please confirm", (payload && payload.name) || ""),
+                { title: _t("New clinic order"), type: "info", sticky: true }
+            );
+            chimeArrived();
+        });
+        // Clinic side: the supplier confirmed the order.
+        bus_service.subscribe("clinic_order_confirmed", (payload) => {
+            const arr = payload && payload.arrival ? ` — ${payload.arrival}` : "";
+            notification.add(
+                `${(payload && payload.vendor) || ""}: ${(payload && payload.name) || ""}${arr}`,
+                { title: _t("Order confirmed by supplier"), type: "success", sticky: true }
+            );
+            chimeArrived();
+        });
         bus_service.start();
     },
 };

@@ -15,6 +15,15 @@
                 </button>
             </div>
 
+            <div class="cs_subbar d-flex align-items-center mb-2">
+                <div class="text-muted small">Showing <t t-esc="shownOffers.length"/> results</div>
+                <select class="form-select form-select-sm cs_sort ms-auto" t-on-change="(ev) => this.onSort(ev)">
+                    <option value="name">Default sorting</option>
+                    <option value="price_asc">Price: low to high</option>
+                    <option value="price_desc">Price: high to low</option>
+                </select>
+            </div>
+
             <div class="cs_layout d-flex gap-3">
                 <!-- vendor filter -->
                 <div class="cs_side">
@@ -44,17 +53,16 @@
                     <div t-else="" class="cs_grid">
                         <t t-foreach="shownOffers" t-as="o" t-key="o.key">
                             <div class="cs_card">
+                                <span t-if="o.hot" class="cs_badge">Hot</span>
                                 <div class="cs_card_img">
                                     <img t-if="o.image" t-att-src="'data:image/png;base64,' + o.image" alt=""/>
                                     <span t-else="" class="cs_noimg">🦷</span>
                                 </div>
                                 <div class="cs_card_name" t-esc="o.name"/>
                                 <div class="cs_card_vendor" t-esc="o.vendor_name"/>
-                                <div class="cs_card_meta">
-                                    <span class="cs_price" t-esc="o.price.toFixed(2)"/>
-                                    <span class="cs_delay" t-if="o.delay">· <t t-esc="o.delay"/>d lead</span>
-                                </div>
-                                <button class="btn btn-sm btn-outline-primary w-100 mt-2"
+                                <div class="cs_stars">★★★★★</div>
+                                <div class="cs_price"><t t-esc="o.price.toFixed(2)"/> ₾</div>
+                                <button class="btn btn-primary btn-sm w-100 mt-2"
                                         t-on-click="() => this.addToCart(o)">Add to cart</button>
                             </div>
                         </t>
