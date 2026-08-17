@@ -2,51 +2,125 @@
 <templates xml:space="preserve">
 
     <t t-name="clinic_patient_card.ClinicPlanning">
-        <div class="clinic_planning o_action_manager p-2">
-            <div class="cp_toolbar d-flex align-items-center gap-2 mb-2">
-                <button class="btn btn-outline-secondary" t-on-click="() => this.changeDay(-1)">‹</button>
-                <button class="btn btn-outline-primary" t-on-click="() => this.setToday()">Today</button>
-                <button class="btn btn-outline-secondary" t-on-click="() => this.changeDay(1)">›</button>
+        <div class="clinic_planning">
+            <!-- ===== top toolbar ===== -->
+            <div class="cp_top d-flex align-items-center flex-wrap gap-2 mb-3">
+                <div class="me-auto">
+                    <h4 class="mb-0 fw-bold">Calendar</h4>
+                    <small class="text-muted">Manage appointments, rooms and schedules.</small>
+                </div>
+                <button class="btn btn-outline-secondary" t-on-click="() => this.setToday()">Today</button>
+                <div class="btn-group">
+                    <button class="btn btn-outline-secondary" t-on-click="() => this.changeDay(-1)">‹</button>
+                    <button class="btn btn-outline-secondary" t-on-click="() => this.changeDay(1)">›</button>
+                </div>
                 <input type="date" class="form-control cp_dateinput" t-att-value="state.date"
                        t-on-change="(ev) => this.onDateInput(ev)"/>
-                <span class="ms-auto"/>
+                <select class="form-select cp_dentsel" t-on-change="(ev) => this.onDentistFilter(ev)">
+                    <option value="all">All Dentists</option>
+                    <t t-foreach="state.dentists" t-as="d" t-key="d.id">
+                        <option t-att-value="d.id" t-esc="d.name"/>
+                    </t>
+                </select>
                 <button class="btn btn-primary" t-on-click="() => this.newAppointment()">+ New Appointment</button>
             </div>
 
-            <div t-if="!state.dentists.length" class="text-muted p-4 text-center">
-                No clinic appointments for this day.
-            </div>
+            <div class="cp_layout d-flex gap-3">
+                <!-- ===== left sidebar ===== -->
+                <div class="cp_side">
+                    <!-- mini month calendar -->
+                    <div class="cp_minical mb-3">
+                        <div class="d-flex align-items-center mb-1">
+                            <button class="btn btn-sm btn-light" t-on-click="() => this.changeMonth(-1)">‹</button>
+                            <div class="flex-grow-1 text-center fw-semibold" t-esc="monthLabel"/>
+                            <button class="btn btn-sm btn-light" t-on-click="() => this.changeMonth(1)">›</button>
+                        </div>
+                        <table class="cp_mc_table">
+                            <thead>
+                                <tr>
+                                    <t t-foreach="DOW" t-as="dw" t-key="dw"><th t-esc="dw"/></t>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="calendarWeeks()" t-as="week" t-key="week_index">
+                                    <tr>
+                                        <t t-foreach="week" t-as="cell" t-key="cell.iso">
+                                            <td t-att-class="(cell.inMonth ? '' : 'cp_mc_out') + (cell.isSelected ? ' cp_mc_sel' : '') + (cell.isToday ? ' cp_mc_today' : '')"
+                                                t-on-click="() => this.selectDay(cell.iso)">
+                                                <span t-esc="cell.day"/>
+                                            </td>
+                                        </t>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
 
-            <div t-else="" class="cp_wrap">
-                <!-- header row: corner + dentist names -->
-                <div class="cp_headrow d-flex">
-                    <div class="cp_hourhead"/>
-                    <t t-foreach="state.dentists" t-as="d" t-key="d.id">
-                        <div class="cp_denthead" t-esc="d.name"/>
-                    </t>
-                </div>
-                <!-- body: hour ruler + dentist columns -->
-                <div class="cp_body d-flex">
-                    <div class="cp_hourcol" t-attf-style="height:{{ totalHeight }}px;">
-                        <t t-foreach="hours()" t-as="h" t-key="h">
-                            <div class="cp_hourmark" t-esc="h + ':00'"/>
+                    <!-- appointment type legend -->
+                    <div class="cp_legend mb-3">
+                        <div class="fw-semibold mb-1">Appointment Types</div>
+                        <t t-foreach="state.types" t-as="t" t-key="t.id">
+                            <div class="cp_leg_row">
+                                <span class="cp_dot" t-attf-style="background:{{ COLORS[(t.color || 0) % 12] }};"/>
+                                <span t-esc="t.name"/>
+                            </div>
                         </t>
                     </div>
-                    <t t-foreach="state.dentists" t-as="d" t-key="d.id">
-                        <div class="cp_col" t-attf-style="height:{{ totalHeight }}px;">
-                            <t t-foreach="hours()" t-as="h" t-key="h">
-                                <div class="cp_slotline"/>
-                            </t>
-                            <t t-foreach="eventsFor(d.id)" t-as="ev" t-key="ev.id">
-                                <div class="cp_event" t-att-style="eventStyle(ev)"
-                                     t-on-click="() => this.openEvent(ev)">
-                                    <div class="cp_ev_time" t-esc="evTime(ev)"/>
-                                    <div class="cp_ev_name" t-esc="ev.name"/>
-                                    <div class="cp_ev_pat" t-esc="ev.patient_id ? ev.patient_id[1] : ''"/>
+
+                    <!-- room filter -->
+                    <div class="cp_rooms">
+                        <div class="fw-semibold mb-1">Rooms</div>
+                        <t t-foreach="state.rooms" t-as="r" t-key="r.id">
+                            <label class="cp_room_row">
+                                <input type="checkbox" t-att-checked="!state.roomOff[r.id]"
+                                       t-on-change="() => this.toggleRoom(r.id)"/>
+                                <span t-esc="r.name"/>
+                            </label>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- ===== main grid ===== -->
+                <div class="cp_main flex-grow-1">
+                    <div t-if="!shownDentists.length" class="text-muted p-5 text-center">
+                        No clinic appointments for this day.
+                    </div>
+                    <div t-else="" class="cp_grid">
+                        <!-- header row -->
+                        <div class="cp_headrow d-flex">
+                            <div class="cp_hourhead"/>
+                            <t t-foreach="shownDentists" t-as="d" t-key="d.id">
+                                <div class="cp_denthead">
+                                    <div class="fw-semibold" t-esc="d.name"/>
+                                    <small class="text-muted" t-esc="d.room"/>
                                 </div>
                             </t>
                         </div>
-                    </t>
+                        <!-- body -->
+                        <div class="cp_body d-flex position-relative">
+                            <div class="cp_hourcol" t-attf-style="height:{{ totalHeight }}px;">
+                                <t t-foreach="hours()" t-as="h" t-key="h">
+                                    <div class="cp_hourmark" t-esc="(h &lt; 10 ? '0' : '') + h + ':00'"/>
+                                </t>
+                            </div>
+                            <t t-foreach="shownDentists" t-as="d" t-key="d.id">
+                                <div class="cp_col" t-attf-style="height:{{ totalHeight }}px;">
+                                    <t t-foreach="hours()" t-as="h" t-key="h">
+                                        <div class="cp_slotline"/>
+                                    </t>
+                                    <t t-foreach="eventsFor(d.id)" t-as="ev" t-key="ev.id">
+                                        <div class="cp_event" t-att-style="eventStyle(ev)"
+                                             t-on-click="() => this.openEvent(ev)">
+                                            <div class="cp_ev_time" t-esc="evTime(ev)"/>
+                                            <div class="cp_ev_name" t-esc="ev.name"/>
+                                            <div class="cp_ev_pat" t-esc="patientName(ev)"/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+                            <div t-if="nowTop >= 0" class="cp_nowline" t-attf-style="top:{{ nowTop }}px;"/>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
