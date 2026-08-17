@@ -8,7 +8,7 @@
     "author": "refreshg",
     "website": "https://github.com/refreshg/clinic",
     "category": "Healthcare",
-    "version": "19.0.9.0.0",
+    "version": "19.0.10.0.0",
     "license": "LGPL-3",
     "depends": [
         "base",
@@ -27,7 +27,6 @@
         "data/clinic_cron.xml",
         "views/clinic_catalog_views.xml",
         "views/clinic_appointment_views.xml",
-        "views/clinic_inventory_views.xml",
         "views/clinic_planning_views.xml",
         "views/res_partner_views.xml",
     ],
