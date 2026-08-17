@@ -94,9 +94,34 @@
             min-width: 150px;
             position: relative;
             border-left: 1px solid #eef0f2;
+            cursor: pointer;
+            &:hover { background: rgba(99, 102, 241, 0.03); }
             .cp_slotline {
                 height: 64px;
                 border-top: 1px solid #f1f3f5;
+            }
+
+            /* click feedback: ripple at the pointer + ghost half-hour block */
+            .cp_ripple {
+                position: absolute;
+                width: 10px;
+                height: 10px;
+                margin: -5px 0 0 -5px;
+                border-radius: 50%;
+                background: rgba(99, 102, 241, 0.45);
+                pointer-events: none;
+                transform: scale(0);
+                animation: cp_ripple_a 0.45s ease-out forwards;
+            }
+            .cp_ghost {
+                position: absolute;
+                left: 4px;
+                right: 4px;
+                border-radius: 6px;
+                background: rgba(99, 102, 241, 0.12);
+                border: 1px dashed rgba(99, 102, 241, 0.55);
+                pointer-events: none;
+                animation: cp_ghost_a 0.45s ease-out forwards;
             }
             .cp_event {
                 position: absolute;
@@ -150,4 +175,13 @@
             }
         }
     }
+}
+
+@keyframes cp_ripple_a {
+    to { transform: scale(9); opacity: 0; }
+}
+@keyframes cp_ghost_a {
+    0% { opacity: 0; }
+    30% { opacity: 1; }
+    100% { opacity: 0; }
 }

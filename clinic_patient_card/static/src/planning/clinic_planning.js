@@ -271,6 +271,8 @@ export class ClinicPlanning extends Component {
         }
         const rect = ev.currentTarget.getBoundingClientRect();
         const y = ev.clientY - rect.top;
+        // quick visual feedback: a ripple + a ghost slot where we clicked
+        this._flashSlot(ev.currentTarget, ev.clientX - rect.left, y);
         let hour = START_HOUR + y / HOUR_PX;
         // snap to the nearest half hour, keep inside the working window
         hour = Math.round(hour * 2) / 2;
@@ -297,6 +299,29 @@ export class ClinicPlanning extends Component {
                 default_stop: stop,
             },
         });
+    }
+
+    // Transient click feedback inside a column: a ripple at the pointer plus a
+    // half-hour "ghost" block snapped to the slot, both auto-removed.
+    _flashSlot(col, x, y) {
+        const snappedTop = Math.round((y / HOUR_PX) * 2) / 2 * HOUR_PX;
+
+        const ghost = document.createElement("div");
+        ghost.className = "cp_ghost";
+        ghost.style.top = `${Math.max(0, snappedTop)}px`;
+        ghost.style.height = `${HOUR_PX / 2 - 2}px`;
+        col.appendChild(ghost);
+
+        const ripple = document.createElement("span");
+        ripple.className = "cp_ripple";
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        col.appendChild(ripple);
+
+        setTimeout(() => {
+            ghost.remove();
+            ripple.remove();
+        }, 450);
     }
 }
 

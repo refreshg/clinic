@@ -38,8 +38,30 @@
                        statusbar_visible="booked,confirmed,arrived,in_progress,done,paid"/>
             </xpath>
 
+            <!-- Hide meeting-only fields for clinic visits: Location, Video Link,
+                 and the whole guests/attendees block (counter + attendees +
+                 EMAIL/SMS). They stay for ordinary calendar events. -->
+            <xpath expr="//field[@name='location']" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
+            <xpath expr="//label[@for='videocall_location']" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
+            <xpath expr="//field[@name='videocall_location']" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
+            <xpath expr="//div[hasclass('mb-2')][@colspan='2']" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
+
+            <!-- Open the Clinic tab first for clinic visits. -->
+            <xpath expr="//notebook/page[1]" position="attributes">
+                <attribute name="autofocus"/>
+            </xpath>
+
             <xpath expr="//notebook" position="inside">
-                <page name="clinic_page" string="Clinic" invisible="not is_clinic">
+                <page name="clinic_page" string="Clinic" invisible="not is_clinic"
+                      autofocus="autofocus">
                     <group>
                         <group>
                             <field name="is_clinic"/>
