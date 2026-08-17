@@ -54,11 +54,11 @@
                         <t t-foreach="shownOffers" t-as="o" t-key="o.key">
                             <div class="cs_card">
                                 <span t-if="o.hot" class="cs_badge">Hot</span>
-                                <div class="cs_card_img">
+                                <div class="cs_card_img cs_clickable" t-on-click="() => this.openDetail(o)">
                                     <img t-if="o.image" t-att-src="'data:image/png;base64,' + o.image" alt=""/>
                                     <span t-else="" class="cs_noimg">🦷</span>
                                 </div>
-                                <div class="cs_card_name" t-esc="o.name"/>
+                                <div class="cs_card_name cs_clickable" t-on-click="() => this.openDetail(o)" t-esc="o.name"/>
                                 <div class="cs_card_vendor" t-esc="o.vendor_name"/>
                                 <div class="cs_stars">★★★★★</div>
                                 <div class="cs_price"><t t-esc="o.price.toFixed(2)"/> ₾</div>
@@ -94,6 +94,36 @@
                     </div>
                     <button class="btn btn-primary w-100 mt-2" t-att-disabled="!cartLines.length"
                             t-on-click="() => this.checkout()">Send to Suppliers</button>
+                </div>
+            </div>
+
+            <!-- product detail modal -->
+            <div t-if="state.detail" class="cs_modal_backdrop" t-on-click="() => this.closeDetail()">
+                <div class="cs_modal" t-on-click.stop="() => {}">
+                    <button class="cs_modal_close" t-on-click="() => this.closeDetail()">✕</button>
+                    <div class="cs_modal_body">
+                        <div class="cs_modal_img">
+                            <img t-if="state.detail.image_big"
+                                 t-att-src="'data:image/png;base64,' + state.detail.image_big" alt=""/>
+                            <span t-else="" class="cs_noimg">🦷</span>
+                        </div>
+                        <div class="cs_modal_info">
+                            <h3 t-esc="state.detail.name"/>
+                            <div class="text-muted mb-1" t-esc="state.detail.vendor_name"/>
+                            <div class="cs_modal_price"><t t-esc="state.detail.price.toFixed(2)"/> ₾</div>
+                            <div t-if="state.detail.desc" class="cs_modal_desc" t-out="state.detail.desc"/>
+                            <div class="cs_stock" t-esc="state.detail.qty_available + ' in stock'"/>
+                            <div class="d-flex align-items-center gap-2 mt-3">
+                                <input type="number" min="1" class="form-control cs_dqty"
+                                       t-att-value="state.detail.addQty"
+                                       t-on-change="(ev) => this.setDetailQty(ev)"/>
+                                <button class="btn btn-primary" t-on-click="() => this.addDetailToCart()">Add to cart</button>
+                            </div>
+                            <div t-if="state.detail.delay" class="text-muted small mt-2">
+                                Lead time: <t t-esc="state.detail.delay"/> days
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

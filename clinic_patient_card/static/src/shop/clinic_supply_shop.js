@@ -23,6 +23,7 @@ export class ClinicSupplyShop extends Component {
             sortBy: "name",
             cart: {},        // key `${product_id}_${vendor_id}` -> line
             cartOpen: false,
+            detail: null,    // open product detail
         });
         onWillStart(() => this.load());
     }
@@ -138,21 +139,52 @@ export class ClinicSupplyShop extends Component {
         this.state.search = ev.target.value;
     }
 
-    addToCart(offer) {
-        const c = this.state.cart[offer.key];
+    addToCart(offer, qty = 1) {
+        const key = offer.key || `${offer.product_id}_${offer.vendor_id}`;
+        const c = this.state.cart[key];
         if (c) {
-            c.qty += 1;
+            c.qty += qty;
         } else {
-            this.state.cart[offer.key] = {
+            this.state.cart[key] = {
                 product_id: offer.product_id,
                 name: offer.name,
                 vendor_id: offer.vendor_id,
                 vendor_name: offer.vendor_name,
                 price: offer.price,
-                qty: 1,
+                qty: qty,
             };
         }
         this.state.cartOpen = true;
+    }
+
+    async openDetail(offer) {
+        const p = await this.orm.read("product.product", [offer.product_id],
+            ["qty_available", "product_tmpl_id", "image_1920"]);
+        let desc = "";
+        if (p.length && p[0].product_tmpl_id) {
+            const t = await this.orm.read("product.template", [p[0].product_tmpl_id[0]],
+                ["description_sale", "description"]);
+            desc = (t.length && (t[0].description_sale || t[0].description)) || "";
+        }
+        this.state.detail = {
+            ...offer,
+            qty_available: p.length ? p[0].qty_available : 0,
+            image_big: (p.length && p[0].image_1920) || offer.image,
+            desc,
+            addQty: 1,
+        };
+    }
+    closeDetail() {
+        this.state.detail = null;
+    }
+    setDetailQty(ev) {
+        const v = parseFloat(ev.target.value);
+        this.state.detail.addQty = isNaN(v) || v < 1 ? 1 : v;
+    }
+    addDetailToCart() {
+        const d = this.state.detail;
+        this.addToCart(d, d.addQty);
+        this.closeDetail();
     }
     setQty(key, ev) {
         const v = parseFloat(ev.target.value);
