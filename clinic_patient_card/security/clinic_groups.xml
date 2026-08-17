@@ -46,7 +46,28 @@
         <field name="implied_ids" eval="[
             (4, ref('base.group_user')),
             (4, ref('purchase.group_purchase_user')),
+            (4, ref('stock.group_stock_user')),
         ]"/>
+    </record>
+
+    <!-- A supplier's Inventory shows only the products they themselves supply
+         (products with a product.supplierinfo line for their company). This
+         makes standard Inventory the base, scoped per supplier. -->
+    <record id="rule_clinic_supplier_own_template" model="ir.rule">
+        <field name="name">Clinic Supplier: own product templates</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="groups" eval="[(4, ref('group_clinic_supplier'))]"/>
+        <field name="domain_force">
+            [('seller_ids.partner_id.commercial_partner_id', '=', user.partner_id.commercial_partner_id.id)]
+        </field>
+    </record>
+    <record id="rule_clinic_supplier_own_product" model="ir.rule">
+        <field name="name">Clinic Supplier: own product variants</field>
+        <field name="model_id" ref="product.model_product_product"/>
+        <field name="groups" eval="[(4, ref('group_clinic_supplier'))]"/>
+        <field name="domain_force">
+            [('seller_ids.partner_id.commercial_partner_id', '=', user.partner_id.commercial_partner_id.id)]
+        </field>
     </record>
 
     <!-- A supplier sees only the purchase orders addressed to their own

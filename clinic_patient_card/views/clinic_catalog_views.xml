@@ -35,12 +35,19 @@
     </record>
 
     <!-- ===================== Menus ===================== -->
-    <menuitem id="menu_clinic_root" name="Clinic" sequence="90"/>
+    <!-- Root visible to any clinic role (incl. suppliers, who only get the
+         supplier child menus below). -->
+    <menuitem id="menu_clinic_root" name="Clinic" sequence="90"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor,clinic_patient_card.group_clinic_supplier"/>
+    <!-- Clinic-staff-only config; suppliers must not see it. -->
     <menuitem id="menu_clinic_config" name="Configuration"
-              parent="menu_clinic_root" sequence="10"/>
+              parent="menu_clinic_root" sequence="10"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
     <menuitem id="menu_clinic_procedures" name="Procedures"
-              parent="menu_clinic_config" action="action_clinic_procedures" sequence="10"/>
+              parent="menu_clinic_config" action="action_clinic_procedures" sequence="10"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
     <menuitem id="menu_clinic_insurance" name="Insurance Companies"
-              parent="menu_clinic_config" action="action_clinic_insurance_companies" sequence="20"/>
+              parent="menu_clinic_config" action="action_clinic_insurance_companies" sequence="20"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
 
 </odoo>

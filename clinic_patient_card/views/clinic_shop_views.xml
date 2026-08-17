@@ -15,7 +15,13 @@
         <field name="tag">clinic_supplier_portal</field>
     </record>
 
-    <menuitem id="menu_clinic_supplier_portal" name="My Products (Supplier)"
+    <menuitem id="menu_clinic_supplier_portal" name="My Shop"
               parent="menu_clinic_root" action="action_clinic_supplier_portal" sequence="16"
               groups="clinic_patient_card.group_clinic_supplier"/>
+
+    <!-- Suppliers reach their (scoped) stock straight from standard Inventory,
+         which is the base for the products they manage in "My Shop". -->
+    <menuitem id="menu_clinic_supplier_inventory" name="My Inventory"
+              parent="menu_clinic_root" action="stock.product_template_action_product"
+              sequence="17" groups="clinic_patient_card.group_clinic_supplier"/>
 </odoo>

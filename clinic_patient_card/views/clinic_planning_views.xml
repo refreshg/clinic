@@ -6,5 +6,6 @@
     </record>
 
     <menuitem id="menu_clinic_planning" name="Planning"
-              parent="menu_clinic_root" action="action_clinic_planning" sequence="3"/>
+              parent="menu_clinic_root" action="action_clinic_planning" sequence="3"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
 </odoo>

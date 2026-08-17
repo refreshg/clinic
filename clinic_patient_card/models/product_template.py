@@ -38,7 +38,7 @@ class ProductTemplate(models.Model):
         vendor = self._clinic_current_vendor()
         if not vendor:
             return {"vendor": False, "products": []}
-        sis = self.env["product.supplierinfo"].search(
+        sis = self.env["product.supplierinfo"].sudo().search(
             [("partner_id", "=", vendor.id)]
         )
         rows = []
@@ -92,11 +92,15 @@ class ProductTemplate(models.Model):
         if "image" in vals:
             tmpl_vals["image_1920"] = vals["image"] or False
 
+        # The ORM writes run as sudo so the "own products only" record rule
+        # never blocks a supplier from creating a brand-new product (which has
+        # no supplierinfo line yet); vendor scoping is still enforced here.
+        sudo = self.sudo()
         tmpl_id = vals.get("id")
         if tmpl_id:
-            tmpl = self.browse(int(tmpl_id))
+            tmpl = sudo.browse(int(tmpl_id))
             # a supplier may only edit a product they actually offer
-            has = self.env["product.supplierinfo"].search_count([
+            has = self.env["product.supplierinfo"].sudo().search_count([
                 ("product_tmpl_id", "=", tmpl.id),
                 ("partner_id", "=", vendor.id),
             ])
@@ -109,10 +113,10 @@ class ProductTemplate(models.Model):
                 "is_storable": True,
                 "is_clinic_supply": True,
             })
-            tmpl = self.create(tmpl_vals)
+            tmpl = sudo.create(tmpl_vals)
 
         # ensure a supplierinfo line (price / lead time) for this vendor
-        si = self.env["product.supplierinfo"].search([
+        si = self.env["product.supplierinfo"].sudo().search([
             ("product_tmpl_id", "=", tmpl.id),
             ("partner_id", "=", vendor.id),
         ], limit=1)
@@ -121,7 +125,7 @@ class ProductTemplate(models.Model):
             si.write(si_vals)
         else:
             si_vals.update({"partner_id": vendor.id, "product_tmpl_id": tmpl.id})
-            self.env["product.supplierinfo"].create(si_vals)
+            self.env["product.supplierinfo"].sudo().create(si_vals)
         return tmpl.id
 
     @api.model
@@ -131,7 +135,7 @@ class ProductTemplate(models.Model):
         vendor = self._clinic_current_vendor()
         if not vendor:
             return False
-        sis = self.env["product.supplierinfo"].search([
+        sis = self.env["product.supplierinfo"].sudo().search([
             ("product_tmpl_id", "=", int(tmpl_id)),
             ("partner_id", "=", vendor.id),
         ])

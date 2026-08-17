@@ -222,14 +222,18 @@
         <field name="view_mode">list</field>
     </record>
 
-    <!-- ===================== Menus ===================== -->
+    <!-- ===================== Menus (clinic staff only) ===================== -->
     <menuitem id="menu_clinic_appointments" name="Appointments"
-              parent="menu_clinic_root" action="action_clinic_appointment" sequence="1"/>
+              parent="menu_clinic_root" action="action_clinic_appointment" sequence="1"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
     <menuitem id="menu_clinic_my_calendar" name="My Calendar"
-              parent="menu_clinic_root" action="action_clinic_my_calendar" sequence="2"/>
+              parent="menu_clinic_root" action="action_clinic_my_calendar" sequence="2"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
     <menuitem id="menu_clinic_rooms" name="Rooms"
-              parent="menu_clinic_config" action="action_clinic_room" sequence="30"/>
+              parent="menu_clinic_config" action="action_clinic_room" sequence="30"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
     <menuitem id="menu_clinic_appointment_types" name="Appointment Types"
-              parent="menu_clinic_config" action="action_clinic_appointment_type" sequence="40"/>
+              parent="menu_clinic_config" action="action_clinic_appointment_type" sequence="40"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
 
 </odoo>
