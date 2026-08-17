@@ -168,16 +168,18 @@ class CalendarEvent(models.Model):
                 "date_deadline": fields.Date.context_today(self),
                 "user_id": dentist.id,
             })
-        if dentist.partner_id:
-            self.env["bus.bus"]._sendone(
-                dentist.partner_id,
-                "clinic_patient_arrived",
-                {
-                    "appointment_id": self.id,
-                    "patient": self.patient_id.name or "",
-                    "room": self.room_id.name or "",
-                },
-            )
+        # Notify the dentist AND the acting user (so a single-session admin also
+        # hears/sees it, and it works even if the dentist isn't logged in).
+        payload = {
+            "appointment_id": self.id,
+            "patient": self.patient_id.name or "",
+            "room": self.room_id.name or "",
+        }
+        partners = dentist.partner_id
+        if self.env.user.partner_id:
+            partners |= self.env.user.partner_id
+        for partner in partners:
+            self.env["bus.bus"]._sendone(partner, "clinic_patient_arrived", payload)
 
     def action_next_visit(self):
         """R13 — create a linked follow-up appointment (long-term plans)."""
