@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260630\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 13:51+0000\n"
-"PO-Revision-Date: 2026-08-17 13:51+0000\n"
+"POT-Creation-Date: 2026-08-17 16:42+0000\n"
+"PO-Revision-Date: 2026-08-17 16:42+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language-Team: Georgian\n"
@@ -16,6 +16,12 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: clinic_patient_card
+#. odoo-javascript
+#: code:addons/clinic_patient_card/static/src/planning/clinic_planning.xml:0
+msgid "+ New Appointment"
+msgstr "+ ახალი ჯავშანი"
 
 #. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_appointment_type__active
@@ -889,6 +895,12 @@ msgid "Next Visit"
 msgstr "შემდეგი ვიზიტი"
 
 #. module: clinic_patient_card
+#. odoo-javascript
+#: code:addons/clinic_patient_card/static/src/planning/clinic_planning.xml:0
+msgid "No clinic appointments for this day."
+msgstr "ამ დღეს ჯავშნები არ არის."
+
+#. module: clinic_patient_card
 #: model:ir.model.fields.selection,name:clinic_patient_card.selection__calendar_event__clinic_state__no_show
 #: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_appointment_form
 msgid "No-Show"
@@ -1096,6 +1108,12 @@ msgstr "დაგეგმილი"
 #: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__planned_date
 msgid "Planned Date"
 msgstr "დაგეგმილი თარიღი"
+
+#. module: clinic_patient_card
+#: model:ir.actions.client,name:clinic_patient_card.action_clinic_planning
+#: model:ir.ui.menu,name:clinic_patient_card.menu_clinic_planning
+msgid "Planning"
+msgstr "დაგეგმვა"
 
 #. module: clinic_patient_card
 #: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__loyalty_status__platinum
@@ -1404,6 +1422,12 @@ msgstr "სათაური"
 #: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_tooth__status__to_extract
 msgid "To Extract"
 msgstr "ამოსაღები"
+
+#. module: clinic_patient_card
+#. odoo-javascript
+#: code:addons/clinic_patient_card/static/src/planning/clinic_planning.xml:0
+msgid "Today"
+msgstr "დღეს"
 
 #. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_tooth__tooth_number

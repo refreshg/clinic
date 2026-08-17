@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="clinic_patient_card.ClinicPlanning">
+        <div class="clinic_planning o_action_manager p-2">
+            <div class="cp_toolbar d-flex align-items-center gap-2 mb-2">
+                <button class="btn btn-outline-secondary" t-on-click="() => this.changeDay(-1)">‹</button>
+                <button class="btn btn-outline-primary" t-on-click="() => this.setToday()">Today</button>
+                <button class="btn btn-outline-secondary" t-on-click="() => this.changeDay(1)">›</button>
+                <input type="date" class="form-control cp_dateinput" t-att-value="state.date"
+                       t-on-change="(ev) => this.onDateInput(ev)"/>
+                <span class="ms-auto"/>
+                <button class="btn btn-primary" t-on-click="() => this.newAppointment()">+ New Appointment</button>
+            </div>
+
+            <div t-if="!state.dentists.length" class="text-muted p-4 text-center">
+                No clinic appointments for this day.
+            </div>
+
+            <div t-else="" class="cp_wrap">
+                <!-- header row: corner + dentist names -->
+                <div class="cp_headrow d-flex">
+                    <div class="cp_hourhead"/>
+                    <t t-foreach="state.dentists" t-as="d" t-key="d.id">
+                        <div class="cp_denthead" t-esc="d.name"/>
+                    </t>
+                </div>
+                <!-- body: hour ruler + dentist columns -->
+                <div class="cp_body d-flex">
+                    <div class="cp_hourcol" t-attf-style="height:{{ totalHeight }}px;">
+                        <t t-foreach="hours()" t-as="h" t-key="h">
+                            <div class="cp_hourmark" t-esc="h + ':00'"/>
+                        </t>
+                    </div>
+                    <t t-foreach="state.dentists" t-as="d" t-key="d.id">
+                        <div class="cp_col" t-attf-style="height:{{ totalHeight }}px;">
+                            <t t-foreach="hours()" t-as="h" t-key="h">
+                                <div class="cp_slotline"/>
+                            </t>
+                            <t t-foreach="eventsFor(d.id)" t-as="ev" t-key="ev.id">
+                                <div class="cp_event" t-att-style="eventStyle(ev)"
+                                     t-on-click="() => this.openEvent(ev)">
+                                    <div class="cp_ev_time" t-esc="evTime(ev)"/>
+                                    <div class="cp_ev_name" t-esc="ev.name"/>
+                                    <div class="cp_ev_pat" t-esc="ev.patient_id ? ev.patient_id[1] : ''"/>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

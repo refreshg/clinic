@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_clinic_planning" model="ir.actions.client">
+        <field name="name">Planning</field>
+        <field name="tag">clinic_planning</field>
+    </record>
+
+    <menuitem id="menu_clinic_planning" name="Planning"
+              parent="menu_clinic_root" action="action_clinic_planning" sequence="3"/>
+</odoo>
