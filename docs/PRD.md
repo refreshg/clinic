@@ -7,9 +7,9 @@
 | **პლატფორმა** | Odoo **19.0 Community** (server build `19.0-20260630`) |
 | **ლიცენზია** | LGPL-3 |
 | **რეპოზიტორი** | https://github.com/refreshg/clinic (branch `main`) |
-| **ვერსია** | 19.0.4.0.0 |
-| **სტატუსი** | Phase 1–2 + Rev-A + Phase 3A დასრულებული (ჯავშნის ბირთვი); Phase 3B/3C/4 იგეგმება |
-| **ბოლო განახლება** | 2026-08-16 |
+| **ვერსია** | 19.0.25.0.0 |
+| **სტატუსი** | Phase 1–2 + Rev-A + Phase 3 (A/B/C) + Phase 4 დასრულებული და ცოცხლად. დამატებით: OWL Planning board, პაციენტის ვიზუალური Dashboard, Supply Shop (custom storefront), მომწოდებლის portal (როლი + სტანდ. Inventory ფუძედ) და **PO↔SO ჯაჭვი**. |
+| **ბოლო განახლება** | 2026-08-18 |
 
 > ეს დოკუმენტი პროექტის **source of truth**-ია. კოდის ან scope-ის ცვლილებისას ეს ფაილიც განახლდეს.
 > ორიგინალი მოთხოვნები: `პაციენტის ბარათი- 04.07.26 (1).doc` (რეპოს root-ში).
@@ -197,13 +197,33 @@ computed: `age`, `odontogram_html`. write()-ში: `patient_ref` მინი�
   (clinic_state state machine + workflow ღილაკები), `clinic.room`, `clinic.appointment.type`,
   calendar/list/form view-ები, Clinic→Appointments მენიუ, „Create Booking" ღილაკი,
   დროის აღრიცხვა. `calendar` install. → იხ. 1.10 + `booking-visit-patterns.md`.
-- **Phase 3B — 🔜 როლები/წვდომა:** Clinic Doctor vs Administrator (res.groups + ACL + ir.rule +
+- **Phase 3B — ✅ როლები/წვდომა:** Clinic Doctor vs Administrator (res.groups + ACL + ir.rule +
   field `groups=`): სამედ./კბილი/პროცედურა/ჯავშანი = ექიმი; ფინანს./საბანკო/გადახდა = ადმინი.
-- **Phase 3C — 🔜:** ექიმის bus+ხმა+toast შეტყობინება (checkin), ექიმის კალენდარი + OWL visual
-  (screenshot-ის იერი), პროცედურის auto-შევსება (done→history), follow-up ლოგიკა, გადახდა
-  (account), 1.4 ბოლო ვიზიტი auto, 1.7 auto-გამოთვლა, 1.8 თაიმლაინი (chatter), ავტ. შეხსენებები.
-- **Phase 4 — 🔜 მარაგები/შეკვეთა:** `stock`+`purchase`+`website_sale` (shop reuse) → მარაგი,
-  reordering, მაღაზიის UI → `purchase.order` ხიდი, vendor confirm. + Form-100, EHR, დაწკაპ. ოდონტოგრამა.
+  ადმინი ერთდება post_init_hook-ით (`_post_init_grant_admin`).
+- **Phase 3C — ✅:** ექიმის bus+ხმა+toast შეტყობინება (checkin → `clinic_arrived_service.js`),
+  ექიმის კალენდარი, პროცედურის auto-შევსება (done→`clinic.procedure.history`), follow-up
+  („Next Visit"), გადახდა (`clinic.payment.wizard` → account.move), 1.4 ბოლო ვიზიტი auto.
+- **Phase 4 — ✅ მარაგები/შეკვეთა:** `stock`+`purchase` reuse → მარაგი, reordering,
+  low-stock alert (cron → activity + bus). **Supply Shop** = custom OWL storefront (მომხმარებლის
+  არჩევანი — „მაღაზიის იერი პრინციპულია"), არა `website_sale` (ის გაყიდვისთვისაა). checkout →
+  `purchase.order` (RFQ) + **სარკე `sale.order`** მომწოდებელზე (PO↔SO ჯაჭვი).
+- **Phase 5 — ✅ Planning board / Dashboard / Supplier portal (extras, v19.0.15–25):**
+  - **OWL Planning board** (`clinic_planning`, Clinic→Planning, seq 1): მრავალსვეტიანი
+    დღის ხედი დენტისტებით, ფერადი ბლოკები appointment_type-ით, mini-cal, room/dentist ფილტრი,
+    now-line. **ცარიელ უჯრაზე დაკლიკება** → ახალი ვიზიტი წინასწარ შევსებული (dentist + დრო,
+    snap 30წთ) + ripple/ghost ვიზუალური feedback. სვეტები ყოველთვის ჩანს
+    (`res.users.clinic_dentists` = Doctor ჯგუფი).
+  - **პაციენტის Dashboard** (`clinic_patient_dashboard`): Health-Care დიზაინის ვიზუალი —
+    breadcrumb, პროფილის ბარათი, vitals row (ვიზუალი, „not tracked yet"), history table.
+    „🩺 Open Dashboard" ღილაკი Patient Card ტაბზე.
+  - **მომწოდებლის portal:** ახალი როლი **Clinic Supplier** (implies purchase + stock + sales
+    user); record rules → ხედავს მხოლოდ თავის პროდუქტებს (Inventory ფუძედ), თავის RFQ/SO-ებს.
+    „My Shop" OWL პანელი (პროდუქტების გამოქვეყნება, სურათით) სტანდ. Inventory-ს ზედნაშენად.
+    checkout → SO მომწოდებელზე; მომწოდებელი ადასტურებს SO-ს → PO ავტომატურად დასტურდება +
+    კლინიკას toast. მენიუ: My Shop / My Inventory / My Orders.
+  - **ვიზიტის ფორმა:** კლინიკურ ვიზიტზე დამალულია meeting-only ველები (Location, Video Link,
+    guests/attendees + EMAIL/SMS); Clinic ტაბი ავტომატურად იხსნება.
+- **🔜 დარჩენილი:** Form-100, EHR sync, დაწკაპუნებადი ოდონტოგრამა, დემო-პროდუქტების რეალური ფოტოები.
 
 ## 8. გადაწყვეტილებების ჟურნალი
 - პირადი ნომერი → სტანდარტული `vat` (მომხმარებლის არჩევანი, დუბლის თავიდან ასაცილებლად).
@@ -212,6 +232,21 @@ computed: `age`, `odontogram_html`. write()-ში: `patient_ref` მინი�
 - დოკუმენტები/ხელმოწერა → attachments + `signature` widget (Enterprise `documents`/`sign` მიუწვდომ.).
 - კბილის სქემა → ჯერ ცხრილი + ვიზუალური read-only ოდონტოგრამა; დაწკაპუნებადი JS მოგვიანებით.
 - სწრაფი ღილაკები → placeholder, სანამ შესაბამისი ფუნქციონალი არ არსებობს.
+- **მაღაზია → custom OWL Supply Shop** (არა `website_sale`): მომხმარებელმა თქვა „მაღაზიის იერი
+  პრინციპულია"; `website_sale` გაყიდვისთვისაა (sale.order), ჩვენ ყიდვა გვჭირდება. custom UI
+  სტანდარტულ `purchase`-ზე დაშენდა.
+- **PO↔SO ჯაჭვი:** კლინიკა ყიდულობს → `purchase.order`; მომწოდებელი ყიდის → `sale.order`
+  (სარკე, ერთ DB-ში). ეს „სწორი ჯაჭვია" (მომხმარებლის დაკვირვება). SO-ს delivery გამორთულია
+  კლინიკის ორდერებზე (`_action_launch_stock_rule` skip) — საქონელი PO-ს receipt-ით მოდის,
+  ასე რომ SO confirm არ საჭიროებს warehouse route-ს.
+- **მომწოდებლის პროდუქტები = სტანდარტული Inventory ფუძედ** (მომხმარებლის მოთხოვნა): „My Shop"
+  პანელი მხოლოდ მართვის UI-ია; ბაზა/ნაშთი ყველაფერი Inventory-დან, record rule-ით scoped
+  („seller_ids.partner_id" == user's vendor). პანელის write-ები `.sudo()`-ით (scoping კოდში).
+- **მომწოდებელი ≠ კლინიკის მენიუები:** როლებით — მომწოდებელი ხედავს მხოლოდ My Shop/Inventory/
+  Orders; კალენდარი/ვიზიტები დამალულია. (მენიუს ხილვადობა მოწმდება `ir.ui.menu.load_menus`-ით,
+  არა raw search-ით — raw search group-gating-ს არ ითვალისწინებს.)
+- **vitals ვიზუალი მხოლოდ:** Dashboard-ზე წნევა/პულსი/გლუკოზა/ქოლესტეროლი placeholder-ია
+  („not tracked yet") — არ ვინახავთ vitals-ს, გამოგონილ სამედიცინო მაჩვენებლებს არ ვაჩვენებთ.
 
 ## 9. ღია საკითხები
 - ჯავშნის მოდელის ველების ზუსტი scope (სტატუსები, გაუქმების მიზეზი/ავტორი).

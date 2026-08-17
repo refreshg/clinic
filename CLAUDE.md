@@ -21,9 +21,37 @@
 ## Product / plan
 - **`docs/PRD.md` is the source of truth** for requirements, data model, phases and
   decisions (patient card 1.1–1.9). Keep it updated as scope changes.
-- Status: Phases 1–2 DONE (basic/contact/medical/dental + financials/documents/profile/
-  quick-action buttons + visual FDI odontogram). Phase 3 = appointments, timeline,
-  wiring the quick actions, Form-100, EHR sync, clickable odontogram.
+- Status (as of v19.0.25.0.0): Phases 1–2, Rev-A, Phase 3 (A/B/C) and Phase 4 are DONE
+  and live. Extras also live: OWL Planning board (Clinic>Planning; click empty grid slot
+  to book, with a ripple/ghost cue), a visual patient Dashboard (Health-Care style OWL
+  action, "Open Dashboard" on the Patient Card tab), a custom OWL Supply Shop, and a
+  supplier portal (Clinic Supplier role: standard Inventory is the base, "My Shop" panel
+  publishes products into the shop). Ordering models the correct chain: clinic checkout
+  makes a purchase.order AND a mirror sale.order for the supplier — the supplier confirms
+  the SO, which mirror-confirms the PO and notifies the clinic. Clinic visit forms hide
+  meeting-only fields (Location/Video Link/attendees) and open the Clinic tab by default.
+- Still open: Form-100, EHR sync, clickable odontogram, real photos for demo products.
+
+## Key architecture decisions (this build)
+- **Shop = custom OWL, not `website_sale`** — website_sale sells (sale.order); the clinic
+  BUYS. The storefront is a custom OWL client action over standard `purchase`.
+- **PO↔SO chain** — one Odoo DB holds clinic + suppliers as users. Clinic checkout creates
+  `purchase.order` (RFQ) per vendor AND a mirror `sale.order` (customer = clinic company,
+  tagged `clinic_supplier_id`/`clinic_purchase_id`). Supplier confirms the SO →
+  `_clinic_notify_clinic_confirmed` mirror-confirms the linked PO. Mirror SO lines skip
+  delivery (`sale.order.line._action_launch_stock_rule` no-op for clinic orders) so confirm
+  never depends on warehouse routes — goods reach the clinic via the PO receipt.
+- **Supplier products = standard Inventory as the base** — the "My Shop" OWL panel is only a
+  management UI; products/stock live in standard Inventory, scoped per supplier by ir.rule
+  (`seller_ids.partner_id.commercial_partner_id == user's`). Panel writes use `.sudo()` with
+  vendor scoping enforced in code (so creating a new product isn't blocked before its
+  supplierinfo exists).
+- **Roles gate menus** — Clinic Administrator / Doctor / Supplier. Suppliers see only
+  My Shop / My Inventory / My Orders — no calendar/visits. Verify menu visibility with
+  `ir.ui.menu.load_menus`, NOT a raw `search` (raw search ignores group gating).
+- **Custom board is the calendar** — the standard Appointments/My Calendar list menus were
+  removed; the OWL Planning board is the scheduling UI. The act_window actions stay defined
+  for quick-action buttons.
 
 ## How to work here
 - Use the **odoo-development** skill for all Odoo questions; read the relevant file in
