@@ -8,7 +8,7 @@
     "author": "refreshg",
     "website": "https://github.com/refreshg/clinic",
     "category": "Healthcare",
-    "version": "19.0.7.0.0",
+    "version": "19.0.8.0.0",
     "license": "LGPL-3",
     "depends": [
         "base",
@@ -24,6 +24,7 @@
         "security/clinic_groups.xml",
         "security/ir.model.access.csv",
         "data/ir_sequence.xml",
+        "data/clinic_cron.xml",
         "views/clinic_catalog_views.xml",
         "views/clinic_appointment_views.xml",
         "views/clinic_inventory_views.xml",

@@ -40,6 +40,15 @@ export const clinicArrivedService = {
             });
             beep();
         });
+        bus_service.subscribe("clinic_low_stock", (payload) => {
+            const items = (payload && payload.items) || [];
+            notification.add(items.join(", "), {
+                title: _t("Low stock (%s)", (payload && payload.count) || 0),
+                type: "warning",
+                sticky: true,
+            });
+            beep();
+        });
         bus_service.start();
     },
 };

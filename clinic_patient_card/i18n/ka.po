@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260630\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 12:02+0000\n"
-"PO-Revision-Date: 2026-08-17 12:02+0000\n"
+"POT-Creation-Date: 2026-08-17 13:51+0000\n"
+"PO-Revision-Date: 2026-08-17 13:51+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language-Team: Georgian\n"
@@ -244,6 +244,11 @@ msgstr "კლინიკის ოთახი / სავარძელი"
 #: model:ir.model.fields,field_description:clinic_patient_card.field_product_template__is_clinic_supply
 msgid "Clinic Supply"
 msgstr "კლინიკის მასალა"
+
+#. module: clinic_patient_card
+#: model:ir.actions.server,name:clinic_patient_card.cron_clinic_low_stock_ir_actions_server
+msgid "Clinic: low-stock alert"
+msgstr ""
 
 #. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_appointment_type__color
@@ -749,6 +754,18 @@ msgstr "ლათინური სრული სახელი, გამ�
 #: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__risk_level__low
 msgid "Low"
 msgstr "დაბალი"
+
+#. module: clinic_patient_card
+#. odoo-javascript
+#: code:addons/clinic_patient_card/static/src/clinic_arrived_service.js:0
+msgid "Low stock (%s)"
+msgstr "დაბალი მარაგი (%s)"
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/product_template.py:0
+msgid "Low stock: %s"
+msgstr "დაბალი მარაგი: %s"
 
 #. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__loyalty_status
