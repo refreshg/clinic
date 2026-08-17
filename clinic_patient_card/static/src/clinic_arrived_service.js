@@ -23,24 +23,41 @@ function ensureAudio() {
         return null;
     }
 }
-function beep(times = 2) {
+// Pleasant notification chime — a short melody of sine notes with sustain.
+function playMelody(notes) {
     const ctx = ensureAudio();
     if (!ctx) {
         return;
     }
-    for (let i = 0; i < times; i++) {
-        const t = ctx.currentTime + i * 0.28;
+    const now = ctx.currentTime;
+    notes.forEach((n, i) => {
+        const t = now + (n.at !== undefined ? n.at : i * 0.16);
+        const dur = n.dur || 0.5;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.frequency.value = 900;
+        osc.type = "sine";
+        osc.frequency.value = n.f;
         gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+        gain.gain.exponentialRampToValueAtTime(0.32, t + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(t);
-        osc.stop(t + 0.24);
-    }
+        osc.stop(t + dur + 0.05);
+    });
+}
+// Friendly ascending arpeggio (C5-E5-G5-C6), then repeat softer.
+function chimeArrived() {
+    playMelody([
+        { f: 523.25 }, { f: 659.25 }, { f: 783.99 }, { f: 1046.5, dur: 0.7 },
+    ]);
+}
+// Two-tone alert for low stock.
+function chimeAlert() {
+    playMelody([
+        { f: 880, at: 0, dur: 0.35 }, { f: 587.33, at: 0.3, dur: 0.5 },
+        { f: 880, at: 0.7, dur: 0.35 }, { f: 587.33, at: 1.0, dur: 0.5 },
+    ]);
 }
 
 export const clinicArrivedService = {
@@ -58,7 +75,7 @@ export const clinicArrivedService = {
                 type: "info",
                 sticky: false,
             });
-            beep(2);
+            chimeArrived();
         });
         bus_service.subscribe("clinic_low_stock", (payload) => {
             const items = (payload && payload.items) || [];
@@ -67,7 +84,7 @@ export const clinicArrivedService = {
                 type: "warning",
                 sticky: true,
             });
-            beep(3);
+            chimeAlert();
         });
         bus_service.start();
     },
