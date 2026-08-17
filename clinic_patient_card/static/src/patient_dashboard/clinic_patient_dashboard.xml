@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="clinic_patient_card.ClinicPatientDashboard">
+        <div class="clinic_pdash">
+
+            <t t-if="state.loading">
+                <div class="cpd_empty">Loading…</div>
+            </t>
+
+            <t t-elif="!state.patient">
+                <div class="cpd_empty">No patient selected.</div>
+            </t>
+
+            <t t-else="">
+                <!-- breadcrumb -->
+                <div class="cpd_crumbs">
+                    Patient <span class="cpd_sep">›</span>
+                    Patient Details <span class="cpd_sep">›</span>
+                    <span class="cpd_current" t-esc="state.patient.display_name"/>
+                </div>
+
+                <!-- ===== profile card ===== -->
+                <div class="cpd_card cpd_profile">
+                    <div class="cpd_profile_left">
+                        <div class="cpd_avatar">
+                            <img t-if="state.patient.image_1024"
+                                 t-att-src="'data:image/png;base64,' + state.patient.image_1024" alt=""/>
+                            <span t-else="" class="cpd_avatar_ph"
+                                  t-esc="(state.patient.name || '?').slice(0,1)"/>
+                        </div>
+                        <div class="cpd_name" t-esc="state.patient.display_name"/>
+                        <div class="cpd_email" t-esc="state.patient.email || state.patient.phone || ''"/>
+                        <button class="cpd_edit" t-on-click="() => this.editProfile()">Edit Profile</button>
+                    </div>
+                    <div class="cpd_profile_grid">
+                        <div class="cpd_field"><div class="cpd_lbl">Sex</div><div class="cpd_val" t-esc="sexLabel"/></div>
+                        <div class="cpd_field"><div class="cpd_lbl">Age</div><div class="cpd_val" t-esc="state.patient.age || '—'"/></div>
+                        <div class="cpd_field"><div class="cpd_lbl">Risk</div><div class="cpd_val" t-esc="riskLabel"/></div>
+
+                        <div class="cpd_field"><div class="cpd_lbl">Status</div>
+                            <div class="cpd_val cpd_active" t-esc="statusLabel"/></div>
+                        <div class="cpd_field"><div class="cpd_lbl">Patient No.</div>
+                            <div class="cpd_val" t-esc="state.patient.patient_ref || '—'"/></div>
+                        <div class="cpd_field"><div class="cpd_lbl">Registered Date</div>
+                            <div class="cpd_val" t-esc="fmtDate(state.patient.registration_date)"/></div>
+
+                        <div class="cpd_field"><div class="cpd_lbl">Treatment Plan</div>
+                            <div class="cpd_val" t-esc="planLabel"/></div>
+                        <div class="cpd_field"><div class="cpd_lbl">Last Visit</div>
+                            <div class="cpd_val" t-esc="fmtDate(state.patient.last_dental_visit_date)"/></div>
+                        <div class="cpd_field"><div class="cpd_lbl">Balance (debt)</div>
+                            <div class="cpd_val" t-esc="fmtMoney(state.patient.credit) + ' ₾'"/></div>
+                    </div>
+                </div>
+
+                <!-- ===== vitals (visual placeholder — no stored data yet) ===== -->
+                <div class="cpd_section_title">
+                    Patient Current Vitals
+                    <span class="cpd_hint">visual — not tracked yet</span>
+                </div>
+                <div class="cpd_vitals">
+                    <div class="cpd_vital">
+                        <div class="cpd_vital_lbl">Blood Pressure</div>
+                        <div class="cpd_vital_val">—</div>
+                        <div class="cpd_vital_note cpd_muted">no data</div>
+                    </div>
+                    <div class="cpd_vital">
+                        <div class="cpd_vital_lbl">Heart rate</div>
+                        <div class="cpd_vital_val">—</div>
+                        <div class="cpd_vital_note cpd_muted">no data</div>
+                    </div>
+                    <div class="cpd_vital">
+                        <div class="cpd_vital_lbl">Glucose</div>
+                        <div class="cpd_vital_val">—</div>
+                        <div class="cpd_vital_note cpd_muted">no data</div>
+                    </div>
+                    <div class="cpd_vital">
+                        <div class="cpd_vital_lbl">Cholesterol</div>
+                        <div class="cpd_vital_val">—</div>
+                        <div class="cpd_vital_note cpd_muted">no data</div>
+                    </div>
+                </div>
+
+                <!-- ===== patient history ===== -->
+                <div class="cpd_card cpd_history">
+                    <div class="cpd_hist_head">
+                        <div class="cpd_section_title cpd_inline">Patient History</div>
+                        <div class="cpd_total">Total <t t-esc="state.history.length"/> visits</div>
+                    </div>
+                    <table class="cpd_table">
+                        <thead>
+                            <tr>
+                                <th>Date Of Visit</th>
+                                <th>Procedure</th>
+                                <th>Visit</th>
+                                <th>Doctor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-if="!state.history.length">
+                                <tr><td colspan="5" class="cpd_muted cpd_center">No visit history yet.</td></tr>
+                            </t>
+                            <t t-foreach="state.history" t-as="h" t-key="h.id">
+                                <tr>
+                                    <td t-esc="fmtDate(h.date)"/>
+                                    <td class="cpd_strong" t-esc="h.diagnosis"/>
+                                    <td t-esc="h.visit || '—'"/>
+                                    <td t-esc="h.doctor || '—'"/>
+                                    <td><span t-att-class="statusClass(h.status)" t-esc="statusText(h.status)"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </div>
+    </t>
+
+</templates>

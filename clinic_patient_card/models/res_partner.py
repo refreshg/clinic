@@ -381,3 +381,15 @@ class ResPartner(models.Model):
                 "default_name": self.name,
             },
         }
+
+    def action_open_dashboard(self):
+        """Open the visual patient dashboard (OWL client action) for this patient."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.client",
+            "tag": "clinic_patient_dashboard",
+            "name": self.display_name,
+            "target": "current",
+            "context": {"active_id": self.id, "default_partner_id": self.id},
+            "params": {"partner_id": self.id},
+        }
