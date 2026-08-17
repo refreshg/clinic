@@ -1,0 +1,192 @@
+/** @odoo-module **/
+
+import { Component, useState, onWillStart } from "@odoo/owl";
+import { registry } from "@web/core/registry";
+import { useService } from "@web/core/utils/hooks";
+import { _t } from "@web/core/l10n/translation";
+
+export class ClinicSupplyShop extends Component {
+    static template = "clinic_patient_card.ClinicSupplyShop";
+    static props = ["*"];
+
+    setup() {
+        this.orm = useService("orm");
+        this.action = useService("action");
+        this.notification = useService("notification");
+        this.state = useState({
+            offers: [],
+            vendors: [],
+            vendorOff: {},
+            categories: [],
+            catOff: {},
+            search: "",
+            cart: {},        // key `${product_id}_${vendor_id}` -> line
+            cartOpen: false,
+        });
+        onWillStart(() => this.load());
+    }
+
+    async load() {
+        const sis = await this.orm.searchRead(
+            "product.supplierinfo", [],
+            ["partner_id", "product_tmpl_id", "product_id", "price", "delay"]
+        );
+        // resolve a product.product id + name for each template
+        const tmplIds = [...new Set(sis.map((s) => s.product_tmpl_id && s.product_tmpl_id[0]).filter(Boolean))];
+        const prods = tmplIds.length
+            ? await this.orm.searchRead("product.product",
+                [["product_tmpl_id", "in", tmplIds]],
+                ["product_tmpl_id", "display_name"])
+            : [];
+        const byTmpl = {};
+        for (const p of prods) {
+            if (p.product_tmpl_id && !byTmpl[p.product_tmpl_id[0]]) {
+                byTmpl[p.product_tmpl_id[0]] = p;
+            }
+        }
+        const offers = [];
+        const vmap = new Map();
+        for (const s of sis) {
+            if (!s.partner_id) {
+                continue;
+            }
+            let pid, pname;
+            if (s.product_id) {
+                pid = s.product_id[0];
+                pname = s.product_id[1];
+            } else if (s.product_tmpl_id && byTmpl[s.product_tmpl_id[0]]) {
+                const pp = byTmpl[s.product_tmpl_id[0]];
+                pid = pp.id;
+                pname = pp.display_name;
+            } else {
+                continue;
+            }
+            offers.push({
+                key: `${pid}_${s.partner_id[0]}`,
+                product_id: pid,
+                name: pname,
+                vendor_id: s.partner_id[0],
+                vendor_name: s.partner_id[1],
+                price: s.price || 0,
+                delay: s.delay || 0,
+            });
+            vmap.set(s.partner_id[0], s.partner_id[1]);
+        }
+        // fetch image + category for every offered product
+        const pids = [...new Set(offers.map((o) => o.product_id))];
+        const details = pids.length
+            ? await this.orm.searchRead("product.product", [["id", "in", pids]],
+                ["image_128", "categ_id"])
+            : [];
+        const dmap = {};
+        for (const d of details) {
+            dmap[d.id] = d;
+        }
+        const cmap = new Map();
+        for (const o of offers) {
+            const d = dmap[o.product_id];
+            o.image = (d && d.image_128) || false;
+            o.categ_id = d && d.categ_id ? d.categ_id[0] : false;
+            o.categ_name = d && d.categ_id ? d.categ_id[1] : "";
+            if (o.categ_id) {
+                cmap.set(o.categ_id, o.categ_name);
+            }
+        }
+        this.state.offers = offers;
+        this.state.vendors = [...vmap.entries()].map(([id, name]) => ({ id, name }));
+        this.state.categories = [...cmap.entries()].map(([id, name]) => ({ id, name }));
+    }
+
+    get shownOffers() {
+        const q = (this.state.search || "").toLowerCase();
+        return this.state.offers.filter((o) => {
+            if (this.state.vendorOff[o.vendor_id]) {
+                return false;
+            }
+            if (o.categ_id && this.state.catOff[o.categ_id]) {
+                return false;
+            }
+            if (q && !(`${o.name} ${o.vendor_name}`.toLowerCase().includes(q))) {
+                return false;
+            }
+            return true;
+        });
+    }
+
+    toggleVendor(id) {
+        this.state.vendorOff[id] = !this.state.vendorOff[id];
+    }
+    toggleCat(id) {
+        this.state.catOff[id] = !this.state.catOff[id];
+    }
+    onSearch(ev) {
+        this.state.search = ev.target.value;
+    }
+
+    addToCart(offer) {
+        const c = this.state.cart[offer.key];
+        if (c) {
+            c.qty += 1;
+        } else {
+            this.state.cart[offer.key] = {
+                product_id: offer.product_id,
+                name: offer.name,
+                vendor_id: offer.vendor_id,
+                vendor_name: offer.vendor_name,
+                price: offer.price,
+                qty: 1,
+            };
+        }
+        this.state.cartOpen = true;
+    }
+    setQty(key, ev) {
+        const v = parseFloat(ev.target.value);
+        if (this.state.cart[key]) {
+            this.state.cart[key].qty = isNaN(v) || v < 1 ? 1 : v;
+        }
+    }
+    removeLine(key) {
+        delete this.state.cart[key];
+    }
+    get cartLines() {
+        return Object.entries(this.state.cart).map(([key, l]) => ({ key, ...l }));
+    }
+    get cartCount() {
+        return this.cartLines.length;
+    }
+    get cartTotal() {
+        return this.cartLines.reduce((s, l) => s + l.price * l.qty, 0);
+    }
+    toggleCart() {
+        this.state.cartOpen = !this.state.cartOpen;
+    }
+
+    async checkout() {
+        const cart = this.cartLines.map((l) => ({
+            product_id: l.product_id,
+            vendor_id: l.vendor_id,
+            qty: l.qty,
+            price: l.price,
+        }));
+        if (!cart.length) {
+            return;
+        }
+        const poIds = await this.orm.call("purchase.order", "clinic_create_rfqs", [cart]);
+        this.state.cart = {};
+        this.state.cartOpen = false;
+        this.notification.add(
+            _t("Sent to suppliers — %s RFQ(s) created", (poIds || []).length),
+            { type: "success" }
+        );
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: _t("Requests for Quotation"),
+            res_model: "purchase.order",
+            domain: [["id", "in", poIds || []]],
+            views: [[false, "list"], [false, "form"]],
+            target: "current",
+        });
+    }
+}
+
+registry.category("actions").add("clinic_supply_shop", ClinicSupplyShop);

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_clinic_supply_shop" model="ir.actions.client">
+        <field name="name">Supply Shop</field>
+        <field name="tag">clinic_supply_shop</field>
+    </record>
+
+    <menuitem id="menu_clinic_supply_shop" name="Supply Shop"
+              parent="menu_clinic_root" action="action_clinic_supply_shop" sequence="15"
+              groups="clinic_patient_card.group_clinic_admin"/>
+</odoo>

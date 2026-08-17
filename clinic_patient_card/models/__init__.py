@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from . import product_template
+from . import purchase_order
 from . import clinic_room
 from . import clinic_appointment_type
 from . import clinic_appointment

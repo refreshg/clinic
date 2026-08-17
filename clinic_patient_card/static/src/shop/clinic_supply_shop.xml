@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="clinic_patient_card.ClinicSupplyShop">
+        <div class="clinic_shop">
+            <div class="cs_top d-flex align-items-center flex-wrap gap-2 mb-3">
+                <div class="me-auto">
+                    <h4 class="mb-0 fw-bold">Supply Shop</h4>
+                    <small class="text-muted">Browse products published by suppliers, fill the cart and send.</small>
+                </div>
+                <input type="text" class="form-control cs_search" placeholder="Search..."
+                       t-att-value="state.search" t-on-input="(ev) => this.onSearch(ev)"/>
+                <button class="btn btn-primary" t-on-click="() => this.toggleCart()">
+                    🛒 Cart (<t t-esc="cartCount"/>)
+                </button>
+            </div>
+
+            <div class="cs_layout d-flex gap-3">
+                <!-- vendor filter -->
+                <div class="cs_side">
+                    <div class="fw-semibold mb-1">Suppliers</div>
+                    <t t-foreach="state.vendors" t-as="v" t-key="v.id">
+                        <label class="cs_vrow">
+                            <input type="checkbox" t-att-checked="!state.vendorOff[v.id]"
+                                   t-on-change="() => this.toggleVendor(v.id)"/>
+                            <span t-esc="v.name"/>
+                        </label>
+                    </t>
+                    <div t-if="state.categories.length" class="fw-semibold mb-1 mt-3">Categories</div>
+                    <t t-foreach="state.categories" t-as="c" t-key="c.id">
+                        <label class="cs_vrow">
+                            <input type="checkbox" t-att-checked="!state.catOff[c.id]"
+                                   t-on-change="() => this.toggleCat(c.id)"/>
+                            <span t-esc="c.name"/>
+                        </label>
+                    </t>
+                </div>
+
+                <!-- product grid -->
+                <div class="cs_main flex-grow-1">
+                    <div t-if="!shownOffers.length" class="text-muted p-5 text-center">
+                        No products available from suppliers.
+                    </div>
+                    <div t-else="" class="cs_grid">
+                        <t t-foreach="shownOffers" t-as="o" t-key="o.key">
+                            <div class="cs_card">
+                                <div class="cs_card_img">
+                                    <img t-if="o.image" t-att-src="'data:image/png;base64,' + o.image" alt=""/>
+                                    <span t-else="" class="cs_noimg">🦷</span>
+                                </div>
+                                <div class="cs_card_name" t-esc="o.name"/>
+                                <div class="cs_card_vendor" t-esc="o.vendor_name"/>
+                                <div class="cs_card_meta">
+                                    <span class="cs_price" t-esc="o.price.toFixed(2)"/>
+                                    <span class="cs_delay" t-if="o.delay">· <t t-esc="o.delay"/>d lead</span>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary w-100 mt-2"
+                                        t-on-click="() => this.addToCart(o)">Add to cart</button>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- cart panel -->
+                <div t-if="state.cartOpen" class="cs_cart">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="fw-bold flex-grow-1">Cart</div>
+                        <button class="btn btn-sm btn-light" t-on-click="() => this.toggleCart()">✕</button>
+                    </div>
+                    <div t-if="!cartLines.length" class="text-muted small">Cart is empty.</div>
+                    <t t-foreach="cartLines" t-as="l" t-key="l.key">
+                        <div class="cs_cart_line">
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold" t-esc="l.name"/>
+                                <div class="text-muted small" t-esc="l.vendor_name"/>
+                            </div>
+                            <input type="number" min="1" class="form-control form-control-sm cs_qty"
+                                   t-att-value="l.qty" t-on-change="(ev) => this.setQty(l.key, ev)"/>
+                            <div class="cs_line_sub" t-esc="(l.price * l.qty).toFixed(2)"/>
+                            <button class="btn btn-sm btn-link text-danger" t-on-click="() => this.removeLine(l.key)">✕</button>
+                        </div>
+                    </t>
+                    <div class="d-flex align-items-center mt-2 pt-2 border-top">
+                        <div class="fw-bold flex-grow-1">Total</div>
+                        <div class="fw-bold" t-esc="cartTotal.toFixed(2)"/>
+                    </div>
+                    <button class="btn btn-primary w-100 mt-2" t-att-disabled="!cartLines.length"
+                            t-on-click="() => this.checkout()">Send to Suppliers</button>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>
