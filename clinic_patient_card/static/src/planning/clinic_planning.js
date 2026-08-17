@@ -101,13 +101,14 @@ export class ClinicPlanning extends Component {
         const from = this._iso(prev) + " 00:00:00";
         const to = this._iso(next) + " 23:59:59";
 
-        const [events, types, rooms, fg] = await Promise.all([
+        const [events, types, rooms, fg, dentists] = await Promise.all([
             this.orm.searchRead("calendar.event",
                 [["is_clinic", "=", true], ["start", ">=", from], ["start", "<=", to]],
                 ["name", "start", "stop", "dentist_id", "room_id", "appointment_type_id", "patient_id", "clinic_state"]),
             this.orm.searchRead("clinic.appointment.type", [], ["name", "color"]),
             this.orm.searchRead("clinic.room", [], ["name"]),
             this.orm.call("calendar.event", "fields_get", [["clinic_state"], ["selection"]]),
+            this.orm.call("res.users", "clinic_dentists", []),
         ]);
         this.state.stateLabels = Object.fromEntries(
             (fg.clinic_state && fg.clinic_state.selection) || []
@@ -120,15 +121,22 @@ export class ClinicPlanning extends Component {
         const dayEvents = events.filter(
             (e) => deserializeDateTime(e.start).toFormat("yyyy-LL-dd") === this.state.date
         );
-        // dentist columns (with the room they work in that day)
+        // dentist columns: always show every clinic dentist (so an empty day
+        // still has clickable columns), keeping the room seen in that day's
+        // events when there is one.
         const dmap = new Map();
+        for (const u of dentists || []) {
+            dmap.set(u.id, { id: u.id, name: u.name, room: "" });
+        }
         for (const e of dayEvents) {
-            if (e.dentist_id && !dmap.has(e.dentist_id[0])) {
-                dmap.set(e.dentist_id[0], {
-                    id: e.dentist_id[0],
-                    name: e.dentist_id[1],
-                    room: e.room_id ? e.room_id[1] : "",
-                });
+            if (e.dentist_id) {
+                const existing = dmap.get(e.dentist_id[0]) || {
+                    id: e.dentist_id[0], name: e.dentist_id[1], room: "",
+                };
+                if (!existing.room && e.room_id) {
+                    existing.room = e.room_id[1];
+                }
+                dmap.set(e.dentist_id[0], existing);
             }
         }
         this.state.events = dayEvents;
@@ -252,6 +260,42 @@ export class ClinicPlanning extends Component {
             views: [[false, "form"]],
             target: "current",
             context: { default_is_clinic: true },
+        });
+    }
+
+    // Click an empty area of a dentist's column -> new visit at that time.
+    onSlotClick(dentist, ev) {
+        // ignore clicks that landed on an existing event card
+        if (ev.target.closest(".cp_event")) {
+            return;
+        }
+        const rect = ev.currentTarget.getBoundingClientRect();
+        const y = ev.clientY - rect.top;
+        let hour = START_HOUR + y / HOUR_PX;
+        // snap to the nearest half hour, keep inside the working window
+        hour = Math.round(hour * 2) / 2;
+        hour = Math.min(END_HOUR - 0.5, Math.max(START_HOUR, hour));
+        const h = Math.floor(hour);
+        const m = Math.round((hour - h) * 60);
+        const pad = (n) => (n < 10 ? "0" + n : "" + n);
+        // naive local datetime string; the form widget interprets it in tz
+        const start = `${this.state.date} ${pad(h)}:${pad(m)}:00`;
+        const endHour = Math.min(END_HOUR, hour + 0.5);
+        const eh = Math.floor(endHour);
+        const em = Math.round((endHour - eh) * 60);
+        const stop = `${this.state.date} ${pad(eh)}:${pad(em)}:00`;
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "calendar.event",
+            views: [[false, "form"]],
+            target: "current",
+            context: {
+                default_is_clinic: true,
+                default_dentist_id: dentist.id,
+                default_user_id: dentist.id,
+                default_start: start,
+                default_stop: stop,
+            },
         });
     }
 }

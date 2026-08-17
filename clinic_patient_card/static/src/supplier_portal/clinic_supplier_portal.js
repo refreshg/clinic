@@ -123,10 +123,12 @@ export class ClinicSupplierPortal extends Component {
     }
 
     openOrders() {
+        // The supplier fulfils clinic orders as their own sales orders.
         this.action.doAction({
             type: "ir.actions.act_window",
             name: _t("My Orders"),
-            res_model: "purchase.order",
+            res_model: "sale.order",
+            domain: [["is_clinic_order", "=", true]],
             views: [[false, "list"], [false, "form"]],
             target: "current",
         });

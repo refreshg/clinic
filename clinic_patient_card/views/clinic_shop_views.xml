@@ -24,4 +24,15 @@
     <menuitem id="menu_clinic_supplier_inventory" name="My Inventory"
               parent="menu_clinic_root" action="stock.product_template_action_product"
               sequence="17" groups="clinic_patient_card.group_clinic_supplier"/>
+
+    <!-- Clinic orders reach the supplier as their own sales orders to fulfil. -->
+    <record id="action_clinic_supplier_orders" model="ir.actions.act_window">
+        <field name="name">My Orders</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_clinic_order', '=', True)]</field>
+    </record>
+    <menuitem id="menu_clinic_supplier_orders" name="My Orders"
+              parent="menu_clinic_root" action="action_clinic_supplier_orders"
+              sequence="18" groups="clinic_patient_card.group_clinic_supplier"/>
 </odoo>

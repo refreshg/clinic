@@ -7,6 +7,8 @@ class PurchaseOrder(models.Model):
 
     # Marks RFQs created from the clinic Supply Shop (drives the notify flow).
     is_clinic_order = fields.Boolean(string="Clinic Order", copy=False)
+    # The mirror sales order created on the supplier's side.
+    clinic_sale_id = fields.Many2one("sale.order", string="Supplier Sales Order", copy=False)
 
     # ------------------------------------------------------------------
     # Shop -> RFQs
@@ -43,9 +45,42 @@ class PurchaseOrder(models.Model):
                 "order_line": order_lines,
                 "is_clinic_order": True,
             })
+            # Mirror the order onto the supplier's side as a sales order, so the
+            # chain is modelled correctly (clinic buys via PO, supplier sells via SO).
+            po._clinic_create_supplier_sale(lines)
             po._clinic_notify_vendor()
             po_ids.append(po.id)
         return po_ids
+
+    def _clinic_create_supplier_sale(self, lines):
+        """Create the supplier's sale.order that mirrors this clinic RFQ.
+
+        The customer is the clinic company; the sale order is tagged with the
+        supplier partner so the supplier's record rule can scope it.
+        """
+        self.ensure_one()
+        clinic_partner = self.env.company.partner_id
+        so_lines = []
+        for line in lines:
+            product = self.env["product.product"].browse(int(line["product_id"]))
+            if not product.exists():
+                continue
+            so_lines.append((0, 0, {
+                "product_id": product.id,
+                "product_uom_qty": line.get("qty") or 1.0,
+                "price_unit": line.get("price") or product.list_price or 0.0,
+            }))
+        if not so_lines:
+            return self.env["sale.order"]
+        so = self.env["sale.order"].sudo().create({
+            "partner_id": clinic_partner.id,
+            "order_line": so_lines,
+            "is_clinic_order": True,
+            "clinic_supplier_id": self.partner_id.id,
+            "clinic_purchase_id": self.id,
+        })
+        self.clinic_sale_id = so.id
+        return so
 
     # ------------------------------------------------------------------
     # Business process notifications
@@ -57,7 +92,11 @@ class PurchaseOrder(models.Model):
         return self.env["res.users"].search([("all_group_ids", "in", group.id)])
 
     def _clinic_notify_vendor(self):
-        """Order placed by the clinic -> tell the supplier to confirm."""
+        """Order placed by the clinic -> tell the supplier to confirm.
+
+        The supplier works on the mirror sale.order (their own document), so
+        the to-do activity and the live toast point at that sales order.
+        """
         self.ensure_one()
         # RFQ is now sent to the supplier.
         if self.state == "draft":
@@ -67,23 +106,27 @@ class PurchaseOrder(models.Model):
         admin_partners = self._clinic_admin_users().partner_id
         if admin_partners:
             self.message_subscribe(partner_ids=admin_partners.ids)
-        # Notify the supplier's user(s): activity + live toast.
-        vendor_users = self.env["res.users"].search([("partner_id", "=", self.partner_id.id)])
+        # Notify the supplier's user(s): activity on the SALES ORDER + live toast.
+        vendor_partner = self.partner_id.commercial_partner_id
+        vendor_users = self.env["res.users"].search([
+            ("partner_id.commercial_partner_id", "=", vendor_partner.id)
+        ])
+        so = self.clinic_sale_id
         todo = self.env.ref("mail.mail_activity_data_todo", raise_if_not_found=False)
-        po_model_id = self.env["ir.model"]._get_id("purchase.order")
+        so_model_id = self.env["ir.model"]._get_id("sale.order")
         for user in vendor_users:
-            if todo:
-                self.env["mail.activity"].create({
-                    "res_model_id": po_model_id,
-                    "res_id": self.id,
+            if todo and so:
+                self.env["mail.activity"].sudo().create({
+                    "res_model_id": so_model_id,
+                    "res_id": so.id,
                     "activity_type_id": todo.id,
-                    "summary": _("Confirm clinic order %s") % self.name,
+                    "summary": _("Confirm clinic order %s") % so.name,
                     "date_deadline": fields.Date.context_today(self),
                     "user_id": user.id,
                 })
             if user.partner_id:
                 self.env["bus.bus"]._sendone(user.partner_id, "clinic_new_order", {
-                    "name": self.name,
+                    "name": so.name if so else self.name,
                     "amount": self.amount_total,
                 })
 

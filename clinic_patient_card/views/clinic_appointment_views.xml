@@ -222,13 +222,10 @@
         <field name="view_mode">list</field>
     </record>
 
-    <!-- ===================== Menus (clinic staff only) ===================== -->
-    <menuitem id="menu_clinic_appointments" name="Appointments"
-              parent="menu_clinic_root" action="action_clinic_appointment" sequence="1"
-              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
-    <menuitem id="menu_clinic_my_calendar" name="My Calendar"
-              parent="menu_clinic_root" action="action_clinic_my_calendar" sequence="2"
-              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
+    <!-- ===================== Menus (clinic staff only) =====================
+         The custom Planning board is the calendar now, so the standard
+         Appointments / My Calendar list menus are intentionally not exposed.
+         The actions themselves stay defined (used by quick buttons / the board). -->
     <menuitem id="menu_clinic_rooms" name="Rooms"
               parent="menu_clinic_config" action="action_clinic_room" sequence="30"
               groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>

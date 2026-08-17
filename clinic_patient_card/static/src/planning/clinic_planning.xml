@@ -104,13 +104,14 @@
                                 </t>
                             </div>
                             <t t-foreach="shownDentists" t-as="d" t-key="d.id">
-                                <div class="cp_col" t-attf-style="height:{{ totalHeight }}px;">
+                                <div class="cp_col" t-attf-style="height:{{ totalHeight }}px;"
+                                     t-on-click="(ev) => this.onSlotClick(d, ev)" title="Click to add a visit">
                                     <t t-foreach="hours()" t-as="h" t-key="h">
                                         <div class="cp_slotline"/>
                                     </t>
                                     <t t-foreach="eventsFor(d.id)" t-as="ev" t-key="ev.id">
                                         <div class="cp_event" t-att-style="eventStyle(ev)"
-                                             t-on-click="() => this.openEvent(ev)">
+                                             t-on-click.stop="() => this.openEvent(ev)">
                                             <span t-attf-class="cp_status {{ stateClass(ev) }}" t-esc="stateLabel(ev)"/>
                                             <div class="cp_ev_time" t-esc="evTime(ev)"/>
                                             <div class="cp_ev_name" t-esc="ev.name"/>
