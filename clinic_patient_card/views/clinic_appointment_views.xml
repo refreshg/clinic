@@ -1,48 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ===================== Appointment form ===================== -->
+    <!-- ===== Appointment form = INHERIT the base calendar.event form, so the
+         clinic buttons/fields appear on every calendar.event form (Planning,
+         standard Calendar, Clinic > Appointments, activities). ===== -->
     <record id="view_clinic_appointment_form" model="ir.ui.view">
-        <field name="name">clinic.appointment.form</field>
+        <field name="name">clinic.appointment.form.inherit</field>
         <field name="model">calendar.event</field>
-        <field name="priority">32</field>
+        <field name="inherit_id" ref="calendar.view_calendar_event_form"/>
         <field name="arch" type="xml">
-            <form string="Appointment">
-                <header>
-                    <button name="action_confirm" type="object" string="Confirm"
-                            groups="clinic_patient_card.group_clinic_admin"
-                            class="btn-primary" invisible="clinic_state not in ('requested','booked')"/>
-                    <button name="action_arrive" type="object" string="Arrived"
-                            groups="clinic_patient_card.group_clinic_admin"
-                            class="btn-primary" invisible="clinic_state not in ('booked','confirmed')"/>
-                    <button name="action_start" type="object" string="Start"
-                            groups="clinic_patient_card.group_clinic_doctor"
-                            class="btn-primary" invisible="clinic_state != 'arrived'"/>
-                    <button name="action_done" type="object" string="Done"
-                            groups="clinic_patient_card.group_clinic_doctor"
-                            class="btn-primary" invisible="clinic_state != 'in_progress'"/>
-                    <button name="action_pay" type="object" string="Register Payment"
-                            groups="clinic_patient_card.group_clinic_admin"
-                            class="btn-primary" invisible="clinic_state != 'done'"/>
-                    <button name="action_cancel" type="object" string="Cancel"
-                            groups="clinic_patient_card.group_clinic_admin"
-                            invisible="clinic_state in ('paid','cancelled','no_show')"/>
-                    <button name="action_no_show" type="object" string="No-Show"
-                            groups="clinic_patient_card.group_clinic_admin"
-                            invisible="clinic_state not in ('booked','confirmed','arrived')"/>
-                    <button name="action_next_visit" type="object" string="Next Visit"
-                            groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"
-                            invisible="clinic_state not in ('done','paid')"/>
-                    <field name="clinic_state" widget="statusbar"
-                           statusbar_visible="booked,confirmed,arrived,in_progress,done,paid"/>
-                </header>
-                <sheet>
+            <xpath expr="//header" position="inside">
+                <button name="action_confirm" type="object" string="Confirm"
+                        groups="clinic_patient_card.group_clinic_admin" class="btn-primary"
+                        invisible="not is_clinic or clinic_state not in ('requested','booked')"/>
+                <button name="action_arrive" type="object" string="Arrived"
+                        groups="clinic_patient_card.group_clinic_admin" class="btn-primary"
+                        invisible="not is_clinic or clinic_state not in ('booked','confirmed')"/>
+                <button name="action_start" type="object" string="Start"
+                        groups="clinic_patient_card.group_clinic_doctor" class="btn-primary"
+                        invisible="not is_clinic or clinic_state != 'arrived'"/>
+                <button name="action_done" type="object" string="Done"
+                        groups="clinic_patient_card.group_clinic_doctor" class="btn-primary"
+                        invisible="not is_clinic or clinic_state != 'in_progress'"/>
+                <button name="action_pay" type="object" string="Register Payment"
+                        groups="clinic_patient_card.group_clinic_admin" class="btn-primary"
+                        invisible="not is_clinic or clinic_state != 'done'"/>
+                <button name="action_cancel" type="object" string="Cancel"
+                        groups="clinic_patient_card.group_clinic_admin"
+                        invisible="not is_clinic or clinic_state in ('paid','cancelled','no_show')"/>
+                <button name="action_no_show" type="object" string="No-Show"
+                        groups="clinic_patient_card.group_clinic_admin"
+                        invisible="not is_clinic or clinic_state not in ('booked','confirmed','arrived')"/>
+                <button name="action_next_visit" type="object" string="Next Visit"
+                        groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"
+                        invisible="not is_clinic or clinic_state not in ('done','paid')"/>
+                <field name="clinic_state" widget="statusbar" invisible="not is_clinic"
+                       statusbar_visible="booked,confirmed,arrived,in_progress,done,paid"/>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page name="clinic_page" string="Clinic" invisible="not is_clinic">
                     <group>
                         <group>
-                            <field name="is_clinic" invisible="1"/>
+                            <field name="is_clinic"/>
                             <field name="patient_id"/>
                             <field name="appointment_type_id"/>
-                            <field name="name" string="Subject"/>
                             <field name="cancel_reason"
                                    invisible="clinic_state != 'cancelled'"
                                    required="clinic_state == 'cancelled'"/>
@@ -50,8 +52,6 @@
                         <group>
                             <field name="dentist_id"/>
                             <field name="room_id"/>
-                            <field name="start"/>
-                            <field name="stop"/>
                         </group>
                     </group>
                     <group string="Procedures"
@@ -73,10 +73,8 @@
                         <field name="treat_end_time"/>
                         <field name="parent_appointment_id"/>
                     </group>
-                    <field name="description" placeholder="Notes..."/>
-                </sheet>
-                <chatter/>
-            </form>
+                </page>
+            </xpath>
         </field>
     </record>
 
@@ -160,12 +158,7 @@
         <field name="view_id" ref="view_clinic_appointment_list"/>
         <field name="act_window_id" ref="action_clinic_appointment"/>
     </record>
-    <record id="action_clinic_appointment_view_form" model="ir.actions.act_window.view">
-        <field name="sequence" eval="3"/>
-        <field name="view_mode">form</field>
-        <field name="view_id" ref="view_clinic_appointment_form"/>
-        <field name="act_window_id" ref="action_clinic_appointment"/>
-    </record>
+    <!-- form uses the default (inherited) calendar.event form -->
 
     <!-- R11 — doctor's own calendar -->
     <record id="action_clinic_my_calendar" model="ir.actions.act_window">
@@ -186,12 +179,6 @@
         <field name="sequence" eval="2"/>
         <field name="view_mode">list</field>
         <field name="view_id" ref="view_clinic_appointment_list"/>
-        <field name="act_window_id" ref="action_clinic_my_calendar"/>
-    </record>
-    <record id="action_my_cal_view_form" model="ir.actions.act_window.view">
-        <field name="sequence" eval="3"/>
-        <field name="view_mode">form</field>
-        <field name="view_id" ref="view_clinic_appointment_form"/>
         <field name="act_window_id" ref="action_clinic_my_calendar"/>
     </record>
 
