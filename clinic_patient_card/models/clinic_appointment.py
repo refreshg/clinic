@@ -52,6 +52,10 @@ class CalendarEvent(models.Model):
     )
     # Follow-up chaining (long-term treatment plans).
     parent_appointment_id = fields.Many2one("calendar.event", string="Previous Visit")
+    # Procedures performed/planned in THIS visit (auto-pushed to patient history).
+    procedure_line_ids = fields.One2many(
+        "clinic.procedure.history", "appointment_id", string="Procedures",
+    )
 
     @api.depends("checkin_time", "treat_start_time", "treat_end_time")
     def _compute_durations(self):
@@ -85,16 +89,41 @@ class CalendarEvent(models.Model):
         self.write({"clinic_state": "confirmed"})
 
     def action_arrive(self):
+        # R2/R9 (admin marks arrival) + R10 (notify the dentist).
         self.write({"clinic_state": "arrived", "checkin_time": fields.Datetime.now()})
+        for ev in self:
+            ev._notify_dentist_arrived()
 
     def action_start(self):
         self.write({"clinic_state": "in_progress", "treat_start_time": fields.Datetime.now()})
 
     def action_done(self):
-        self.write({"clinic_state": "done", "treat_end_time": fields.Datetime.now()})
+        # R12 — the doctor closes: push the visit's procedures to patient history.
+        now = fields.Datetime.now()
+        today = fields.Date.context_today(self)
+        for ev in self:
+            ev.write({"clinic_state": "done", "treat_end_time": now})
+            for line in ev.procedure_line_ids:
+                vals = {}
+                if line.status != "done":
+                    vals["status"] = "done"
+                if not line.procedure_date:
+                    vals["procedure_date"] = today
+                if not line.doctor_id:
+                    vals["doctor_id"] = (ev.dentist_id or self.env.user).id
+                if not line.partner_id and ev.patient_id:
+                    vals["partner_id"] = ev.patient_id.id
+                if vals:
+                    line.write(vals)
+            if ev.patient_id:
+                ev.patient_id.last_dental_visit_date = today
 
     def action_pay(self):
-        self.write({"clinic_state": "paid"})
+        # R14 — administrator closes with payment: draft a customer invoice from
+        # the visit's procedure products (reuses standard `account`).
+        for ev in self:
+            ev._create_invoice_from_procedures()
+            ev.write({"clinic_state": "paid"})
 
     def action_cancel(self):
         for ev in self:
@@ -104,3 +133,84 @@ class CalendarEvent(models.Model):
 
     def action_no_show(self):
         self.write({"clinic_state": "no_show"})
+
+    # ------------------------------------------------------------------
+    # 3C helpers — notification, follow-up, invoicing
+    # ------------------------------------------------------------------
+    def _notify_dentist_arrived(self):
+        """R10 — to-do activity + live bus push (sound/toast) for the dentist."""
+        self.ensure_one()
+        dentist = self.dentist_id
+        if not dentist:
+            return
+        todo = self.env.ref("mail.mail_activity_data_todo", raise_if_not_found=False)
+        if todo:
+            self.env["mail.activity"].create({
+                "res_model_id": self.env["ir.model"]._get_id("calendar.event"),
+                "res_id": self.id,
+                "activity_type_id": todo.id,
+                "summary": _("Patient arrived: %s") % (self.patient_id.name or ""),
+                "date_deadline": fields.Date.context_today(self),
+                "user_id": dentist.id,
+            })
+        if dentist.partner_id:
+            self.env["bus.bus"]._sendone(
+                dentist.partner_id,
+                "clinic_patient_arrived",
+                {
+                    "appointment_id": self.id,
+                    "patient": self.patient_id.name or "",
+                    "room": self.room_id.name or "",
+                },
+            )
+
+    def action_next_visit(self):
+        """R13 — create a linked follow-up appointment (long-term plans)."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Next Visit"),
+            "res_model": "calendar.event",
+            "view_mode": "form",
+            "target": "current",
+            "context": {
+                "default_is_clinic": True,
+                "default_patient_id": self.patient_id.id,
+                "default_dentist_id": self.dentist_id.id,
+                "default_room_id": self.room_id.id,
+                "default_appointment_type_id": self.appointment_type_id.id,
+                "default_parent_appointment_id": self.id,
+                "default_name": self.name,
+            },
+        }
+
+    def _create_invoice_from_procedures(self):
+        """R14/pattern-5 — draft an invoice from the visit's procedure products.
+        Defensive: skips silently if accounting has no sales journal configured.
+        """
+        self.ensure_one()
+        if not self.patient_id:
+            return
+        lines = self.procedure_line_ids.filtered(lambda l: l.procedure_id)
+        if not lines:
+            return
+        journal = self.env["account.journal"].search(
+            [("type", "=", "sale"), ("company_id", "=", self.env.company.id)], limit=1
+        )
+        if not journal:
+            return
+        invoice_lines = [
+            (0, 0, {
+                "product_id": line.procedure_id.id,
+                "name": line.name or line.procedure_id.name,
+                "quantity": 1,
+                "price_unit": line.procedure_id.list_price,
+            })
+            for line in lines
+        ]
+        self.env["account.move"].create({
+            "move_type": "out_invoice",
+            "partner_id": self.patient_id.id,
+            "invoice_origin": self.name or "",
+            "invoice_line_ids": invoice_lines,
+        })

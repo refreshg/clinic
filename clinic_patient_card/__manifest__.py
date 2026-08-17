@@ -8,7 +8,7 @@
     "author": "refreshg",
     "website": "https://github.com/refreshg/clinic",
     "category": "Healthcare",
-    "version": "19.0.5.0.0",
+    "version": "19.0.6.0.0",
     "license": "LGPL-3",
     "depends": [
         "base",
@@ -26,6 +26,11 @@
         "views/clinic_appointment_views.xml",
         "views/res_partner_views.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "clinic_patient_card/static/src/clinic_arrived_service.js",
+        ],
+    },
     "installable": True,
     "application": False,
     "post_init_hook": "_post_init_grant_admin",
