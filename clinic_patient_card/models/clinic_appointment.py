@@ -203,7 +203,7 @@ class CalendarEvent(models.Model):
             (0, 0, {
                 "product_id": line.procedure_id.id,
                 "name": line.name or line.procedure_id.name,
-                "quantity": 1,
+                "quantity": line.qty or 1.0,
                 "price_unit": line.procedure_id.list_price,
             })
             for line in lines

@@ -60,6 +60,7 @@
                             <list editable="bottom">
                                 <field name="status"/>
                                 <field name="procedure_id"/>
+                                <field name="qty"/>
                                 <field name="tooth"/>
                                 <field name="note"/>
                             </list>

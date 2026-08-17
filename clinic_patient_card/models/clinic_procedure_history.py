@@ -33,6 +33,7 @@ class ClinicProcedureHistory(models.Model):
         default="planned",
         required=True,
     )
+    qty = fields.Float(string="Qty", default=1.0)
     planned_date = fields.Date(string="Planned Date")
     procedure_date = fields.Date(string="Done Date")
     # Who performed the procedure (doctor).

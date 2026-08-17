@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260630\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 16:42+0000\n"
-"PO-Revision-Date: 2026-08-17 16:42+0000\n"
+"POT-Creation-Date: 2026-08-17 20:02+0000\n"
+"PO-Revision-Date: 2026-08-17 20:02+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language-Team: Georgian\n"
@@ -47,6 +47,12 @@ msgid "Alcohol"
 msgstr "ალკოჰოლი"
 
 #. module: clinic_patient_card
+#. odoo-javascript
+#: code:addons/clinic_patient_card/static/src/planning/clinic_planning.xml:0
+msgid "All Dentists"
+msgstr ""
+
+#. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__allergy_ids
 #: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__allergy_ids
 msgid "Allergies"
@@ -59,7 +65,6 @@ msgstr "ალერგიული სინჯი ჩატარდა"
 
 #. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_procedure_history__appointment_id
-#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_appointment_form
 msgid "Appointment"
 msgstr "ჯავშანი"
 
@@ -71,6 +76,8 @@ msgid "Appointment Type"
 msgstr "ჯავშნის ტიპი"
 
 #. module: clinic_patient_card
+#. odoo-javascript
+#: code:addons/clinic_patient_card/static/src/planning/clinic_planning.xml:0
 #: model:ir.actions.act_window,name:clinic_patient_card.action_clinic_appointment_type
 #: model:ir.ui.menu,name:clinic_patient_card.menu_clinic_appointment_types
 msgid "Appointment Types"
@@ -132,6 +139,12 @@ msgstr "მოტანილი"
 #: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__has_bruxism
 msgid "Bruxism"
 msgstr "ბრუქსიზმი"
+
+#. module: clinic_patient_card
+#. odoo-javascript
+#: code:addons/clinic_patient_card/static/src/planning/clinic_planning.xml:0
+msgid "Calendar"
+msgstr ""
 
 #. module: clinic_patient_card
 #: model:ir.model,name:clinic_patient_card.model_calendar_event
@@ -211,6 +224,7 @@ msgstr "ქრონიკული დაავადებები"
 #. module: clinic_patient_card
 #: model:ir.module.category,name:clinic_patient_card.module_category_clinic
 #: model:ir.ui.menu,name:clinic_patient_card.menu_clinic_root
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_appointment_form
 msgid "Clinic"
 msgstr "კლინიკა"
 
@@ -689,11 +703,6 @@ msgid "Insurance Valid Until"
 msgstr "დაზღვევის ვადა"
 
 #. module: clinic_patient_card
-#: model:ir.ui.menu,name:clinic_patient_card.menu_clinic_inventory
-msgid "Inventory"
-msgstr "მარაგი"
-
-#. module: clinic_patient_card
 #: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_partner_form_patient_card
 msgid "Invoices and Payments"
 msgstr "ინვოისები და გადახდები"
@@ -788,6 +797,12 @@ msgstr "გადახდა / დავალიანებაში"
 #: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__gender__male
 msgid "Male"
 msgstr "მამრობითი"
+
+#. module: clinic_patient_card
+#. odoo-javascript
+#: code:addons/clinic_patient_card/static/src/planning/clinic_planning.xml:0
+msgid "Manage appointments, rooms and schedules."
+msgstr ""
 
 #. module: clinic_patient_card
 #: model:ir.model.fields.selection,name:clinic_patient_card.selection__clinic_patient_allergy__allergy_type__material
@@ -934,21 +949,10 @@ msgid "Notes"
 msgstr "შენიშვნები"
 
 #. module: clinic_patient_card
-#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_appointment_form
-msgid "Notes..."
-msgstr "შენიშვნები..."
-
-#. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__odontogram_html
 #: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__odontogram_html
 msgid "Odontogram"
 msgstr "ოდონტოგრამა"
-
-#. module: clinic_patient_card
-#: model:ir.actions.act_window,name:clinic_patient_card.action_clinic_onhand
-#: model:ir.ui.menu,name:clinic_patient_card.menu_clinic_onhand
-msgid "On-hand"
-msgstr "მარაგში"
 
 #. module: clinic_patient_card
 #: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_partner_form_patient_card
@@ -1205,12 +1209,6 @@ msgid "Product"
 msgstr ""
 
 #. module: clinic_patient_card
-#: model:ir.actions.act_window,name:clinic_patient_card.action_clinic_purchase_orders
-#: model:ir.ui.menu,name:clinic_patient_card.menu_clinic_purchase_orders
-msgid "Purchase Orders"
-msgstr "შესყიდვის ორდერები"
-
-#. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__reaction
 msgid "Reaction"
 msgstr "რეაქცია"
@@ -1266,12 +1264,6 @@ msgid "Repeat Patient"
 msgstr "განმეორებითი პაციენტი"
 
 #. module: clinic_patient_card
-#: model:ir.actions.act_window,name:clinic_patient_card.action_clinic_replenishment
-#: model:ir.ui.menu,name:clinic_patient_card.menu_clinic_replenishment
-msgid "Replenishment"
-msgstr "შევსება"
-
-#. module: clinic_patient_card
 #: model:ir.model.fields.selection,name:clinic_patient_card.selection__calendar_event__clinic_state__requested
 msgid "Requested"
 msgstr "მოთხოვნილი"
@@ -1307,6 +1299,8 @@ msgid "Room"
 msgstr "ოთახი"
 
 #. module: clinic_patient_card
+#. odoo-javascript
+#: code:addons/clinic_patient_card/static/src/planning/clinic_planning.xml:0
 #: model:ir.actions.act_window,name:clinic_patient_card.action_clinic_room
 #: model:ir.ui.menu,name:clinic_patient_card.menu_clinic_rooms
 msgid "Rooms"
@@ -1372,20 +1366,9 @@ msgid "Status"
 msgstr "სტატუსი"
 
 #. module: clinic_patient_card
-#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_appointment_form
-msgid "Subject"
-msgstr "თემა"
-
-#. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_allergy__name
 msgid "Substance"
 msgstr "ნივთიერება"
-
-#. module: clinic_patient_card
-#: model:ir.actions.act_window,name:clinic_patient_card.action_clinic_supplies
-#: model:ir.ui.menu,name:clinic_patient_card.menu_clinic_supplies
-msgid "Supplies"
-msgstr "მასალები"
 
 #. module: clinic_patient_card
 #: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_partner_form_patient_card

@@ -226,6 +226,7 @@
                                                decoration-warning="status == 'planned'"
                                                decoration-danger="status in ('postponed','cancelled')"/>
                                         <field name="procedure_id"/>
+                                        <field name="qty"/>
                                         <field name="name" optional="hide"/>
                                         <field name="planned_date"/>
                                         <field name="procedure_date"/>

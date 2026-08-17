@@ -35,6 +35,7 @@ export class ClinicPlanning extends Component {
             rooms: [],
             roomOff: {},          // {roomId: true} when unchecked
             dentistFilter: false, // false = all
+            stateLabels: {},      // clinic_state value -> translated label
         });
         onWillStart(() => this.load());
     }
@@ -100,13 +101,17 @@ export class ClinicPlanning extends Component {
         const from = this._iso(prev) + " 00:00:00";
         const to = this._iso(next) + " 23:59:59";
 
-        const [events, types, rooms] = await Promise.all([
+        const [events, types, rooms, fg] = await Promise.all([
             this.orm.searchRead("calendar.event",
                 [["is_clinic", "=", true], ["start", ">=", from], ["start", "<=", to]],
                 ["name", "start", "stop", "dentist_id", "room_id", "appointment_type_id", "patient_id", "clinic_state"]),
             this.orm.searchRead("clinic.appointment.type", [], ["name", "color"]),
             this.orm.searchRead("clinic.room", [], ["name"]),
+            this.orm.call("calendar.event", "fields_get", [["clinic_state"], ["selection"]]),
         ]);
+        this.state.stateLabels = Object.fromEntries(
+            (fg.clinic_state && fg.clinic_state.selection) || []
+        );
 
         const typeMap = {};
         for (const t of types) {
@@ -174,6 +179,17 @@ export class ClinicPlanning extends Component {
     }
     patientName(ev) {
         return ev.patient_id ? ev.patient_id[1] : "";
+    }
+    stateLabel(ev) {
+        return this.state.stateLabels[ev.clinic_state] || ev.clinic_state || "";
+    }
+    stateClass(ev) {
+        const s = ev.clinic_state;
+        if (s === "paid" || s === "done") return "cp_st_done";
+        if (s === "in_progress") return "cp_st_prog";
+        if (s === "arrived" || s === "confirmed") return "cp_st_arr";
+        if (s === "cancelled" || s === "no_show") return "cp_st_cancel";
+        return "cp_st_booked";
     }
 
     get nowTop() {

@@ -111,9 +111,26 @@
                 line-height: 1.3;
                 box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06);
                 &:hover { filter: brightness(0.97); }
-                .cp_ev_time { font-weight: 600; opacity: 0.85; }
+                .cp_ev_time { font-weight: 600; opacity: 0.85; padding-right: 46px; }
                 .cp_ev_name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
                 .cp_ev_pat { opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                .cp_status {
+                    position: absolute;
+                    top: 4px;
+                    right: 4px;
+                    font-size: 9px;
+                    font-weight: 600;
+                    line-height: 1;
+                    padding: 2px 5px;
+                    border-radius: 8px;
+                    color: #fff;
+                    white-space: nowrap;
+                }
+                .cp_st_booked { background: #98a2b3; }
+                .cp_st_arr { background: #2f80ed; }
+                .cp_st_prog { background: #f2994a; }
+                .cp_st_done { background: #27ae60; }
+                .cp_st_cancel { background: #eb5757; }
             }
         }
         .cp_nowline {
