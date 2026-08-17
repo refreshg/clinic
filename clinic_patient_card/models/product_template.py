@@ -9,3 +9,5 @@ class ProductTemplate(models.Model):
     _inherit = "product.template"
 
     is_clinic_procedure = fields.Boolean(string="Clinic Procedure")
+    # Consumables / materials the clinic keeps in stock and reorders from vendors.
+    is_clinic_supply = fields.Boolean(string="Clinic Supply")

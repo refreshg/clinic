@@ -20,11 +20,16 @@
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
-    <!-- Clinic Administrator: reception / financial / all appointments -->
+    <!-- Clinic Administrator: reception / financial / all appointments;
+         also gets standard Purchase + Inventory access for supplies. -->
     <record id="group_clinic_admin" model="res.groups">
         <field name="name">Clinic Administrator</field>
         <field name="privilege_id" ref="privilege_clinic"/>
-        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="implied_ids" eval="[
+            (4, ref('base.group_user')),
+            (4, ref('purchase.group_purchase_user')),
+            (4, ref('stock.group_stock_user')),
+        ]"/>
     </record>
 
     <!-- The main administrator is granted both clinic roles by the module's
