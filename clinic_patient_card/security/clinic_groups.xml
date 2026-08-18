@@ -107,6 +107,20 @@
         </field>
     </record>
 
+    <!-- ══ Appointment visibility ══════════════════════════════════════
+         GLOBAL rule (no groups) so it AND-restricts every user: a CLINIC visit
+         is only readable by its own dentist or by a Clinic Administrator.
+         Non-clinic calendar events (ordinary meetings) are untouched. A global
+         rule is required here — a group rule would merely OR-widen the base
+         `calendar` rules and let doctors see everyone. Users without the clinic
+         doctor/admin groups (e.g. reception) are unaffected by the clinic side
+         because they don't open the board; they still see non-clinic events. -->
+    <record id="rule_clinic_event_visibility" model="ir.rule">
+        <field name="name">Clinic: appointment visibility (own dentist or admin)</field>
+        <field name="model_id" ref="calendar.model_calendar_event"/>
+        <field name="domain_force">['|', '|', ('is_clinic', '=', False), ('id', '!=', False) if user.has_group('clinic_patient_card.group_clinic_admin') else ('id', '=', False), ('dentist_id', '=', user.id)]</field>
+    </record>
+
     <!-- The main administrator is granted both clinic roles by the module's
          post_init_hook (base.user_admin is noupdate, so an XML write is skipped). -->
 </odoo>
