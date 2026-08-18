@@ -7,8 +7,8 @@
 | **პლატფორმა** | Odoo **19.0 Community** (server build `19.0-20260630`) |
 | **ლიცენზია** | LGPL-3 |
 | **რეპოზიტორი** | https://github.com/refreshg/clinic (branch `main`) |
-| **ვერსია** | 19.0.25.0.0 |
-| **სტატუსი** | Phase 1–2 + Rev-A + Phase 3 (A/B/C) + Phase 4 დასრულებული და ცოცხლად. დამატებით: OWL Planning board, პაციენტის ვიზუალური Dashboard, Supply Shop (custom storefront), მომწოდებლის portal (როლი + სტანდ. Inventory ფუძედ) და **PO↔SO ჯაჭვი**. |
+| **ვერსია** | 19.0.27.0.0 |
+| **სტატუსი** | Phase 1–2 + Rev-A + Phase 3 (A/B/C) + Phase 4 დასრულებული და ცოცხლად. დამატებით: OWL Planning board, პაციენტის ვიზუალური Dashboard, **Soft-UI პაციენტის ბარათის გვერდი** (OWL), Supply Shop (custom storefront), მომწოდებლის portal (როლი + სტანდ. Inventory ფუძედ), **PO↔SO ჯაჭვი**, და **ექიმის ვიზიტების scoping** (თითო ექიმი მხოლოდ თავისას ხედავს). |
 | **ბოლო განახლება** | 2026-08-18 |
 
 > ეს დოკუმენტი პროექტის **source of truth**-ია. კოდის ან scope-ის ცვლილებისას ეს ფაილიც განახლდეს.
@@ -207,7 +207,7 @@ computed: `age`, `odontogram_html`. write()-ში: `patient_ref` მინი�
   low-stock alert (cron → activity + bus). **Supply Shop** = custom OWL storefront (მომხმარებლის
   არჩევანი — „მაღაზიის იერი პრინციპულია"), არა `website_sale` (ის გაყიდვისთვისაა). checkout →
   `purchase.order` (RFQ) + **სარკე `sale.order`** მომწოდებელზე (PO↔SO ჯაჭვი).
-- **Phase 5 — ✅ Planning board / Dashboard / Supplier portal (extras, v19.0.15–25):**
+- **Phase 5 — ✅ Planning board / Dashboard / Supplier portal / Soft-UI card (extras, v19.0.15–27):**
   - **OWL Planning board** (`clinic_planning`, Clinic→Planning, seq 1): მრავალსვეტიანი
     დღის ხედი დენტისტებით, ფერადი ბლოკები appointment_type-ით, mini-cal, room/dentist ფილტრი,
     now-line. **ცარიელ უჯრაზე დაკლიკება** → ახალი ვიზიტი წინასწარ შევსებული (dentist + დრო,
@@ -223,7 +223,18 @@ computed: `age`, `odontogram_html`. write()-ში: `patient_ref` მინი�
     კლინიკას toast. მენიუ: My Shop / My Inventory / My Orders.
   - **ვიზიტის ფორმა:** კლინიკურ ვიზიტზე დამალულია meeting-only ველები (Location, Video Link,
     guests/attendees + EMAIL/SMS); Clinic ტაბი ავტომატურად იხსნება.
-- **🔜 დარჩენილი:** Form-100, EHR sync, დაწკაპუნებადი ოდონტოგრამა, დემო-პროდუქტების რეალური ფოტოები.
+  - **Soft-UI პაციენტის ბარათის გვერდი** (`clinic_patient_card_page`, v19.0.26): design-handoff
+    (`docs/design_handoff_patient_card/`) native OWL-ად. tokens 1:1 (scoped `.cpc`), lucide inline
+    SVG (stroke 1.5), 4 ტაბი + ინტერაქტიული FDI სქემა (legend brush→paint→list→remove; 18-11/21-28
+    ზედა, 48-41/31-38 ქვედა). რეალური `res.partner` orm.read-ით. **read-only ამ ეტაპზე**
+    (painting ეკრანზე; tooth_ids-ში ჩაწერა შემდეგ). ღილაკი „🪪 პაციენტის ბარათი"→
+    `action_open_card_page`. React reference აპი — `patient-card-ui/` (Vite+lucide-react).
+  - **ექიმის ვიზიტების scoping** (v19.0.27): global ir.rule `calendar.event`-ზე — ექიმი ხედავს
+    მხოლოდ თავის კლინიკურ ვიზიტებს (dentist_id=self), ადმინი — ყველას; არა-კლინიკური events
+    ხელუხლებელი. `clinic_dentists` ექიმს 1 სვეტს აბრუნებს. (Odoo 19: `(1,'=',0)` აღარ მუშაობს →
+    `('id','=',False)`.)
+- **🔜 დარჩენილი:** patient-card write-back (tooth_ids/note/flags ჩაწერა), Form-100, EHR sync,
+  დაწკაპუნებადი ოდონტოგრამა res.partner ფორმაზე, დემო-პროდუქტების რეალური ფოტოები.
 
 ## 8. გადაწყვეტილებების ჟურნალი
 - პირადი ნომერი → სტანდარტული `vat` (მომხმარებლის არჩევანი, დუბლის თავიდან ასაცილებლად).

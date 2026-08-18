@@ -21,7 +21,7 @@
 ## Product / plan
 - **`docs/PRD.md` is the source of truth** for requirements, data model, phases and
   decisions (patient card 1.1–1.9). Keep it updated as scope changes.
-- Status (as of v19.0.25.0.0): Phases 1–2, Rev-A, Phase 3 (A/B/C) and Phase 4 are DONE
+- Status (as of v19.0.27.0.0): Phases 1–2, Rev-A, Phase 3 (A/B/C) and Phase 4 are DONE
   and live. Extras also live: OWL Planning board (Clinic>Planning; click empty grid slot
   to book, with a ripple/ghost cue), a visual patient Dashboard (Health-Care style OWL
   action, "Open Dashboard" on the Patient Card tab), a custom OWL Supply Shop, and a
@@ -30,7 +30,18 @@
   makes a purchase.order AND a mirror sale.order for the supplier — the supplier confirms
   the SO, which mirror-confirms the PO and notifies the clinic. Clinic visit forms hide
   meeting-only fields (Location/Video Link/attendees) and open the Clinic tab by default.
-- Still open: Form-100, EHR sync, clickable odontogram, real photos for demo products.
+  A full Soft-UI patient-card page (OWL client action `clinic_patient_card_page`, ported
+  from `docs/design_handoff_patient_card/`) opens via "🪪 პაციენტის ბარათი" on the Patient
+  Card tab, reading a real res.partner (read-only for now). Each doctor sees only their own
+  appointments on the calendar/board; the admin sees all.
+
+## Next steps (pick up here)
+- **Patient-card page write-back** — persist the interactions: tooth painting → `tooth_ids`,
+  note → `patient_note`, status/med flags → the partner booleans, +add contact/procedure.
+  Currently the page is read-only (painting is on-screen only).
+- **Form-100** generation and **EHR sync**.
+- **Clickable odontogram** on the res.partner form itself (status change on tooth click).
+- **Real photos** for the demo supply products (user to drop files into scratchpad).
 
 ## Key architecture decisions (this build)
 - **Shop = custom OWL, not `website_sale`** — website_sale sells (sale.order); the clinic
@@ -52,6 +63,15 @@
 - **Custom board is the calendar** — the standard Appointments/My Calendar list menus were
   removed; the OWL Planning board is the scheduling UI. The act_window actions stay defined
   for quick-action buttons.
+- **Design handoffs → native OWL, not React embed** — the Soft-UI card was delivered as a
+  React/Vite reference (`patient-card-ui/`), then rebuilt as an OWL client action so it lives
+  in our stack on real data. Design tokens are copied 1:1 into a scoped SCSS block; lucide
+  icons become inline SVG. Never embed a foreign framework (React) into the Odoo backend.
+- **Doctor appointment scoping = GLOBAL ir.rule** — restricting `calendar.event` per dentist
+  must be a global rule (no `groups`, AND-combined). A group rule only OR-widens the base
+  `calendar` rules and still leaks other dentists' visits. The rule: non-clinic OR own-dentist
+  OR (admin ? all : none). **Odoo 19 gotcha:** the domain engine rejects the `(1,'=',0)`
+  always-false trick — use `('id','!=',False)` / `('id','=',False)` for the admin branch.
 
 ## How to work here
 - Use the **odoo-development** skill for all Odoo questions; read the relevant file in
