@@ -393,3 +393,15 @@ class ResPartner(models.Model):
             "context": {"active_id": self.id, "default_partner_id": self.id},
             "params": {"partner_id": self.id},
         }
+
+    def action_open_card_page(self):
+        """Open the full Soft-UI patient card page (OWL client action)."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.client",
+            "tag": "clinic_patient_card_page",
+            "name": self.display_name,
+            "target": "current",
+            "context": {"active_id": self.id, "default_partner_id": self.id},
+            "params": {"partner_id": self.id},
+        }

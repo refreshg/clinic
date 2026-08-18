@@ -45,10 +45,13 @@
                       autofocus="autofocus"
                       invisible="not is_patient">
 
-                    <!-- Visual dashboard (Health-Care style) -->
-                    <div class="d-flex mb-2">
+                    <!-- Visual dashboard (Health-Care style) + full Soft-UI card page -->
+                    <div class="d-flex gap-2 mb-2">
+                        <button name="action_open_card_page" type="object"
+                                string="🪪 პაციენტის ბარათი" class="btn-primary"
+                                invisible="not is_patient"/>
                         <button name="action_open_dashboard" type="object"
-                                string="🩺 Open Dashboard" class="btn-primary"
+                                string="🩺 Open Dashboard" class="btn-secondary"
                                 invisible="not is_patient"/>
                     </div>
 

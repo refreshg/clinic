@@ -1,0 +1,119 @@
+@import "./tokens.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg-page);
+  font-family: var(--font);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--primary-dark);
+}
+
+::selection {
+  background: rgba(123, 111, 214, 0.25);
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Lucide icons render at 1.5 stroke by default via props; keep them aligned */
+.lucide {
+  display: block;
+}
+
+/* ---- App shell ---- */
+.dc-page {
+  min-height: 100vh;
+  padding: 36px 24px;
+  display: flex;
+  justify-content: center;
+}
+.dc-app {
+  width: 100%;
+  max-width: 1280px;
+  background: var(--bg-app);
+  border-radius: var(--r-app);
+  box-shadow: var(--shadow-app);
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+}
+.dc-main {
+  flex: 1;
+  min-width: 0;
+  padding: 32px 32px 44px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Two-column grids collapse to a single column on tablet & below */
+.dc-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+.dc-grid-1p2-08 {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 22px;
+  align-items: start;
+}
+.dc-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.dc-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .dc-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .dc-grid-2,
+  .dc-grid-1p2-08,
+  .dc-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dc-page {
+    padding: 14px;
+  }
+  .dc-app {
+    border-radius: 24px;
+  }
+  .dc-main {
+    padding: 20px 18px 28px;
+  }
+  .dc-grid-4 {
+    grid-template-columns: 1fr;
+  }
+}

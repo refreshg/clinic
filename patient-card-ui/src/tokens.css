@@ -1,0 +1,52 @@
+/* დენტალ კლინიკის პაციენტის ბარათი — Soft UI დიზაინ-ტოკენები (v4)
+   ზუსტად docs/design_handoff_patient_card/tokens.css-დან. */
+:root {
+  /* ფერები */
+  --bg-page: #c6cbdd;
+  --bg-app: #f7f8fc;
+  --bg-card: #ffffff;
+  --bg-soft: #fbfbfe;
+  --bg-tint: #f7f6fd;
+  --bg-chip: #efedfb;
+
+  --primary: #7b6fd6;
+  --primary-dark: #5e51c4;
+  --primary-grad: linear-gradient(135deg, #8478e0 0%, #6d5fd0 55%, #5f50c6 100%);
+  --pink: #f87ba6;
+  --pink-grad: linear-gradient(135deg, #f98cb1, #f76d9d);
+
+  --text: #3a3654;
+  --text-muted: #a5a1c0;
+  --border-soft: #efedfb;
+  --border-input: #e3e1f0;
+  --row-line: #f0f0f7;
+
+  /* კბილის სტატუსების ფერები (FDI სქემა) */
+  --tooth-healthy: #ffffff;
+  --tooth-caries: #f76d9d;
+  --tooth-filled: #7b6fd6;
+  --tooth-crown: #f5c351;
+  --tooth-root: #9d8df1;
+  --tooth-implant: #b3b0c9;
+  --tooth-missing: #3a3654;
+  --tooth-extract: #fb9d5b;
+  --tooth-other: #e3e1f0;
+
+  /* რადიუსები */
+  --r-app: 36px;
+  --r-card: 24px;
+  --r-inner: 16px;
+  --r-tooth: 12px;
+  --r-check: 7px;
+  --r-pill: 999px;
+
+  /* ჩრდილები */
+  --shadow-app: 0 30px 60px rgba(58, 54, 84, 0.25);
+  --shadow-card: 0 10px 24px rgba(58, 54, 84, 0.08);
+  --shadow-primary: 0 10px 22px rgba(123, 111, 214, 0.45);
+  --shadow-hero: 0 20px 40px rgba(109, 95, 208, 0.4);
+  --shadow-pink: 0 16px 32px rgba(247, 109, 157, 0.35);
+
+  /* ტიპოგრაფია */
+  --font: "Manrope", "Noto Sans Georgian", system-ui, sans-serif;
+}
