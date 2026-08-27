@@ -16,13 +16,14 @@ phase by phase from the specification (`პაციენტის ბარა
 | 4 | Supplies & ordering: `stock`+`purchase` reuse, low-stock alert, custom **Supply Shop** | ✅ done |
 | 5 | Extras: OWL Planning board · patient Dashboard · Soft-UI patient-card page · supplier portal · **PO↔SO chain** | ✅ done |
 
-Current module version: **19.0.27.0.0**. See `docs/PRD.md` for the full spec, data
+Current module version: **19.0.29.0.0**. See `docs/PRD.md` for the full spec, data
 model and decision log, and root `CLAUDE.md` for the key architecture decisions.
 
 ### Highlights
 - **Planning board** (Clinic → Planning): multi-column day view; click an empty slot to
-  book a visit (with a ripple/ghost cue). Each doctor sees only their own appointments;
-  the admin sees all (enforced by a global `calendar.event` record rule).
+  book a visit (with a ripple/ghost cue). The time window fits the day's visits (so late
+  appointments aren't clipped) and the board scrolls internally on any screen. Each doctor
+  sees only their own appointments; the admin sees all (global `calendar.event` record rule).
 - **Soft-UI patient-card page**: the design handoff (`docs/design_handoff_patient_card/`)
   rebuilt as a native OWL client action over a real `res.partner` — 4 tabs + an interactive
   FDI tooth chart. A React/Vite reference of the same design lives in `patient-card-ui/`.

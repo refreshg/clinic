@@ -21,7 +21,7 @@
 ## Product / plan
 - **`docs/PRD.md` is the source of truth** for requirements, data model, phases and
   decisions (patient card 1.1–1.9). Keep it updated as scope changes.
-- Status (as of v19.0.27.0.0): Phases 1–2, Rev-A, Phase 3 (A/B/C) and Phase 4 are DONE
+- Status (as of v19.0.29.0.0): Phases 1–2, Rev-A, Phase 3 (A/B/C) and Phase 4 are DONE
   and live. Extras also live: OWL Planning board (Clinic>Planning; click empty grid slot
   to book, with a ripple/ghost cue), a visual patient Dashboard (Health-Care style OWL
   action, "Open Dashboard" on the Patient Card tab), a custom OWL Supply Shop, and a
@@ -62,7 +62,10 @@
   `ir.ui.menu.load_menus`, NOT a raw `search` (raw search ignores group gating).
 - **Custom board is the calendar** — the standard Appointments/My Calendar list menus were
   removed; the OWL Planning board is the scheduling UI. The act_window actions stay defined
-  for quick-action buttons.
+  for quick-action buttons. The board's hour window is dynamic (default 08–18, auto-fits the
+  day's earliest/latest visit so late ones aren't clipped) and it owns its own vertical scroll
+  (`height:100%` + `max-height:calc(100vh - 46px)` + `overflow-y:auto`) so short/laptop screens
+  can always reach the bottom rows — don't rely on the surrounding Odoo container to scroll.
 - **Design handoffs → native OWL, not React embed** — the Soft-UI card was delivered as a
   React/Vite reference (`patient-card-ui/`), then rebuilt as an OWL client action so it lives
   in our stack on real data. Design tokens are copied 1:1 into a scoped SCSS block; lucide

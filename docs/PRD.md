@@ -7,7 +7,7 @@
 | **პლატფორმა** | Odoo **19.0 Community** (server build `19.0-20260630`) |
 | **ლიცენზია** | LGPL-3 |
 | **რეპოზიტორი** | https://github.com/refreshg/clinic (branch `main`) |
-| **ვერსია** | 19.0.27.0.0 |
+| **ვერსია** | 19.0.29.0.0 |
 | **სტატუსი** | Phase 1–2 + Rev-A + Phase 3 (A/B/C) + Phase 4 დასრულებული და ცოცხლად. დამატებით: OWL Planning board, პაციენტის ვიზუალური Dashboard, **Soft-UI პაციენტის ბარათის გვერდი** (OWL), Supply Shop (custom storefront), მომწოდებლის portal (როლი + სტანდ. Inventory ფუძედ), **PO↔SO ჯაჭვი**, და **ექიმის ვიზიტების scoping** (თითო ექიმი მხოლოდ თავისას ხედავს). |
 | **ბოლო განახლება** | 2026-08-18 |
 
@@ -207,12 +207,16 @@ computed: `age`, `odontogram_html`. write()-ში: `patient_ref` მინი�
   low-stock alert (cron → activity + bus). **Supply Shop** = custom OWL storefront (მომხმარებლის
   არჩევანი — „მაღაზიის იერი პრინციპულია"), არა `website_sale` (ის გაყიდვისთვისაა). checkout →
   `purchase.order` (RFQ) + **სარკე `sale.order`** მომწოდებელზე (PO↔SO ჯაჭვი).
-- **Phase 5 — ✅ Planning board / Dashboard / Supplier portal / Soft-UI card (extras, v19.0.15–27):**
+- **Phase 5 — ✅ Planning board / Dashboard / Supplier portal / Soft-UI card (extras, v19.0.15–29):**
   - **OWL Planning board** (`clinic_planning`, Clinic→Planning, seq 1): მრავალსვეტიანი
     დღის ხედი დენტისტებით, ფერადი ბლოკები appointment_type-ით, mini-cal, room/dentist ფილტრი,
     now-line. **ცარიელ უჯრაზე დაკლიკება** → ახალი ვიზიტი წინასწარ შევსებული (dentist + დრო,
     snap 30წთ) + ripple/ghost ვიზუალური feedback. სვეტები ყოველთვის ჩანს
-    (`res.users.clinic_dentists` = Doctor ჯგუფი).
+    (`res.users.clinic_dentists` = Doctor ჯგუფი). **დროის ფანჯარა დინამიურია** (v19.0.28):
+    default 08–18, ავტომ. იწელება დღის ყველაზე ადრეული/გვიანი ვიზიტის დასაფარად ([0,24]),
+    რომ 18:00-ის შემდეგ ჩაწერილი ვიზიტი არ იჭრებოდეს. board **თავად სქროლდება** (v19.0.29:
+    `height:100%` + `max-height:calc(100vh - 46px)` + `overflow-y:auto`) — დაბალ ეკრანზეც
+    მიაღწევ ბოლო რიგებს (ადრე გარე Odoo კონტეინერს ეყრდნობოდა და ზოგ ეკრანზე არ სქროლდებოდა).
   - **პაციენტის Dashboard** (`clinic_patient_dashboard`): Health-Care დიზაინის ვიზუალი —
     breadcrumb, პროფილის ბარათი, vitals row (ვიზუალი, „not tracked yet"), history table.
     „🩺 Open Dashboard" ღილაკი Patient Card ტაბზე.
