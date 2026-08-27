@@ -13,8 +13,11 @@ const COLORS = [
 const MONTHS = ["January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"];
 const DOW = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-const START_HOUR = 8;
-const END_HOUR = 18;
+// Default working window; the board auto-expands it to fit early/late visits.
+const DEFAULT_START_HOUR = 8;
+const DEFAULT_END_HOUR = 18;
+const MIN_HOUR = 0;
+const MAX_HOUR = 24;
 const HOUR_PX = 64;
 
 export class ClinicPlanning extends Component {
@@ -36,6 +39,8 @@ export class ClinicPlanning extends Component {
             roomOff: {},          // {roomId: true} when unchecked
             dentistFilter: false, // false = all
             stateLabels: {},      // clinic_state value -> translated label
+            startHour: DEFAULT_START_HOUR, // dynamic window, fitted to the day's visits
+            endHour: DEFAULT_END_HOUR,
         });
         onWillStart(() => this.load());
     }
@@ -49,7 +54,7 @@ export class ClinicPlanning extends Component {
         return this._iso(new Date());
     }
     get totalHeight() {
-        return (END_HOUR - START_HOUR) * HOUR_PX;
+        return (this.state.endHour - this.state.startHour) * HOUR_PX;
     }
     get monthLabel() {
         const d = new Date(this.state.date + "T00:00:00");
@@ -62,7 +67,7 @@ export class ClinicPlanning extends Component {
 
     hours() {
         const out = [];
-        for (let h = START_HOUR; h <= END_HOUR; h++) {
+        for (let h = this.state.startHour; h <= this.state.endHour; h++) {
             out.push(h);
         }
         return out;
@@ -121,6 +126,19 @@ export class ClinicPlanning extends Component {
         const dayEvents = events.filter(
             (e) => deserializeDateTime(e.start).toFormat("yyyy-LL-dd") === this.state.date
         );
+        // Fit the time window to the day's visits so early/late appointments
+        // are never clipped: expand the default 08–18 window down/up to cover
+        // the earliest start and latest stop, clamped to [0, 24].
+        let startH = DEFAULT_START_HOUR;
+        let endH = DEFAULT_END_HOUR;
+        for (const e of dayEvents) {
+            const s = Math.floor(this._hourOf(e.start));
+            const en = Math.ceil(this._hourOf(e.stop));
+            if (s < startH) startH = s;
+            if (en > endH) endH = en;
+        }
+        this.state.startHour = Math.max(MIN_HOUR, startH);
+        this.state.endHour = Math.min(MAX_HOUR, Math.max(endH, this.state.startHour + 1));
         // dentist columns: always show every clinic dentist (so an empty day
         // still has clickable columns), keeping the room seen in that day's
         // events when there is one.
@@ -177,7 +195,7 @@ export class ClinicPlanning extends Component {
     eventStyle(ev) {
         const s = this._hourOf(ev.start);
         const e = this._hourOf(ev.stop);
-        const top = Math.max(0, (s - START_HOUR) * HOUR_PX);
+        const top = Math.max(0, (s - this.state.startHour) * HOUR_PX);
         const height = Math.max(30, (e - s) * HOUR_PX - 3);
         const hex = this._colorHex(ev);
         return `top:${top}px;height:${height}px;background:${hex}1f;border-left:3px solid ${hex};`;
@@ -206,10 +224,10 @@ export class ClinicPlanning extends Component {
         }
         const now = new Date();
         const h = now.getHours() + now.getMinutes() / 60;
-        if (h < START_HOUR || h > END_HOUR) {
+        if (h < this.state.startHour || h > this.state.endHour) {
             return -1;
         }
-        return (h - START_HOUR) * HOUR_PX;
+        return (h - this.state.startHour) * HOUR_PX;
     }
 
     // ---- interactions ----
@@ -273,16 +291,16 @@ export class ClinicPlanning extends Component {
         const y = ev.clientY - rect.top;
         // quick visual feedback: a ripple + a ghost slot where we clicked
         this._flashSlot(ev.currentTarget, ev.clientX - rect.left, y);
-        let hour = START_HOUR + y / HOUR_PX;
+        let hour = this.state.startHour + y / HOUR_PX;
         // snap to the nearest half hour, keep inside the working window
         hour = Math.round(hour * 2) / 2;
-        hour = Math.min(END_HOUR - 0.5, Math.max(START_HOUR, hour));
+        hour = Math.min(this.state.endHour - 0.5, Math.max(this.state.startHour, hour));
         const h = Math.floor(hour);
         const m = Math.round((hour - h) * 60);
         const pad = (n) => (n < 10 ? "0" + n : "" + n);
         // naive local datetime string; the form widget interprets it in tz
         const start = `${this.state.date} ${pad(h)}:${pad(m)}:00`;
-        const endHour = Math.min(END_HOUR, hour + 0.5);
+        const endHour = Math.min(this.state.endHour, hour + 0.5);
         const eh = Math.floor(endHour);
         const em = Math.round((endHour - eh) * 60);
         const stop = `${this.state.date} ${pad(eh)}:${pad(em)}:00`;
