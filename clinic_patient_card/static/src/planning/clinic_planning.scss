@@ -1,6 +1,16 @@
 .clinic_planning {
     padding: 12px 16px;
+    // Fill the action area and own the vertical scroll, so a tall day grid
+    // (e.g. 08:00–20:00) is always reachable regardless of screen height and
+    // the surrounding Odoo container's overflow behaviour. height:100% works
+    // when the parent has a definite height; the viewport max-height is a
+    // fallback (minus the ~46px backbone navbar) for when it doesn't, so the
+    // board always scrolls internally instead of clipping off-screen.
+    height: 100%;
+    max-height: calc(100vh - 46px);
     min-height: 300px;
+    overflow-y: auto;
+    box-sizing: border-box;
 
     .cp_dateinput { max-width: 160px; }
     .cp_dentsel { max-width: 170px; }
