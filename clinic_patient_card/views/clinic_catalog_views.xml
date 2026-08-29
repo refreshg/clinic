@@ -34,6 +34,35 @@
         <field name="context">{'default_is_insurance_company': True, 'default_is_company': True}</field>
     </record>
 
+    <!-- ============ Clinic working schedule (one per company) ============ -->
+    <record id="view_company_form_clinic" model="ir.ui.view">
+        <field name="name">res.company.form.clinic</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="clinic_schedule" string="Clinic Schedule">
+                    <group>
+                        <group string="Working Days">
+                            <field name="clinic_workday_mon"/>
+                            <field name="clinic_workday_tue"/>
+                            <field name="clinic_workday_wed"/>
+                            <field name="clinic_workday_thu"/>
+                            <field name="clinic_workday_fri"/>
+                            <field name="clinic_workday_sat"/>
+                            <field name="clinic_workday_sun"/>
+                        </group>
+                        <group string="Working Hours">
+                            <field name="clinic_work_start" widget="float_time"/>
+                            <field name="clinic_work_end" widget="float_time"/>
+                            <field name="clinic_block_room_overlap"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
     <!-- ===================== Menus ===================== -->
     <!-- Root visible to any clinic role (incl. suppliers, who only get the
          supplier child menus below). -->

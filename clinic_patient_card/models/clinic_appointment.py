@@ -129,6 +129,87 @@ class CalendarEvent(models.Model):
                     _("A clinic visit cannot be saved without a patient.")
                 )
 
+    # ------------------------------------------------------------------
+    # Scheduling rules (reviewer): working hours, no past bookings,
+    # no double-booking of a dentist (or a room, company-configurable).
+    # ------------------------------------------------------------------
+    def _clinic_validate_schedule(self, start_dt, stop_dt=None):
+        """Block bookings in the past (Clinic Administrators may override) and
+        outside the clinic's working days/hours (context clinic_force=1 skips
+        the schedule checks, e.g. for controlled data fixes)."""
+        if self.env.context.get("clinic_force"):
+            return
+        # 1) not in the past (5-minute grace); admins may back-date.
+        if not self.env.user.has_group("clinic_patient_card.group_clinic_admin"):
+            if start_dt < fields.Datetime.now() - timedelta(minutes=5):
+                raise UserError(_(
+                    "Booking in the past is not allowed. "
+                    "Ask a clinic administrator if a back-dated visit is needed."
+                ))
+        # 2) inside working days/hours (local clinic time).
+        company = self.env.company
+        local_start = fields.Datetime.context_timestamp(self, start_dt)
+        workdays = company._clinic_workdays()
+        if workdays and local_start.weekday() not in workdays:
+            raise UserError(_(
+                "The clinic is closed on %s — booking is not possible."
+            ) % local_start.strftime("%A"))
+        start_h = local_start.hour + local_start.minute / 60.0
+        if start_h < (company.clinic_work_start or 0.0) - 1e-6:
+            raise UserError(_(
+                "The visit starts before the clinic opens (%(open)02d:%(om)02d).",
+                open=int(company.clinic_work_start),
+                om=int(round((company.clinic_work_start % 1) * 60)),
+            ))
+        if stop_dt:
+            local_stop = fields.Datetime.context_timestamp(self, stop_dt)
+            stop_h = local_stop.hour + local_stop.minute / 60.0
+            if local_stop.date() != local_start.date():
+                stop_h += 24.0
+            if stop_h > (company.clinic_work_end or 24.0) + 1e-6:
+                raise UserError(_(
+                    "The visit ends after the clinic closes (%(close)02d:%(cm)02d).",
+                    close=int(company.clinic_work_end),
+                    cm=int(round((company.clinic_work_end % 1) * 60)),
+                ))
+
+    @api.constrains("start", "stop", "dentist_id", "room_id", "clinic_state", "active")
+    def _check_clinic_overlap(self):
+        # Booked time is locked: the same dentist (and, if enabled, the same
+        # room) cannot hold two overlapping live clinic visits. sudo() so the
+        # per-doctor record rule can't hide a clashing visit.
+        block_room = self.env.company.clinic_block_room_overlap
+        for ev in self:
+            if (
+                not ev.is_clinic or not ev.start or not ev.stop
+                or ev.clinic_state in ("cancelled", "no_show") or not ev.active
+            ):
+                continue
+            base = [
+                ("id", "!=", ev.id),
+                ("is_clinic", "=", True),
+                ("active", "=", True),
+                ("clinic_state", "not in", ("cancelled", "no_show")),
+                ("start", "<", ev.stop),
+                ("stop", ">", ev.start),
+            ]
+            Event = self.sudo()
+            if ev.dentist_id:
+                clash = Event.search(base + [("dentist_id", "=", ev.dentist_id.id)], limit=1)
+                if clash:
+                    raise ValidationError(_(
+                        "%(dentist)s is already booked at that time (%(visit)s). "
+                        "Pick a free slot.",
+                        dentist=ev.dentist_id.name, visit=clash.display_name,
+                    ))
+            if block_room and ev.room_id:
+                clash = Event.search(base + [("room_id", "=", ev.room_id.id)], limit=1)
+                if clash:
+                    raise ValidationError(_(
+                        "Room %(room)s is already occupied at that time (%(visit)s).",
+                        room=ev.room_id.name, visit=clash.display_name,
+                    ))
+
     @api.depends("checkin_time", "treat_start_time", "treat_end_time")
     def _compute_durations(self):
         for ev in self:
@@ -162,13 +243,21 @@ class CalendarEvent(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        # Onchange doesn't run on RPC creates (e.g. from the Planning board):
-        # apply the dentist's default room here as well.
         for vals in vals_list:
-            if vals.get("is_clinic") and vals.get("dentist_id") and not vals.get("room_id"):
+            if not vals.get("is_clinic"):
+                continue
+            # Onchange doesn't run on RPC creates (e.g. from the Planning
+            # board): apply the dentist's default room here as well.
+            if vals.get("dentist_id") and not vals.get("room_id"):
                 dentist = self.env["res.users"].browse(vals["dentist_id"])
                 if dentist.default_room_id:
                     vals["room_id"] = dentist.default_room_id.id
+            # Scheduling rules: no past bookings, working hours only.
+            if vals.get("start"):
+                self._clinic_validate_schedule(
+                    fields.Datetime.to_datetime(vals["start"]),
+                    vals.get("stop") and fields.Datetime.to_datetime(vals["stop"]),
+                )
         return super().create(vals_list)
 
     # States in which a start/duration change counts as a visible correction.
@@ -178,6 +267,12 @@ class CalendarEvent(models.Model):
         # Flag reschedules / manual duration corrections on clinic visits so the
         # calendar can show them. No-op for non-clinic events (the recurrence
         # engine rewrites start/stop internally) and for our own flag writes.
+        # Scheduling rules apply when a clinic visit's start is (re)set.
+        if vals.get("start") and any(ev.is_clinic for ev in self):
+            self._clinic_validate_schedule(
+                fields.Datetime.to_datetime(vals["start"]),
+                vals.get("stop") and fields.Datetime.to_datetime(vals["stop"]),
+            )
         resched_ids, dured_ids = [], []
         if not self.env.context.get("clinic_flagging") and (
             "start" in vals or "stop" in vals or "duration" in vals
