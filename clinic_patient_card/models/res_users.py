@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
-from odoo import api, models
+from odoo import api, fields, models
 
 
 class ResUsers(models.Model):
     _inherit = "res.users"
+
+    # The room a dentist usually works in — auto-filled on new visits.
+    default_room_id = fields.Many2one("clinic.room", string="Default Room")
 
     @api.model
     def clinic_dentists(self):

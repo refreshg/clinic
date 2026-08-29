@@ -65,15 +65,26 @@
                     <group>
                         <group>
                             <field name="is_clinic"/>
-                            <field name="patient_id"/>
+                            <field name="patient_id" required="is_clinic"
+                                   context="{'clinic_show_ids': 1}"/>
                             <field name="appointment_type_id"/>
+                            <field name="diagnosis"/>
                             <field name="cancel_reason"
                                    invisible="clinic_state != 'cancelled'"
                                    required="clinic_state == 'cancelled'"/>
                         </group>
                         <group>
                             <field name="dentist_id"/>
+                            <field name="assistant_id"/>
                             <field name="room_id"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="amount_paid" widget="monetary"
+                                   invisible="clinic_state != 'paid'"/>
+                            <field name="amount_cash" widget="monetary"
+                                   invisible="payment_method != 'mixed' or clinic_state != 'paid'"/>
+                            <field name="amount_terminal" widget="monetary"
+                                   invisible="payment_method != 'mixed' or clinic_state != 'paid'"/>
+                            <field name="payment_method" invisible="1"/>
                         </group>
                     </group>
                     <group string="Procedures"
@@ -94,7 +105,12 @@
                         <field name="treat_start_time"/>
                         <field name="chair_minutes"/>
                         <field name="treat_end_time"/>
+                        <field name="was_rescheduled" readonly="1"/>
+                        <field name="duration_edited" readonly="1"/>
+                    </group>
+                    <group string="Previous Visit" invisible="not parent_appointment_id">
                         <field name="parent_appointment_id"/>
+                        <field name="parent_visit_info" string="Date · Procedures"/>
                     </group>
                 </page>
             </xpath>
@@ -203,6 +219,22 @@
         <field name="view_mode">list</field>
         <field name="view_id" ref="view_clinic_appointment_list"/>
         <field name="act_window_id" ref="action_clinic_my_calendar"/>
+    </record>
+
+    <!-- ===================== Users: dentist's default room ===================== -->
+    <record id="view_users_form_clinic" model="ir.ui.view">
+        <field name="name">res.users.form.clinic</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="clinic_prefs" string="Clinic">
+                    <group>
+                        <field name="default_room_id"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
     </record>
 
     <!-- ===================== Rooms ===================== -->
