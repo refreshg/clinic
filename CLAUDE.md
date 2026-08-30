@@ -21,7 +21,17 @@
 ## Product / plan
 - **`docs/PRD.md` is the source of truth** for requirements, data model, phases and
   decisions (patient card 1.1–1.9). Keep it updated as scope changes.
-- Status (as of v19.0.29.0.0): Phases 1–2, Rev-A, Phase 3 (A/B/C) and Phase 4 are DONE
+- **Reviewer batch 28.08.26 — DONE (v19.0.30–46):** `docs/28.08.26.docx` (~30 items) fully
+  implemented and user-tested: visit fields (assistant, diagnosis, paid amounts, reschedule
+  flags), one clinic-wide schedule on res.company + booking guards (working hours; past =
+  Administrator uid 2 only; dentist/room double-booking blocked), 10-minute board grid with
+  hover + drag-to-size booking and popup visit form (UTC-serialized defaults!), visit
+  history / cancelled+rescheduled lists, patient-form validations (latin email, digit
+  phone/vat, unique vat) + "რეალიზაცია" tab (direct sale.order), patient search by vat/phone,
+  waitlist/Reserve panel per dentist + dispensary 6-month flow with 14-day-before admin
+  reminders and weekly booking reports. Meeting UI (Send email, RSVP "Going?", Busy row,
+  attendees) hidden on clinic visits. Emails deferred (undecided what/when to send).
+- Status (as of v19.0.46.0.0): Phases 1–2, Rev-A, Phase 3 (A/B/C) and Phase 4 are DONE
   and live. Extras also live: OWL Planning board (Clinic>Planning; click empty grid slot
   to book, with a ripple/ghost cue), a visual patient Dashboard (Health-Care style OWL
   action, "Open Dashboard" on the Patient Card tab), a custom OWL Supply Shop, and a
@@ -36,6 +46,10 @@
   appointments on the calendar/board; the admin sees all.
 
 ## Next steps (pick up here)
+- **Emails** (deferred from the reviewer batch) — clinic must first decide WHAT is sent WHEN
+  (booking confirmation? invoice? Form-100). Then wire mail templates.
+- **ka.po regeneration** — the reviewer batch added many new EN source strings (buttons,
+  errors, lists); regenerate the .pot after a server restart and refill Georgian.
 - **Patient-card page write-back** — persist the interactions: tooth painting → `tooth_ids`,
   note → `patient_note`, status/med flags → the partner booleans, +add contact/procedure.
   Currently the page is read-only (painting is on-screen only).
@@ -70,6 +84,17 @@
   React/Vite reference (`patient-card-ui/`), then rebuilt as an OWL client action so it lives
   in our stack on real data. Design tokens are copied 1:1 into a scoped SCSS block; lucide
   icons become inline SVG. Never embed a foreign framework (React) into the Odoo backend.
+- **Scheduling guards live in create/write, keyed on `'start' in vals`** — otherwise
+  state-only writes (done/paid) on past visits break. Escape hatch: `clinic_force=1` context
+  (schedule checks only, never the overlap constraint). Past-booking bypass = the
+  Administrator ACCOUNT (`base.user_admin`), not a group — the `clinic` user carries
+  Settings rights, so any group-based gate leaked.
+- **`requested` = reserve/waitlist state** — excluded from the board grid and from the
+  overlap constraint (both directions); `action_book` flips it to booked, which re-runs the
+  overlap check. Dispensary entries are created with `clinic_force` (+182d may hit closed days).
+- **Board datetime defaults must be UTC-serialized** (`serializeDateTime(DateTime.local(...))`)
+  — naive local strings display +4h on the form. And board geometry: keep `HOUR_PX` in sync
+  with the SCSS row height, borders `box-sizing: border-box` or hour lines drift 1px/hour.
 - **Doctor appointment scoping = GLOBAL ir.rule** — restricting `calendar.event` per dentist
   must be a global rule (no `groups`, AND-combined). A group rule only OR-widens the base
   `calendar` rules and still leaks other dentists' visits. The rule: non-clinic OR own-dentist

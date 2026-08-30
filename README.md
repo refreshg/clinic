@@ -15,14 +15,16 @@ phase by phase from the specification (`პაციენტის ბარა
 | 3 | Appointment cycle (calendar.event state machine, roles, doctor notify, procedure auto-fill, payment, follow-up) | ✅ done |
 | 4 | Supplies & ordering: `stock`+`purchase` reuse, low-stock alert, custom **Supply Shop** | ✅ done |
 | 5 | Extras: OWL Planning board · patient Dashboard · Soft-UI patient-card page · supplier portal · **PO↔SO chain** | ✅ done |
+| 6 | Reviewer batch 28.08.26: scheduling guards · 10-min drag booking · validations · waitlist/dispensary | ✅ done |
 
-Current module version: **19.0.29.0.0**. See `docs/PRD.md` for the full spec, data
+Current module version: **19.0.46.0.0**. See `docs/PRD.md` for the full spec, data
 model and decision log, and root `CLAUDE.md` for the key architecture decisions.
 
 ### Highlights
-- **Planning board** (Clinic → Planning): multi-column day view; click an empty slot to
-  book a visit (with a ripple/ghost cue). The time window fits the day's visits (so late
-  appointments aren't clipped) and the board scrolls internally on any screen. Each doctor
+- **Planning board** (Clinic → Planning): multi-column day view on a 10-minute grid — hover
+  highlights the slot, drag selects the exact visit length, the form opens as a popup over
+  the board. Working hours are enforced (closed time hatched), double-booking and past
+  bookings are blocked, and a per-dentist Reserve/waitlist panel drives the dispensary flow. Each doctor
   sees only their own appointments; the admin sees all (global `calendar.event` record rule).
 - **Soft-UI patient-card page**: the design handoff (`docs/design_handoff_patient_card/`)
   rebuilt as a native OWL client action over a real `res.partner` — 4 tabs + an interactive
