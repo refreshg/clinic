@@ -72,6 +72,22 @@
                 <attribute name="invisible">is_clinic</attribute>
             </xpath>
 
+            <!-- More meeting-only machinery hidden for clinic visits
+                 (reviewer's screenshot): the "Going?" RSVP badge and the
+                 Busy/visibility status row. -->
+            <xpath expr="//field[@name='current_status']" position="attributes">
+                <attribute name="invisible">is_clinic or not should_show_status</attribute>
+            </xpath>
+            <xpath expr="//label[@for='privacy']" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
+            <xpath expr="//field[@name='show_as']" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
+            <xpath expr="//field[@name='privacy']" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
+
             <!-- Open the Clinic tab first for clinic visits. -->
             <xpath expr="//notebook/page[1]" position="attributes">
                 <attribute name="autofocus"/>
