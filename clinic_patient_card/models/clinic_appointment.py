@@ -99,6 +99,27 @@ class CalendarEvent(models.Model):
     parent_visit_info = fields.Char(
         string="Previous Visit Summary", compute="_compute_parent_visit_info",
     )
+    # Teeth touched in this visit (from the procedure lines) — history list column.
+    tooth_display = fields.Char(
+        string="Teeth", compute="_compute_tooth_display",
+    )
+
+    @api.depends("procedure_line_ids.tooth")
+    def _compute_tooth_display(self):
+        for ev in self:
+            teeth = [t for t in ev.procedure_line_ids.mapped("tooth") if t]
+            # de-duplicate, keep order
+            ev.tooth_display = ", ".join(dict.fromkeys(teeth)) or False
+
+    @api.model
+    def clinic_board_config(self):
+        """Working schedule for the Planning board (grey out closed time)."""
+        company = self.env.company
+        return {
+            "workdays": sorted(company._clinic_workdays()),  # 0=Mon .. 6=Sun
+            "work_start": company.clinic_work_start or 0.0,
+            "work_end": company.clinic_work_end or 24.0,
+        }
 
     @api.depends("parent_appointment_id.start",
                  "parent_appointment_id.procedure_line_ids")

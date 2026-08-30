@@ -91,7 +91,7 @@
             flex: 0 0 $hourcol;
             position: relative;
             .cp_hourmark {
-                height: 64px;
+                height: 96px;
                 font-size: 11px;
                 color: #9aa0a6;
                 text-align: right;
@@ -107,7 +107,7 @@
             cursor: pointer;
             &:hover { background: rgba(99, 102, 241, 0.03); }
             .cp_slotline {
-                height: 64px;
+                height: 96px;
                 border-top: 1px solid #f1f3f5;
             }
 
@@ -137,6 +137,7 @@
                 position: absolute;
                 left: 4px;
                 right: 4px;
+                z-index: 2; /* above the closed-time shading */
                 border-radius: 6px;
                 padding: 4px 8px;
                 overflow: hidden;
@@ -149,6 +150,19 @@
                 .cp_ev_time { font-weight: 600; opacity: 0.85; padding-right: 46px; }
                 .cp_ev_name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
                 .cp_ev_pat { opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                /* reviewer: patient name is the card's primary line */
+                .cp_ev_patmain {
+                    font-weight: 700;
+                    font-size: 12px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .cp_edited {
+                    margin-left: 4px;
+                    color: #b9770a;
+                    font-weight: 700;
+                }
                 .cp_status {
                     position: absolute;
                     top: 4px;
@@ -165,7 +179,25 @@
                 .cp_st_arr { background: #2f80ed; }
                 .cp_st_prog { background: #f2994a; }
                 .cp_st_done { background: #27ae60; }
+                /* reviewer: "Paid" must differ from "Done" (both were green) */
+                .cp_st_paid { background: #7e57c2; }
                 .cp_st_cancel { background: #eb5757; }
+            }
+
+            /* closed (non-working) time — greyed out, not clickable */
+            .cp_offzone {
+                position: absolute;
+                left: 0;
+                right: 0;
+                background: repeating-linear-gradient(
+                    -45deg,
+                    rgba(120, 124, 140, 0.10),
+                    rgba(120, 124, 140, 0.10) 6px,
+                    rgba(120, 124, 140, 0.16) 6px,
+                    rgba(120, 124, 140, 0.16) 12px
+                );
+                pointer-events: none;
+                z-index: 1;
             }
         }
         .cp_nowline {

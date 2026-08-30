@@ -9,6 +9,8 @@
                     <h4 class="mb-0 fw-bold">Calendar</h4>
                     <small class="text-muted">Manage appointments, rooms and schedules.</small>
                 </div>
+                <button class="btn btn-outline-secondary" t-on-click="() => this.openHistory()">Visit History</button>
+                <button class="btn btn-outline-secondary" t-on-click="() => this.openCancelled()">Cancelled</button>
                 <button class="btn btn-outline-secondary" t-on-click="() => this.setToday()">Today</button>
                 <div class="btn-group">
                     <button class="btn btn-outline-secondary" t-on-click="() => this.changeDay(-1)">‹</button>
@@ -109,13 +111,22 @@
                                     <t t-foreach="hours()" t-as="h" t-key="h">
                                         <div class="cp_slotline"/>
                                     </t>
+                                    <!-- closed (non-working) time is greyed out -->
+                                    <t t-foreach="offZones" t-as="z" t-key="z_index">
+                                        <div class="cp_offzone"
+                                             t-attf-style="top:{{ z.top }}px;height:{{ z.height }}px;"/>
+                                    </t>
                                     <t t-foreach="eventsFor(d.id)" t-as="ev" t-key="ev.id">
                                         <div class="cp_event" t-att-style="eventStyle(ev)"
+                                             t-att-title="typeName(ev)"
                                              t-on-click.stop="() => this.openEvent(ev)">
                                             <span t-attf-class="cp_status {{ stateClass(ev) }}" t-esc="stateLabel(ev)"/>
-                                            <div class="cp_ev_time" t-esc="evTime(ev)"/>
-                                            <div class="cp_ev_name" t-esc="ev.name"/>
-                                            <div class="cp_ev_pat" t-esc="patientName(ev)"/>
+                                            <div class="cp_ev_time">
+                                                <t t-esc="evTime(ev)"/>
+                                                <span t-if="edited(ev)" class="cp_edited"
+                                                      title="დრო/ხანგრძლივობა დაკორექტირდა">✎</span>
+                                            </div>
+                                            <div class="cp_ev_patmain" t-esc="patientName(ev) || ev.name"/>
                                         </div>
                                     </t>
                                 </div>

@@ -18,7 +18,8 @@ const DEFAULT_START_HOUR = 8;
 const DEFAULT_END_HOUR = 18;
 const MIN_HOUR = 0;
 const MAX_HOUR = 24;
-const HOUR_PX = 64;
+// 96px/hour so a 10-minute slot (the booking grain) is a workable 16px.
+const HOUR_PX = 96;
 
 export class ClinicPlanning extends Component {
     static template = "clinic_patient_card.ClinicPlanning";
@@ -41,6 +42,7 @@ export class ClinicPlanning extends Component {
             stateLabels: {},      // clinic_state value -> translated label
             startHour: DEFAULT_START_HOUR, // dynamic window, fitted to the day's visits
             endHour: DEFAULT_END_HOUR,
+            config: null,         // clinic working schedule (grey out closed time)
         });
         onWillStart(() => this.load());
     }
@@ -106,15 +108,18 @@ export class ClinicPlanning extends Component {
         const from = this._iso(prev) + " 00:00:00";
         const to = this._iso(next) + " 23:59:59";
 
-        const [events, types, rooms, fg, dentists] = await Promise.all([
+        const [events, types, rooms, fg, dentists, config] = await Promise.all([
             this.orm.searchRead("calendar.event",
                 [["is_clinic", "=", true], ["start", ">=", from], ["start", "<=", to]],
-                ["name", "start", "stop", "dentist_id", "room_id", "appointment_type_id", "patient_id", "clinic_state"]),
+                ["name", "start", "stop", "dentist_id", "room_id", "appointment_type_id",
+                 "patient_id", "clinic_state", "was_rescheduled", "duration_edited"]),
             this.orm.searchRead("clinic.appointment.type", [], ["name", "color"]),
             this.orm.searchRead("clinic.room", [], ["name"]),
             this.orm.call("calendar.event", "fields_get", [["clinic_state"], ["selection"]]),
             this.orm.call("res.users", "clinic_dentists", []),
+            this.orm.call("calendar.event", "clinic_board_config", []),
         ]);
+        this.state.config = config;
         this.state.stateLabels = Object.fromEntries(
             (fg.clinic_state && fg.clinic_state.selection) || []
         );
@@ -211,11 +216,66 @@ export class ClinicPlanning extends Component {
     }
     stateClass(ev) {
         const s = ev.clinic_state;
-        if (s === "paid" || s === "done") return "cp_st_done";
+        // Reviewer: "Paid" and "Done" must be distinguishable at a glance.
+        if (s === "paid") return "cp_st_paid";
+        if (s === "done") return "cp_st_done";
         if (s === "in_progress") return "cp_st_prog";
         if (s === "arrived" || s === "confirmed") return "cp_st_arr";
         if (s === "cancelled" || s === "no_show") return "cp_st_cancel";
         return "cp_st_booked";
+    }
+    edited(ev) {
+        // Reviewer: a corrected time/duration must stay visible on the calendar.
+        return ev.was_rescheduled || ev.duration_edited;
+    }
+    typeName(ev) {
+        return ev.appointment_type_id ? ev.appointment_type_id[1] : "";
+    }
+
+    // ---- working-schedule shading (reviewer: lock non-working time) ----
+    _dateWeekday() {
+        // 0=Mon .. 6=Sun, matching the backend convention.
+        return (new Date(this.state.date + "T00:00:00").getDay() + 6) % 7;
+    }
+    get closedDay() {
+        const c = this.state.config;
+        return !!(c && c.workdays.length && !c.workdays.includes(this._dateWeekday()));
+    }
+    get offZones() {
+        // Grey blocks (px) inside the rendered window for closed time.
+        const c = this.state.config;
+        if (!c) {
+            return [];
+        }
+        if (this.closedDay) {
+            return [{ top: 0, height: this.totalHeight }];
+        }
+        const zones = [];
+        if (c.work_start > this.state.startHour) {
+            zones.push({
+                top: 0,
+                height: (Math.min(c.work_start, this.state.endHour) - this.state.startHour) * HOUR_PX,
+            });
+        }
+        if (c.work_end < this.state.endHour) {
+            const top = (Math.max(c.work_end, this.state.startHour) - this.state.startHour) * HOUR_PX;
+            zones.push({ top, height: this.totalHeight - top });
+        }
+        return zones;
+    }
+    _isWorkTime(hour) {
+        const c = this.state.config;
+        if (!c) {
+            return true;
+        }
+        return !this.closedDay && hour >= c.work_start - 1e-6 && hour < c.work_end - 1e-6;
+    }
+
+    openHistory() {
+        this.action.doAction("clinic_patient_card.action_clinic_visit_history");
+    }
+    openCancelled() {
+        this.action.doAction("clinic_patient_card.action_clinic_visit_cancelled");
     }
 
     get nowTop() {
@@ -289,12 +349,16 @@ export class ClinicPlanning extends Component {
         }
         const rect = ev.currentTarget.getBoundingClientRect();
         const y = ev.clientY - rect.top;
+        let hour = this.state.startHour + y / HOUR_PX;
+        // snap to the nearest 10 minutes (reviewer: 10-minute grid)
+        hour = Math.round(hour * 6) / 6;
+        hour = Math.min(this.state.endHour - 0.5, Math.max(this.state.startHour, hour));
+        // closed time is not clickable
+        if (!this._isWorkTime(hour)) {
+            return;
+        }
         // quick visual feedback: a ripple + a ghost slot where we clicked
         this._flashSlot(ev.currentTarget, ev.clientX - rect.left, y);
-        let hour = this.state.startHour + y / HOUR_PX;
-        // snap to the nearest half hour, keep inside the working window
-        hour = Math.round(hour * 2) / 2;
-        hour = Math.min(this.state.endHour - 0.5, Math.max(this.state.startHour, hour));
         const h = Math.floor(hour);
         const m = Math.round((hour - h) * 60);
         const pad = (n) => (n < 10 ? "0" + n : "" + n);
@@ -322,7 +386,8 @@ export class ClinicPlanning extends Component {
     // Transient click feedback inside a column: a ripple at the pointer plus a
     // half-hour "ghost" block snapped to the slot, both auto-removed.
     _flashSlot(col, x, y) {
-        const snappedTop = Math.round((y / HOUR_PX) * 2) / 2 * HOUR_PX;
+        // ghost snapped to the same 10-minute grid as the click
+        const snappedTop = Math.round((y / HOUR_PX) * 6) / 6 * HOUR_PX;
 
         const ghost = document.createElement("div");
         ghost.className = "cp_ghost";
