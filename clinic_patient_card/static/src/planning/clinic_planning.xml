@@ -11,6 +11,10 @@
                 </div>
                 <button class="btn btn-outline-secondary" t-on-click="() => this.openHistory()">Visit History</button>
                 <button class="btn btn-outline-secondary" t-on-click="() => this.openCancelled()">Cancelled</button>
+                <button t-attf-class="btn {{ state.waitlistOpen ? 'btn-warning' : 'btn-outline-warning' }}"
+                        t-on-click="() => this.toggleWaitlist()">
+                    Reserve (<t t-esc="shownWaitlist.length"/>)
+                </button>
                 <button class="btn btn-outline-secondary" t-on-click="() => this.setToday()">Today</button>
                 <div class="btn-group">
                     <button class="btn btn-outline-secondary" t-on-click="() => this.changeDay(-1)">‹</button>
@@ -117,7 +121,8 @@
                                              t-attf-style="top:{{ z.top }}px;height:{{ z.height }}px;"/>
                                     </t>
                                     <t t-foreach="eventsFor(d.id)" t-as="ev" t-key="ev.id">
-                                        <div class="cp_event" t-att-style="eventStyle(ev)"
+                                        <div t-attf-class="cp_event {{ ev.is_dispensary ? 'cp_dispensary' : '' }}"
+                                             t-att-style="eventStyle(ev)"
                                              t-att-title="typeName(ev)"
                                              t-on-click.stop="() => this.openEvent(ev)">
                                             <span t-attf-class="cp_status {{ stateClass(ev) }}" t-esc="stateLabel(ev)"/>
@@ -134,6 +139,32 @@
                             <div t-if="nowTop >= 0" class="cp_nowline" t-attf-style="top:{{ nowTop }}px;"/>
                         </div>
                     </div>
+                </div>
+
+                <!-- ===== reserve / waitlist panel (dispensary + pending) ===== -->
+                <div t-if="state.waitlistOpen" class="cp_wait">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="fw-bold flex-grow-1">Reserve / Waitlist</div>
+                        <button class="btn btn-sm btn-light" t-on-click="() => this.toggleWaitlist()">✕</button>
+                    </div>
+                    <div t-if="!shownWaitlist.length" class="text-muted small">
+                        No pending reserve entries.
+                    </div>
+                    <t t-foreach="shownWaitlist" t-as="w" t-key="w.id">
+                        <div class="cp_wait_row">
+                            <div class="cp_wait_info cp_clickable" t-on-click="() => this.openEvent(w)">
+                                <div class="fw-semibold">
+                                    <t t-esc="w.patient_id ? w.patient_id[1] : w.name"/>
+                                    <span t-if="w.is_dispensary" class="cp_wait_badge">6m</span>
+                                </div>
+                                <div class="text-muted small">
+                                    <t t-esc="wlWhen(w)"/> · <t t-esc="w.dentist_id ? w.dentist_id[1] : ''"/>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-primary" title="Confirm to calendar"
+                                    t-on-click="() => this.confirmWait(w)">✓</button>
+                        </div>
+                    </t>
                 </div>
             </div>
         </div>

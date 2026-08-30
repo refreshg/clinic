@@ -103,6 +103,14 @@ export const clinicArrivedService = {
             );
             chimeArrived();
         });
+        // Dispensary control due in 2 weeks — time to call the patient.
+        bus_service.subscribe("clinic_dispensary_due", (payload) => {
+            notification.add(
+                `${(payload && payload.patient) || ""} — ${(payload && payload.when) || ""}`,
+                { title: _t("Dispensary control: call the patient"), type: "warning", sticky: true }
+            );
+            chimeAlert();
+        });
         bus_service.start();
     },
 };

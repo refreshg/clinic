@@ -184,6 +184,12 @@
                 .cp_st_cancel { background: #eb5757; }
             }
 
+            /* dispensary control visits stand out (reviewer: distinct colour) */
+            .cp_event.cp_dispensary {
+                outline: 2px dashed #b9770a;
+                outline-offset: -2px;
+            }
+
             /* closed (non-working) time — greyed out, not clickable */
             .cp_offzone {
                 position: absolute;
@@ -215,6 +221,40 @@
                 border-radius: 50%;
                 background: #e05a5a;
             }
+        }
+    }
+
+    // ---------- reserve / waitlist side panel ----------
+    .cp_wait {
+        flex: 0 0 280px;
+        max-width: 280px;
+        border: 1px solid #f0d9b5;
+        border-radius: 10px;
+        padding: 12px;
+        background: #fffaf1;
+        align-self: flex-start;
+        position: sticky;
+        top: 8px;
+
+        .cp_wait_row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 6px;
+            border-bottom: 1px solid #f5ead4;
+            &:last-child { border-bottom: 0; }
+        }
+        .cp_wait_info { flex: 1; min-width: 0; }
+        .cp_clickable { cursor: pointer; }
+        .cp_wait_badge {
+            margin-left: 6px;
+            background: #b9770a;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 8px;
+            vertical-align: middle;
         }
     }
 }

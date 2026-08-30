@@ -9,4 +9,27 @@
         <field name="interval_type">days</field>
         <field name="active" eval="True"/>
     </record>
+
+    <!-- Dispensary control reminders: 2 weeks before the reserve visit the
+         administrators get a to-do ("call the patient") + a live toast. -->
+    <record id="cron_clinic_dispensary" model="ir.cron">
+        <field name="name">Clinic: dispensary call reminders</field>
+        <field name="model_id" ref="calendar.model_calendar_event"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_dispensary_reminders()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Weekly booking summary for the administrators (the "manager"). -->
+    <record id="cron_clinic_booking_report" model="ir.cron">
+        <field name="name">Clinic: weekly booking report</field>
+        <field name="model_id" ref="calendar.model_calendar_event"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_booking_report()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">weeks</field>
+        <field name="active" eval="True"/>
+    </record>
 </odoo>

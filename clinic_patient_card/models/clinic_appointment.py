@@ -86,6 +86,9 @@ class CalendarEvent(models.Model):
     amount_terminal = fields.Monetary(
         string="Terminal Part", currency_field="currency_id", readonly=True, copy=False,
     )
+    # Dispensary programme: patients booked for a 6-month control visit.
+    is_dispensary = fields.Boolean(string="Dispensary Control", copy=False)
+    dispensary_notified = fields.Boolean(copy=False)  # 14-day reminder sent
     # Reviewer asks that reschedules / duration corrections stay visible.
     was_rescheduled = fields.Boolean(
         string="Rescheduled", copy=False,
@@ -206,11 +209,15 @@ class CalendarEvent(models.Model):
                 or ev.clinic_state in ("cancelled", "no_show") or not ev.active
             ):
                 continue
+            if ev.clinic_state == "requested":
+                # reserve/waitlist entries are placeholders — they neither
+                # clash nor lock time until they are confirmed onto the grid
+                continue
             base = [
                 ("id", "!=", ev.id),
                 ("is_clinic", "=", True),
                 ("active", "=", True),
-                ("clinic_state", "not in", ("cancelled", "no_show")),
+                ("clinic_state", "not in", ("cancelled", "no_show", "requested")),
                 ("start", "<", ev.stop),
                 ("stop", ">", ev.start),
             ]
@@ -466,6 +473,128 @@ class CalendarEvent(models.Model):
                 ),
             },
         }
+
+    # ------------------------------------------------------------------
+    # Waitlist / dispensary (reviewer): 6-month control visits wait in a
+    # reserve list and reach the main calendar only after confirmation.
+    # ------------------------------------------------------------------
+    def action_book(self):
+        """Confirm a reserve (requested) entry onto the main calendar."""
+        for ev in self:
+            if ev.is_clinic and ev.clinic_state == "requested":
+                # run the overlap constraint against the grid by leaving
+                # 'requested' — the constrains() fires on this write
+                ev.write({"clinic_state": "booked"})
+
+    def action_dispensary_next(self):
+        """Book the patient for a 6-month dispensary control — lands in the
+        reserve list (requested) until the administrator confirms it."""
+        self.ensure_one()
+        start = self.start and self.start + timedelta(days=182)
+        stop = self.stop and self.stop + timedelta(days=182)
+        new = self.with_context(clinic_force=1).create({
+            "name": _("Dispensary control: %s") % (self.patient_id.name or ""),
+            "is_clinic": True,
+            "is_dispensary": True,
+            "clinic_state": "requested",
+            "patient_id": self.patient_id.id,
+            "dentist_id": self.dentist_id.id,
+            "room_id": self.room_id.id,
+            "appointment_type_id": self.appointment_type_id.id,
+            "parent_appointment_id": self.id,
+            "start": start,
+            "stop": stop,
+        })
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Dispensary control scheduled"),
+                "message": _("%(patient)s added to the reserve list for %(date)s.",
+                             patient=self.patient_id.name or "",
+                             date=fields.Datetime.context_timestamp(
+                                 self, new.start).strftime("%d.%m.%Y %H:%M") if new.start else ""),
+                "type": "success",
+                "sticky": False,
+            },
+        }
+
+    def _clinic_admin_users(self):
+        group = self.env.ref(
+            "clinic_patient_card.group_clinic_admin", raise_if_not_found=False)
+        if not group:
+            return self.env["res.users"]
+        return self.env["res.users"].search([("all_group_ids", "in", group.id)])
+
+    @api.model
+    def _cron_dispensary_reminders(self):
+        """Daily: dispensary reserve visits starting within 14 days → to-do
+        activity + live toast for the administrators ('time to call')."""
+        due = self.search([
+            ("is_clinic", "=", True),
+            ("is_dispensary", "=", True),
+            ("clinic_state", "=", "requested"),
+            ("dispensary_notified", "=", False),
+            ("start", "!=", False),
+            ("start", "<=", fields.Datetime.now() + timedelta(days=14)),
+        ])
+        if not due:
+            return
+        admins = self._clinic_admin_users()
+        todo = self.env.ref("mail.mail_activity_data_todo", raise_if_not_found=False)
+        model_id = self.env["ir.model"]._get_id("calendar.event")
+        for ev in due:
+            when = fields.Datetime.context_timestamp(ev, ev.start).strftime("%d.%m.%Y %H:%M")
+            for user in admins:
+                if todo:
+                    self.env["mail.activity"].create({
+                        "res_model_id": model_id,
+                        "res_id": ev.id,
+                        "activity_type_id": todo.id,
+                        "summary": _("Call to confirm dispensary control: %(patient)s (%(when)s)",
+                                     patient=ev.patient_id.name or "", when=when),
+                        "date_deadline": fields.Date.context_today(self),
+                        "user_id": user.id,
+                    })
+                if user.partner_id:
+                    self.env["bus.bus"]._sendone(user.partner_id, "clinic_dispensary_due", {
+                        "patient": ev.patient_id.name or "",
+                        "when": when,
+                    })
+        due.with_context(clinic_flagging=True).write({"dispensary_notified": True})
+
+    @api.model
+    def _cron_booking_report(self):
+        """Weekly: booking summary (last 7 days) as a to-do for the admins."""
+        since = fields.Datetime.now() - timedelta(days=7)
+        bookings = self.search([
+            ("is_clinic", "=", True),
+            ("create_date", ">=", since),
+            ("clinic_state", "not in", ("cancelled", "no_show")),
+        ])
+        per_dentist = {}
+        for ev in bookings:
+            key = ev.dentist_id.name or _("(no dentist)")
+            per_dentist[key] = per_dentist.get(key, 0) + 1
+        detail = ", ".join("%s: %s" % (k, v) for k, v in sorted(per_dentist.items()))
+        summary = _("Weekly bookings: %(total)s new (%(detail)s)",
+                    total=len(bookings), detail=detail or "-")
+        todo = self.env.ref("mail.mail_activity_data_todo", raise_if_not_found=False)
+        if not todo:
+            return
+        # res.users has no chatter — hang the to-do on the admin's partner.
+        partner_model_id = self.env["ir.model"]._get_id("res.partner")
+        for user in self._clinic_admin_users():
+            if not user.partner_id:
+                continue
+            self.env["mail.activity"].create({
+                "res_model_id": partner_model_id,
+                "res_id": user.partner_id.id,
+                "activity_type_id": todo.id,
+                "summary": summary,
+                "date_deadline": fields.Date.context_today(self),
+                "user_id": user.id,
+            })
 
     def _create_invoice_from_procedures(self):
         """R14/pattern-5 — draft an invoice from the visit's procedure products.

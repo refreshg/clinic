@@ -34,6 +34,13 @@
                 <button name="action_next_visit" type="object" string="Next Visit"
                         groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"
                         invisible="not is_clinic or clinic_state not in ('done','paid')"/>
+                <button name="action_dispensary_next" type="object" string="Dispensary +6m"
+                        groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"
+                        invisible="not is_clinic or clinic_state not in ('done','paid')"/>
+                <button name="action_book" type="object" string="Confirm to Calendar"
+                        class="btn-primary"
+                        groups="clinic_patient_card.group_clinic_admin"
+                        invisible="not is_clinic or clinic_state != 'requested'"/>
                 <field name="clinic_state" widget="statusbar" invisible="not is_clinic"
                        statusbar_visible="booked,confirmed,arrived,in_progress,done,paid"/>
             </xpath>

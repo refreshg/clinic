@@ -43,6 +43,8 @@ export class ClinicPlanning extends Component {
             startHour: DEFAULT_START_HOUR, // dynamic window, fitted to the day's visits
             endHour: DEFAULT_END_HOUR,
             config: null,         // clinic working schedule (grey out closed time)
+            waitlist: [],         // reserve entries (clinic_state=requested)
+            waitlistOpen: false,
         });
         onWillStart(() => this.load());
     }
@@ -108,18 +110,27 @@ export class ClinicPlanning extends Component {
         const from = this._iso(prev) + " 00:00:00";
         const to = this._iso(next) + " 23:59:59";
 
-        const [events, types, rooms, fg, dentists, config] = await Promise.all([
+        const [events, types, rooms, fg, dentists, config, waitlist] = await Promise.all([
             this.orm.searchRead("calendar.event",
-                [["is_clinic", "=", true], ["start", ">=", from], ["start", "<=", to]],
+                [["is_clinic", "=", true], ["clinic_state", "!=", "requested"],
+                 ["start", ">=", from], ["start", "<=", to]],
                 ["name", "start", "stop", "dentist_id", "room_id", "appointment_type_id",
-                 "patient_id", "clinic_state", "was_rescheduled", "duration_edited"]),
+                 "patient_id", "clinic_state", "was_rescheduled", "duration_edited",
+                 "is_dispensary"]),
             this.orm.searchRead("clinic.appointment.type", [], ["name", "color"]),
             this.orm.searchRead("clinic.room", [], ["name"]),
             this.orm.call("calendar.event", "fields_get", [["clinic_state"], ["selection"]]),
             this.orm.call("res.users", "clinic_dentists", []),
             this.orm.call("calendar.event", "clinic_board_config", []),
+            // reserve list: upcoming requested visits waiting for confirmation
+            this.orm.searchRead("calendar.event",
+                [["is_clinic", "=", true], ["clinic_state", "=", "requested"],
+                 ["start", ">=", this._todayStr() + " 00:00:00"]],
+                ["name", "start", "patient_id", "dentist_id", "is_dispensary"],
+                { order: "start asc", limit: 80 }),
         ]);
         this.state.config = config;
+        this.state.waitlist = waitlist;
         this.state.stateLabels = Object.fromEntries(
             (fg.clinic_state && fg.clinic_state.selection) || []
         );
@@ -276,6 +287,25 @@ export class ClinicPlanning extends Component {
     }
     openCancelled() {
         this.action.doAction("clinic_patient_card.action_clinic_visit_cancelled");
+    }
+
+    // ---- waitlist / reserve panel (dispensary + pending requests) ----
+    get shownWaitlist() {
+        let list = this.state.waitlist;
+        if (this.state.dentistFilter) {
+            list = list.filter((w) => w.dentist_id && w.dentist_id[0] === this.state.dentistFilter);
+        }
+        return list;
+    }
+    toggleWaitlist() {
+        this.state.waitlistOpen = !this.state.waitlistOpen;
+    }
+    wlWhen(w) {
+        return w.start ? deserializeDateTime(w.start).toFormat("dd.LL HH:mm") : "";
+    }
+    async confirmWait(w) {
+        await this.orm.call("calendar.event", "action_book", [[w.id]]);
+        await this.load();
     }
 
     get nowTop() {
