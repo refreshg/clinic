@@ -112,10 +112,22 @@
                             </div>
                             <t t-foreach="shownDentists" t-as="d" t-key="d.id">
                                 <div class="cp_col" t-attf-style="height:{{ totalHeight }}px;"
-                                     t-on-click="(ev) => this.onSlotClick(d, ev)" title="Click to add a visit">
+                                     t-on-mousemove="(ev) => this.onColMove(d, ev)"
+                                     t-on-mouseleave="() => this.onColLeave(d)"
+                                     t-on-mousedown="(ev) => this.onColDown(d, ev)"
+                                     t-on-mouseup="(ev) => this.onColUp(d, ev)"
+                                     title="Click to add a visit · drag to size it">
                                     <t t-foreach="hours()" t-as="h" t-key="h">
                                         <div class="cp_slotline"/>
                                     </t>
+                                    <!-- 10-min cell under the pointer -->
+                                    <div t-if="state.hover and state.hover.d === d.id and !state.drag"
+                                         class="cp_hover" t-attf-style="top:{{ state.hover.top }}px;"/>
+                                    <!-- drag-selected range (exact visit length) -->
+                                    <div t-if="state.drag and state.drag.d === d.id"
+                                         class="cp_drag" t-att-style="dragStyle(d)">
+                                        <span class="cp_drag_lbl" t-esc="dragLabel(d)"/>
+                                    </div>
                                     <!-- closed (non-working) time is greyed out -->
                                     <t t-foreach="offZones" t-as="z" t-key="z_index">
                                         <div class="cp_offzone"

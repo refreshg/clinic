@@ -45,6 +45,8 @@ export class ClinicPlanning extends Component {
             config: null,         // clinic working schedule (grey out closed time)
             waitlist: [],         // reserve entries (clinic_state=requested)
             waitlistOpen: false,
+            hover: null,          // {d, top} — 10-min cell under the pointer
+            drag: null,           // {d, s, e} — drag-selected slot range
         });
         onWillStart(() => this.load());
     }
@@ -384,33 +386,101 @@ export class ClinicPlanning extends Component {
         });
     }
 
-    // Click an empty area of a dentist's column -> new visit at that time.
-    onSlotClick(dentist, ev) {
-        // ignore clicks that landed on an existing event card
-        if (ev.target.closest(".cp_event")) {
-            return;
-        }
-        const rect = ev.currentTarget.getBoundingClientRect();
-        const y = ev.clientY - rect.top;
-        let hour = this.state.startHour + y / HOUR_PX;
-        // snap to the nearest 10 minutes (reviewer: 10-minute grid)
-        hour = Math.round(hour * 6) / 6;
-        hour = Math.min(this.state.endHour - 0.5, Math.max(this.state.startHour, hour));
-        // closed time is not clickable
-        if (!this._isWorkTime(hour)) {
-            return;
-        }
-        // quick visual feedback: a ripple + a ghost slot where we clicked
-        this._flashSlot(ev.currentTarget, ev.clientX - rect.left, y);
+    // ---- 10-minute slot interaction: hover highlight + drag to size ----
+    _slotFromY(y) {
+        const total = (this.state.endHour - this.state.startHour) * 6;
+        const slot = Math.floor((y / HOUR_PX) * 6);
+        return Math.max(0, Math.min(slot, total - 1));
+    }
+    _slotHour(slot) {
+        return this.state.startHour + slot / 6;
+    }
+    _fmtHour(hour) {
         const h = Math.floor(hour);
         const m = Math.round((hour - h) * 60);
         const pad = (n) => (n < 10 ? "0" + n : "" + n);
-        // naive local datetime string; the form widget interprets it in tz
-        const start = `${this.state.date} ${pad(h)}:${pad(m)}:00`;
-        const endHour = Math.min(this.state.endHour, hour + 0.5);
-        const eh = Math.floor(endHour);
-        const em = Math.round((endHour - eh) * 60);
-        const stop = `${this.state.date} ${pad(eh)}:${pad(em)}:00`;
+        return `${pad(h)}:${pad(m)}`;
+    }
+    onColMove(dentist, ev) {
+        const rect = ev.currentTarget.getBoundingClientRect();
+        const slot = this._slotFromY(ev.clientY - rect.top);
+        const drag = this.state.drag;
+        if (drag && drag.d === dentist.id) {
+            drag.e = slot;
+            this.state.hover = null;
+            return;
+        }
+        if (drag) {
+            return;
+        }
+        if (ev.target.closest(".cp_event") || !this._isWorkTime(this._slotHour(slot))) {
+            this.state.hover = null;
+            return;
+        }
+        this.state.hover = { d: dentist.id, top: slot * (HOUR_PX / 6) };
+    }
+    onColLeave(dentist) {
+        if (this.state.hover && this.state.hover.d === dentist.id) {
+            this.state.hover = null;
+        }
+        if (this.state.drag && this.state.drag.d === dentist.id) {
+            this.state.drag = null;
+        }
+    }
+    onColDown(dentist, ev) {
+        if (ev.button !== 0 || ev.target.closest(".cp_event")) {
+            return;
+        }
+        const rect = ev.currentTarget.getBoundingClientRect();
+        const slot = this._slotFromY(ev.clientY - rect.top);
+        if (!this._isWorkTime(this._slotHour(slot))) {
+            return;
+        }
+        this.state.drag = { d: dentist.id, s: slot, e: slot };
+        ev.preventDefault();
+    }
+    onColUp(dentist, ev) {
+        const drag = this.state.drag;
+        this.state.drag = null;
+        if (!drag || drag.d !== dentist.id) {
+            return;
+        }
+        const s = Math.min(drag.s, drag.e);
+        const e = Math.max(drag.s, drag.e);
+        const startHour = this._slotHour(s);
+        // plain click = default 30 min; a drag books exactly the selected cells
+        let endHour = e === s ? startHour + 0.5 : this._slotHour(e) + 1 / 6;
+        endHour = Math.min(endHour, this.state.endHour);
+        const cfg = this.state.config;
+        if (cfg && !this.closedDay) {
+            endHour = Math.min(endHour, cfg.work_end);
+        }
+        if (endHour <= startHour) {
+            return;
+        }
+        this._openNewVisit(dentist, startHour, endHour);
+    }
+    dragStyle(dentist) {
+        const drag = this.state.drag;
+        if (!drag || drag.d !== dentist.id) {
+            return "";
+        }
+        const s = Math.min(drag.s, drag.e);
+        const e = Math.max(drag.s, drag.e);
+        return `top:${s * (HOUR_PX / 6)}px;height:${(e - s + 1) * (HOUR_PX / 6)}px;`;
+    }
+    dragLabel(dentist) {
+        const drag = this.state.drag;
+        if (!drag || drag.d !== dentist.id) {
+            return "";
+        }
+        const s = Math.min(drag.s, drag.e);
+        const e = Math.max(drag.s, drag.e);
+        return `${this._fmtHour(this._slotHour(s))} – ${this._fmtHour(this._slotHour(e) + 1 / 6)}`;
+    }
+    _openNewVisit(dentist, startHour, endHour) {
+        const start = `${this.state.date} ${this._fmtHour(startHour)}:00`;
+        const stop = `${this.state.date} ${this._fmtHour(endHour)}:00`;
         this.action.doAction({
             type: "ir.actions.act_window",
             res_model: "calendar.event",

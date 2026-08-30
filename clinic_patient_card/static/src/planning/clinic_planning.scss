@@ -206,6 +206,41 @@
                 .cp_st_cancel { background: #eb5757; }
             }
 
+            /* 10-min cell under the pointer + drag-selected range */
+            .cp_hover {
+                position: absolute;
+                left: 2px;
+                right: 2px;
+                height: 16px;
+                border-radius: 4px;
+                background: rgba(99, 102, 241, 0.14);
+                pointer-events: none;
+                z-index: 1;
+            }
+            .cp_drag {
+                position: absolute;
+                left: 2px;
+                right: 2px;
+                border-radius: 6px;
+                background: rgba(99, 102, 241, 0.18);
+                border: 1px dashed rgba(99, 102, 241, 0.65);
+                box-sizing: border-box;
+                pointer-events: none;
+                z-index: 3;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                .cp_drag_lbl {
+                    font-size: 10px;
+                    font-weight: 700;
+                    color: #4f46b8;
+                    background: rgba(255, 255, 255, 0.85);
+                    border-radius: 6px;
+                    padding: 1px 6px;
+                    white-space: nowrap;
+                }
+            }
+
             /* dispensary control visits stand out (reviewer: distinct colour) */
             .cp_event.cp_dispensary {
                 outline: 2px dashed #b9770a;
