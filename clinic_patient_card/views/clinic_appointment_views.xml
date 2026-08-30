@@ -111,8 +111,11 @@
                                    context="{'clinic_show_ids': 1}"/>
                             <field name="appointment_type_id"/>
                             <field name="diagnosis"/>
+                            <!-- visible while cancelling is still possible —
+                                 the reason must be typed BEFORE hitting Cancel -->
                             <field name="cancel_reason"
-                                   invisible="clinic_state != 'cancelled'"
+                                   placeholder="Required to cancel"
+                                   invisible="clinic_state in ('done', 'paid', 'no_show')"
                                    required="clinic_state == 'cancelled'"/>
                         </group>
                         <group>
