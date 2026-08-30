@@ -105,8 +105,9 @@
                         <!-- body -->
                         <div class="cp_body d-flex position-relative">
                             <div class="cp_hourcol" t-attf-style="height:{{ totalHeight }}px;">
-                                <t t-foreach="hours()" t-as="h" t-key="h">
-                                    <div class="cp_hourmark" t-esc="(h &lt; 10 ? '0' : '') + h + ':00'"/>
+                                <t t-foreach="ticks()" t-as="tk" t-key="tk.key">
+                                    <div t-attf-class="cp_tick {{ tk.major ? 'major' : '' }} {{ tk.last ? 'last' : '' }}"
+                                         t-esc="tk.label"/>
                                 </t>
                             </div>
                             <t t-foreach="shownDentists" t-as="d" t-key="d.id">

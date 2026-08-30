@@ -77,6 +77,19 @@ export class ClinicPlanning extends Component {
         return out;
     }
 
+    // Ruler ticks: every 10 minutes, the full hour rendered stronger.
+    ticks() {
+        const pad = (n) => (n < 10 ? "0" + n : "" + n);
+        const out = [];
+        for (let h = this.state.startHour; h < this.state.endHour; h++) {
+            for (let m = 0; m < 60; m += 10) {
+                out.push({ key: h * 60 + m, label: `${pad(h)}:${pad(m)}`, major: m === 0, last: false });
+            }
+        }
+        out.push({ key: this.state.endHour * 60, label: pad(this.state.endHour) + ":00", major: true, last: true });
+        return out;
+    }
+
     calendarWeeks() {
         const sel = new Date(this.state.date + "T00:00:00");
         const y = sel.getFullYear(), m = sel.getMonth();
