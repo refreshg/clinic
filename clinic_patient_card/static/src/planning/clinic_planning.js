@@ -324,6 +324,24 @@ export class ClinicPlanning extends Component {
         await this.orm.call("calendar.event", "action_book", [[w.id]]);
         await this.load();
     }
+    addWait() {
+        // new reserve entry (dialog); dentist prefilled from the board filter
+        const ctx = {
+            default_is_clinic: true,
+            default_clinic_state: "requested",
+        };
+        if (this.state.dentistFilter) {
+            ctx.default_dentist_id = this.state.dentistFilter;
+            ctx.default_user_id = this.state.dentistFilter;
+        }
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "calendar.event",
+            views: [[false, "form"]],
+            target: "new",
+            context: ctx,
+        }, { onClose: () => this.load() });
+    }
 
     get nowTop() {
         if (this.state.date !== this._todayStr()) {

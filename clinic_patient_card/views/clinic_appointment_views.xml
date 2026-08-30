@@ -49,6 +49,9 @@
                         class="btn-primary"
                         groups="clinic_patient_card.group_clinic_admin"
                         invisible="not is_clinic or clinic_state != 'requested'"/>
+                <button name="action_to_reserve" type="object" string="To Reserve"
+                        groups="clinic_patient_card.group_clinic_admin"
+                        invisible="not is_clinic or clinic_state not in ('booked','confirmed')"/>
                 <field name="clinic_state" widget="statusbar" invisible="not is_clinic"
                        statusbar_visible="booked,confirmed,arrived,in_progress,done,paid"/>
             </xpath>

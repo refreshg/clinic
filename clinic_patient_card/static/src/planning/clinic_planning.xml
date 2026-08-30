@@ -158,6 +158,8 @@
                 <div t-if="state.waitlistOpen" class="cp_wait">
                     <div class="d-flex align-items-center mb-2">
                         <div class="fw-bold flex-grow-1">Reserve / Waitlist</div>
+                        <button class="btn btn-sm btn-outline-primary me-1"
+                                t-on-click="() => this.addWait()">+ Add</button>
                         <button class="btn btn-sm btn-light" t-on-click="() => this.toggleWaitlist()">✕</button>
                     </div>
                     <div t-if="!shownWaitlist.length" class="text-muted small">

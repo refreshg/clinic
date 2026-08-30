@@ -492,6 +492,12 @@ class CalendarEvent(models.Model):
                 # 'requested' — the constrains() fires on this write
                 ev.write({"clinic_state": "booked"})
 
+    def action_to_reserve(self):
+        """Move a not-yet-started visit to the waitlist (reserve)."""
+        for ev in self:
+            if ev.is_clinic and ev.clinic_state in ("booked", "confirmed"):
+                ev.write({"clinic_state": "requested"})
+
     def action_dispensary_next(self):
         """Book the patient for a 6-month dispensary control — lands in the
         reserve list (requested) until the administrator confirms it."""
