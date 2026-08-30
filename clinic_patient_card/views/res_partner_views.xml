@@ -21,19 +21,53 @@
                 <attribute name="autofocus"/>
             </xpath>
 
+            <!-- Meeting-style clutter is hidden for patients (reviewer):
+                 job position, website, tags, company/individual switch. -->
+            <xpath expr="//field[@name='function']" position="attributes">
+                <attribute name="invisible">is_patient</attribute>
+            </xpath>
+            <xpath expr="//field[@name='website']" position="attributes">
+                <attribute name="invisible">is_patient</attribute>
+            </xpath>
+            <xpath expr="//field[@name='category_id']" position="attributes">
+                <attribute name="invisible">is_patient</attribute>
+            </xpath>
+            <xpath expr="//field[@name='company_type']" position="attributes">
+                <attribute name="invisible">is_patient</attribute>
+            </xpath>
+            <!-- "Company" reads as "Workplace" for a patient: hide the original
+                 widget and offer a plain relabelled one in the header group
+                 (a label can't be swapped conditionally on one field). -->
+            <xpath expr="//field[@name='parent_id']" position="attributes">
+                <attribute name="invisible">is_patient</attribute>
+            </xpath>
+            <!-- Patients only buy from us — the vendor/purchase side of the
+                 Sales &amp; Purchase tab is noise (reviewer). Sales stays
+                 (e.g. selling toothbrushes). -->
+            <xpath expr="//page[@name='sales_purchases']//group[@name='purchase']"
+                   position="attributes">
+                <attribute name="invisible">is_patient</attribute>
+            </xpath>
+
             <!-- Header block: Personal No. (vat), birthdate, age, gender +
-                 patient toggle. Always visible, even for non-patients. -->
+                 key patient fields the reviewer wants on the FIRST page:
+                 workplace, insurance company, referral source. -->
             <xpath expr="//notebook" position="before">
                 <group>
                     <group>
-                        <field name="vat" string="Personal No." placeholder=""/>
-                        <field name="birthdate"/>
+                        <field name="vat" string="Personal No." placeholder="digits only"/>
+                        <field name="birthdate" placeholder="dd/mm/yyyy — can be typed"/>
                         <field name="age"/>
                         <field name="gender"/>
+                        <field name="parent_id" string="Workplace"
+                               invisible="not is_patient"/>
                     </group>
                     <group>
-                        <field name="is_patient"/>
+                        <field name="is_patient" invisible="1"/>
                         <field name="patient_ref" invisible="not is_patient"/>
+                        <field name="insurance_company_id" invisible="not is_patient"
+                               domain="[('is_insurance_company', '=', True)]"/>
+                        <field name="referral_source" invisible="not is_patient"/>
                         <field name="can_edit_medical" invisible="1"/>
                     </group>
                 </group>
@@ -45,10 +79,14 @@
                       autofocus="autofocus"
                       invisible="not is_patient">
 
-                    <!-- Visual dashboard (Health-Care style) + full Soft-UI card page -->
+                    <!-- Booking first (reviewer: the booking button must stand
+                         out on the patient form) + card page / dashboard -->
                     <div class="d-flex gap-2 mb-2">
+                        <button name="action_create_booking" type="object"
+                                string="📅 დაჯავშნე" class="btn-primary"
+                                invisible="not is_patient"/>
                         <button name="action_open_card_page" type="object"
-                                string="🪪 პაციენტის ბარათი" class="btn-primary"
+                                string="🪪 პაციენტის ბარათი" class="btn-secondary"
                                 invisible="not is_patient"/>
                         <button name="action_open_dashboard" type="object"
                                 string="🩺 Open Dashboard" class="btn-secondary"
@@ -57,9 +95,6 @@
 
                     <!-- 1.9 Quick actions (placeholder buttons for now) -->
                     <div class="d-flex flex-wrap gap-1 mb-3" name="quick_actions">
-                        <button name="action_create_booking" type="object"
-                                string="Create Booking" class="btn-primary"
-                                invisible="not is_patient"/>
                         <button name="action_clinic_todo" type="object"
                                 string="Add Note" class="btn-secondary"/>
                         <button name="action_clinic_todo" type="object"
@@ -293,6 +328,14 @@
                 </page>
             </xpath>
         </field>
+    </record>
+
+    <!-- New contacts made from the Contacts app are patients by default
+         (reviewer: drop the "Is a Patient" checkbox). Vendors, insurance
+         companies and user partners are created through their own flows,
+         which set their own flags. -->
+    <record id="contacts.action_contacts" model="ir.actions.act_window">
+        <field name="context">{'default_is_patient': True}</field>
     </record>
 
     <!-- ============================================================ -->

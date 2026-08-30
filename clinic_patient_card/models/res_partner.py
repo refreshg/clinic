@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
+import re
+
 from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
+
+# Latin-only e-mail (reviewer: no Georgian letters in e-mails).
+EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$")
+# Phone: digits with the usual separators only.
+PHONE_RE = re.compile(r"^[0-9+\-\s()]+$")
 
 
 # Fields that, when changed, bump the "medical history last updated" stamp.
@@ -24,10 +32,70 @@ MEDICAL_TRACKED_FIELDS = {
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
+    # Patients are searchable by personal no. / phone / patient ref too.
+    _rec_names_search = [
+        "complete_name", "email", "ref", "vat", "company_registry",
+        "phone", "patient_ref",
+    ]
+
     # ------------------------------------------------------------------
     # Master flag
     # ------------------------------------------------------------------
     is_patient = fields.Boolean(string="Is a Patient", index=True)
+
+    # ------------------------------------------------------------------
+    # Reviewer validations (patients only)
+    # ------------------------------------------------------------------
+    @api.constrains("is_patient", "email")
+    def _check_patient_email(self):
+        for p in self:
+            if p.is_patient and p.email and not EMAIL_RE.match(p.email.strip()):
+                raise ValidationError(_(
+                    "E-mail must use Latin letters only (e.g. name@mail.com): %s"
+                ) % p.email)
+
+    @api.constrains("is_patient", "phone")
+    def _check_patient_phone(self):
+        for p in self:
+            if p.is_patient and p.phone and not PHONE_RE.match(p.phone.strip()):
+                raise ValidationError(_(
+                    "Phone number may contain digits only: %s"
+                ) % p.phone)
+
+    @api.constrains("is_patient", "vat")
+    def _check_patient_vat(self):
+        for p in self:
+            if not p.is_patient or not p.vat:
+                continue
+            vat = p.vat.strip()
+            if not vat.isdigit():
+                raise ValidationError(_(
+                    "Personal No. may contain digits only: %s"
+                ) % p.vat)
+            # Reviewer: re-registering an already registered personal no. is
+            # forbidden. (Python check, not SQL — empty vats and companies
+            # must stay unconstrained.)
+            dup = self.sudo().search_count([
+                ("id", "!=", p.id),
+                ("is_patient", "=", True),
+                ("vat", "=", vat),
+            ])
+            if dup:
+                raise ValidationError(_(
+                    "A patient with personal no. %s is already registered."
+                ) % vat)
+
+    def _compute_display_name(self):
+        # In clinic pickers (context clinic_show_ids) a patient shows their
+        # personal no. and phone next to the name, so reception can tell
+        # namesakes apart while searching.
+        super()._compute_display_name()
+        if self.env.context.get("clinic_show_ids"):
+            for p in self:
+                if p.is_patient:
+                    extra = " · ".join(x for x in (p.vat, p.phone) if x)
+                    if extra:
+                        p.display_name = f"{p.display_name} · {extra}"
 
     # ==================================================================
     # 1.1 Basic information

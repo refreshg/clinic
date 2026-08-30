@@ -1,11 +1,24 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+import re
+
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
+
+PHONE_RE = re.compile(r"^[0-9+\-\s()]+$")
 
 
 class ClinicPatientPhone(models.Model):
     _name = "clinic.patient.phone"
     _description = "Patient Phone Number"
     _order = "sequence, id"
+
+    @api.constrains("phone")
+    def _check_phone_digits(self):
+        for rec in self:
+            if rec.phone and not PHONE_RE.match(rec.phone.strip()):
+                raise ValidationError(_(
+                    "Phone number may contain digits only: %s"
+                ) % rec.phone)
 
     partner_id = fields.Many2one(
         "res.partner", string="Patient", required=True, ondelete="cascade", index=True,
