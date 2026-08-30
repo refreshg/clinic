@@ -163,12 +163,15 @@ class CalendarEvent(models.Model):
         the schedule checks, e.g. for controlled data fixes)."""
         if self.env.context.get("clinic_force"):
             return
-        # 1) not in the past (5-minute grace); admins may back-date.
-        if not self.env.user.has_group("clinic_patient_card.group_clinic_admin"):
+        # 1) not in the past (5-minute grace); ONLY the Administrator account
+        # (base.user_admin) may back-date — user decision: everyone else,
+        # including clinic-admin-role and Settings users, is blocked.
+        admin_user = self.env.ref("base.user_admin", raise_if_not_found=False)
+        if not admin_user or self.env.user.id != admin_user.id:
             if start_dt < fields.Datetime.now() - timedelta(minutes=5):
                 raise UserError(_(
                     "Booking in the past is not allowed. "
-                    "Ask a clinic administrator if a back-dated visit is needed."
+                    "Ask the administrator if a back-dated visit is needed."
                 ))
         # 2) inside working days/hours (local clinic time).
         company = self.env.company

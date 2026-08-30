@@ -118,6 +118,9 @@
             .cp_slotline {
                 height: 96px;
                 border-top: 1px solid #e3e6ec;
+                // border must live INSIDE the 96px row, otherwise every hour
+                // drifts +1px and the hour line stops matching the 10-min grid
+                box-sizing: border-box;
             }
 
             /* click feedback: ripple at the pointer + ghost half-hour block */
