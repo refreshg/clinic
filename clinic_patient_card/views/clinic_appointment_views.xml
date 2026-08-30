@@ -96,6 +96,14 @@
             <xpath expr="//notebook" position="inside">
                 <page name="clinic_page" string="Clinic" invisible="not is_clinic"
                       autofocus="autofocus">
+                    <!-- Quick jumps to the patient (reviewer: proper buttons
+                         instead of the tiny m2o arrow) -->
+                    <div class="d-flex gap-2 mb-2" invisible="not patient_id">
+                        <button name="action_open_patient" type="object"
+                                string="👤 პაციენტის ანკეტა" class="btn-secondary"/>
+                        <button name="action_open_patient_card" type="object"
+                                string="🪪 პაციენტის ბარათი" class="btn-secondary"/>
+                    </div>
                     <group>
                         <group>
                             <field name="is_clinic"/>

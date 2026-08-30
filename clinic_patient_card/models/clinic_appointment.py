@@ -492,6 +492,34 @@ class CalendarEvent(models.Model):
                 # 'requested' — the constrains() fires on this write
                 ev.write({"clinic_state": "booked"})
 
+    def action_open_patient(self):
+        """Jump from the visit straight to the patient's form (reviewer:
+        convenient buttons instead of the tiny m2o arrow)."""
+        self.ensure_one()
+        if not self.patient_id:
+            raise UserError(_("Set the patient first."))
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "res.partner",
+            "res_id": self.patient_id.id,
+            "views": [[False, "form"]],
+            "target": "current",
+        }
+
+    def action_open_patient_card(self):
+        """Jump from the visit to the Soft-UI patient card page."""
+        self.ensure_one()
+        if not self.patient_id:
+            raise UserError(_("Set the patient first."))
+        return {
+            "type": "ir.actions.client",
+            "tag": "clinic_patient_card_page",
+            "name": self.patient_id.display_name,
+            "target": "current",
+            "context": {"active_id": self.patient_id.id},
+            "params": {"partner_id": self.patient_id.id},
+        }
+
     def action_to_reserve(self):
         """Move a not-yet-started visit to the waitlist (reserve)."""
         for ev in self:
