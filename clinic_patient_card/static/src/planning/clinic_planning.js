@@ -370,13 +370,14 @@ export class ClinicPlanning extends Component {
         this.state.roomOff[roomId] = !this.state.roomOff[roomId];
     }
     openEvent(ev) {
+        // dialog on top of the board — the calendar stays visible behind
         this.action.doAction({
             type: "ir.actions.act_window",
             res_model: "calendar.event",
             res_id: ev.id,
             views: [[false, "form"]],
-            target: "current",
-        });
+            target: "new",
+        }, { onClose: () => this.load() });
     }
     newAppointment() {
         this.action.doAction({
@@ -450,8 +451,8 @@ export class ClinicPlanning extends Component {
         const s = Math.min(drag.s, drag.e);
         const e = Math.max(drag.s, drag.e);
         const startHour = this._slotHour(s);
-        // plain click = default 30 min; a drag books exactly the selected cells
-        let endHour = e === s ? startHour + 0.5 : this._slotHour(e) + 1 / 6;
+        // exactly the selected cells: one cell = a 10-minute visit
+        let endHour = this._slotHour(e) + 1 / 6;
         endHour = Math.min(endHour, this.state.endHour);
         const cfg = this.state.config;
         if (cfg && !this.closedDay) {
@@ -491,11 +492,13 @@ export class ClinicPlanning extends Component {
         };
         const start = toUTC(startHour);
         const stop = toUTC(endHour);
+        // dialog on top of the board — the calendar stays visible behind,
+        // and the grid refreshes as soon as the dialog closes
         this.action.doAction({
             type: "ir.actions.act_window",
             res_model: "calendar.event",
             views: [[false, "form"]],
-            target: "current",
+            target: "new",
             context: {
                 default_is_clinic: true,
                 default_dentist_id: dentist.id,
@@ -503,7 +506,7 @@ export class ClinicPlanning extends Component {
                 default_start: start,
                 default_stop: stop,
             },
-        });
+        }, { onClose: () => this.load() });
     }
 
     // Transient click feedback inside a column: a ripple at the pointer plus a
