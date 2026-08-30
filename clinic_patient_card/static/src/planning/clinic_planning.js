@@ -3,7 +3,9 @@
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { deserializeDateTime } from "@web/core/l10n/dates";
+import { deserializeDateTime, serializeDateTime } from "@web/core/l10n/dates";
+
+const { DateTime } = luxon;
 
 // Palette indexed by clinic.appointment.type.color (0..11).
 const COLORS = [
@@ -479,8 +481,16 @@ export class ClinicPlanning extends Component {
         return `${this._fmtHour(this._slotHour(s))} – ${this._fmtHour(this._slotHour(e) + 1 / 6)}`;
     }
     _openNewVisit(dentist, startHour, endHour) {
-        const start = `${this.state.date} ${this._fmtHour(startHour)}:00`;
-        const stop = `${this.state.date} ${this._fmtHour(endHour)}:00`;
+        // The form reads default datetimes as UTC — serialize the local pick
+        // properly, otherwise 11:10 shows up as 15:10 (+4h) on the form.
+        const [y, mo, d] = this.state.date.split("-").map(Number);
+        const toUTC = (hour) => {
+            const h = Math.floor(hour);
+            const m = Math.round((hour - h) * 60);
+            return serializeDateTime(DateTime.local(y, mo, d, h, m));
+        };
+        const start = toUTC(startHour);
+        const stop = toUTC(endHour);
         this.action.doAction({
             type: "ir.actions.act_window",
             res_model: "calendar.event",
