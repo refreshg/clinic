@@ -41,12 +41,38 @@
             <xpath expr="//field[@name='parent_id']" position="attributes">
                 <attribute name="invisible">is_patient</attribute>
             </xpath>
-            <!-- Patients only buy from us — the vendor/purchase side of the
-                 Sales &amp; Purchase tab is noise (reviewer). Sales stays
-                 (e.g. selling toothbrushes). -->
-            <xpath expr="//page[@name='sales_purchases']//group[@name='purchase']"
-                   position="attributes">
+            <!-- Patients only buy from us — the whole meeting-style Sales &amp;
+                 Purchase tab is replaced for patients by a clean "რეალიზაცია"
+                 page (below): create a sale order directly + see past sales.
+                 Vendors/companies keep the standard tab. -->
+            <xpath expr="//page[@name='sales_purchases']" position="attributes">
                 <attribute name="invisible">is_patient</attribute>
+            </xpath>
+            <xpath expr="//page[@name='sales_purchases']" position="after">
+                <page name="clinic_retail" string="რეალიზაცია" invisible="not is_patient">
+                    <div class="d-flex gap-2 mb-3">
+                        <button name="action_new_sale_order" type="object"
+                                string="🪥 ახალი გაყიდვა" class="btn-primary"/>
+                    </div>
+                    <group>
+                        <group string="Sale Defaults">
+                            <field name="user_id" string="Salesperson"/>
+                            <field name="property_payment_term_id"/>
+                        </group>
+                    </group>
+                    <separator string="Sales History"/>
+                    <field name="sale_order_ids" nolabel="1" readonly="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="date_order"/>
+                            <field name="amount_total"/>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'sale'"
+                                   decoration-info="state == 'draft'"
+                                   decoration-danger="state == 'cancel'"/>
+                        </list>
+                    </field>
+                </page>
             </xpath>
 
             <!-- Header block: Personal No. (vat), birthdate, age, gender +

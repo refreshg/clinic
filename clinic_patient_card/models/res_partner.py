@@ -462,6 +462,18 @@ class ResPartner(models.Model):
             "params": {"partner_id": self.id},
         }
 
+    def action_new_sale_order(self):
+        """რეალიზაცია — start a retail sale (toothbrushes etc.) for this patient."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("New Sale"),
+            "res_model": "sale.order",
+            "view_mode": "form",
+            "target": "current",
+            "context": {"default_partner_id": self.id},
+        }
+
     def action_open_card_page(self):
         """Open the full Soft-UI patient card page (OWL client action)."""
         self.ensure_one()
