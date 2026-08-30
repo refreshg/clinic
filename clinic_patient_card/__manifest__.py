@@ -8,7 +8,7 @@
     "author": "refreshg",
     "website": "https://github.com/refreshg/clinic",
     "category": "Healthcare",
-    "version": "19.0.40.0.0",
+    "version": "19.0.41.0.0",
     "license": "LGPL-3",
     "depends": [
         "base",

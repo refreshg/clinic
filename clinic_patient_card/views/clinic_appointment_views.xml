@@ -9,6 +9,14 @@
         <field name="model">calendar.event</field>
         <field name="inherit_id" ref="calendar.view_calendar_event_form"/>
         <field name="arch" type="xml">
+            <!-- The meeting-style "Send email" header button confuses staff on
+                 a clinic booking (reviewer: "instead of Send message there
+                 should be the booking action") — hidden for clinic visits;
+                 the clinic workflow buttons take its place. -->
+            <xpath expr="//header/button[@name='action_open_composer']" position="attributes">
+                <attribute name="invisible">is_clinic or not user_can_edit</attribute>
+            </xpath>
+
             <xpath expr="//header" position="inside">
                 <button name="action_confirm" type="object" string="Confirm"
                         groups="clinic_patient_card.group_clinic_admin" class="btn-primary"
