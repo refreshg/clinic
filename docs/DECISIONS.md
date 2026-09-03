@@ -78,3 +78,22 @@ regressions caught manually; each commit documents what was verified.
 Date 2026-07 (Rev-A) · Decision: reuse `vat` relabelled "პირადი ნომერი"; digits-only +
 unique-among-patients python constrain (base_vat rejected — EU-format oriented). ·
 Consequences: no duplicate field; validations are clinic-specific.
+
+### D-13: Doctor retail requests = draft sale.order (no custom request model)
+Date 2026-09-03 (b6e1446) · Context: batch #2 — a doctor picks products for a patient, the
+admin approves into billing or rejects with a visible comment. · Decision: reuse sale.order
+(`is_clinic_retail`): doctor drafts (own-drafts record rules, self-confirm impossible),
+admins get activity + `clinic_sale_request` toast, admin confirm auto-creates the draft
+invoice, rejection = cancel + chatter comment (doctor auto-follows). `user_id` pinned to
+the creating doctor. · Rejected: a parallel clinic.sale.request model. · Consequences: full
+standard sale/invoice chain reused; doctors carry narrow sale ACLs.
+
+### D-14: Depend on sale_pdf_quote_builder + sudo its salesman-gated hooks
+Date 2026-09-03 (b6e1446) · Context: doctor's SO create crashed — sale_pdf_quote_builder's
+field DEFAULT is wired straight to its function (bypasses MRO) and searches on a field
+group-gated to salesmen; worse, without a dependency our module loads FIRST, so our method
+overrides sat EARLIER in the MRO and never won. · Decision: add `sale_pdf_quote_builder`
+to depends (auto-installed with sale anyway) so our class loads later; skip its default in
+`default_get` for non-salesmen; run its availability compute as sudo. · Lesson: to override
+another module's behaviour you MUST depend on it — same-model classes compose in module
+load order.

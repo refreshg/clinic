@@ -32,6 +32,7 @@
   waitlist/Reserve panel per dentist + dispensary 6-month flow with 14-day-before admin
   reminders and weekly booking reports. Meeting UI (Send email, RSVP "Going?", Busy row,
   attendees) hidden on clinic visits. Emails deferred (undecided what/when to send).
+- **Reviewer batch #2 Track A (ჯავშნები) — DONE (v19.0.47-49):** doctor-access bug fixed, patient toggle back, family links, referrals analysis, visit form rebuilt in the main body (directions, cancel popup, 9 status colours, card shows pn/procedure/comment), free-slot finder wizard, doctor retail sale-requests with admin approval. Track B (მაღაზია/მარაგები) pending user green-light; SMS deferred.
 - Status (as of v19.0.46.0.0): Phases 1–2, Rev-A, Phase 3 (A/B/C) and Phase 4 are DONE
   and live. Extras also live: OWL Planning board (Clinic>Planning; click empty grid slot
   to book, with a ripple/ghost cue), a visual patient Dashboard (Health-Care style OWL
