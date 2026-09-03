@@ -48,10 +48,18 @@ export class ClinicPatientDashboard extends Component {
             "gender", "age", "is_patient", "patient_ref",
             "registration_date", "last_dental_visit_date",
             "treatment_plan_status", "risk_level",
-            "credit", "total_invoiced",
             "procedure_history_ids",
         ];
         const [p] = await this.orm.read("res.partner", [this.partnerId], fields);
+        // money fields are accounting-gated; the page must open for doctors too
+        Object.assign(p, { credit: 0, total_invoiced: 0 });
+        try {
+            const [money] = await this.orm.read("res.partner", [this.partnerId],
+                ["credit", "total_invoiced"]);
+            Object.assign(p, money);
+        } catch {
+            // no accounting access — keep zeros
+        }
         // visit history — reuse the procedure history lines as "visits"
         let history = [];
         if (p && p.procedure_history_ids && p.procedure_history_ids.length) {

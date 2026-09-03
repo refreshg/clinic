@@ -150,6 +150,12 @@ class ResPartner(models.Model):
     # Guardian for minors.
     is_minor = fields.Boolean(string="Minor", compute="_compute_is_minor", store=True)
     guardian_id = fields.Many2one("res.partner", string="Guardian / Parent")
+    # Family members are linked patient profiles (reviewer batch #2).
+    family_member_ids = fields.Many2many(
+        "res.partner", "clinic_family_member_rel", "partner_id", "member_id",
+        string="Family Members",
+        domain="[('is_patient', '=', True), ('id', '!=', id)]",
+    )
     # Free note about the patient, visible up front.
     patient_note = fields.Text(string="Patient Note")
 

@@ -63,6 +63,55 @@
         </field>
     </record>
 
+    <!-- ============ Referrals = referral-source analysis (batch #2) ============ -->
+    <record id="view_clinic_referral_list" model="ir.ui.view">
+        <field name="name">clinic.referral.partner.list</field>
+        <field name="model">res.partner</field>
+        <field name="priority">45</field>
+        <field name="arch" type="xml">
+            <list string="Referrals" default_order="registration_date desc">
+                <field name="name"/>
+                <field name="patient_ref"/>
+                <field name="phone"/>
+                <field name="referral_source"/>
+                <field name="referral_source_other" optional="hide"/>
+                <field name="registration_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_clinic_referral_search" model="ir.ui.view">
+        <field name="name">clinic.referral.partner.search</field>
+        <field name="model">res.partner</field>
+        <field name="priority">45</field>
+        <field name="arch" type="xml">
+            <search string="Referrals">
+                <field name="name"/>
+                <field name="referral_source"/>
+                <filter name="f_month" string="Registered This Month"
+                        domain="[('registration_date', '&gt;=', (context_today() + relativedelta(day=1)).strftime('%Y-%m-%d'))]"/>
+                <filter name="f_30d" string="Last 30 Days"
+                        domain="[('registration_date', '&gt;=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <group>
+                    <filter name="group_referral" string="Referral Source" domain="[]"
+                            context="{'group_by': 'referral_source'}"/>
+                    <filter name="g_month" string="Registration Month" domain="[]"
+                            context="{'group_by': 'registration_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_clinic_referrals" model="ir.actions.act_window">
+        <field name="name">Referrals</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_patient', '=', True)]</field>
+        <field name="context">{'search_default_group_referral': 1}</field>
+        <field name="view_id" ref="view_clinic_referral_list"/>
+        <field name="search_view_id" ref="view_clinic_referral_search"/>
+    </record>
+
     <!-- ===================== Menus ===================== -->
     <!-- Root visible to any clinic role (incl. suppliers, who only get the
          supplier child menus below). -->
@@ -78,5 +127,8 @@
     <menuitem id="menu_clinic_insurance" name="Insurance Companies"
               parent="menu_clinic_config" action="action_clinic_insurance_companies" sequence="20"
               groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
+    <menuitem id="menu_clinic_referrals" name="Referrals"
+              parent="menu_clinic_config" action="action_clinic_referrals" sequence="25"
+              groups="clinic_patient_card.group_clinic_admin"/>
 
 </odoo>

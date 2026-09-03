@@ -90,7 +90,6 @@ export class ClinicPatientCardPage extends Component {
             "chronic_diseases", "current_medications", "family_history",
             "last_dental_visit_date", "has_bruxism", "periodontitis_risk",
             "medical_update_date", "has_xray", "has_ct",
-            "credit", "debit", "total_invoiced",
             "preferred_payment_method", "discount_percent", "discount_fixed", "loyalty_status",
             "insurance_company_id", "insurance_policy_no", "insurance_valid_until", "insurance_notes",
             "no_show_rate", "ltv_forecast", "risk_level", "risk_notes",
@@ -98,6 +97,17 @@ export class ClinicPatientCardPage extends Component {
             "tooth_ids", "document_ids",
         ];
         const [p] = await this.orm.read("res.partner", [this.partnerId], fields);
+        // Money fields are gated by accounting groups — a doctor may not read
+        // them; the page must still open (reviewer: "doesn't open from the
+        // doctor account"). Fetch them separately and fall back to 0.
+        Object.assign(p, { credit: 0, debit: 0, total_invoiced: 0 });
+        try {
+            const [money] = await this.orm.read("res.partner", [this.partnerId],
+                ["credit", "debit", "total_invoiced"]);
+            Object.assign(p, money);
+        } catch {
+            // no accounting access — keep zeros
+        }
 
         const [phones, allergies, procs, teeth, docs] = await Promise.all([
             p.patient_phone_ids?.length

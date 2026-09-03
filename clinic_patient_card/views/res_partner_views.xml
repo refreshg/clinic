@@ -89,7 +89,12 @@
                                invisible="not is_patient"/>
                     </group>
                     <group>
-                        <field name="is_patient" invisible="1"/>
+                        <!-- reviewer batch #2: the patient toggle is back — it
+                             drives the visibility of every patient field -->
+                        <field name="is_patient"/>
+                        <field name="guardian_id" invisible="not is_minor"
+                               required="is_minor"
+                               context="{'clinic_show_ids': 1}"/>
                         <field name="patient_ref" invisible="not is_patient"/>
                         <field name="insurance_company_id" invisible="not is_patient"
                                domain="[('is_insurance_company', '=', True)]"/>
@@ -158,6 +163,8 @@
                                     <field name="is_regular"/>
                                     <field name="is_minor" readonly="1"/>
                                     <field name="guardian_id"/>
+                                    <field name="family_member_ids" widget="many2many_tags"
+                                           context="{'clinic_show_ids': 1, 'default_is_patient': True}"/>
                                 </group>
                             </group>
 

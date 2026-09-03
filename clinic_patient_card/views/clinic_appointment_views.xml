@@ -108,7 +108,7 @@
                         <group>
                             <field name="is_clinic"/>
                             <field name="patient_id" required="is_clinic"
-                                   context="{'clinic_show_ids': 1}"/>
+                                   context="{'clinic_show_ids': 1, 'default_is_patient': True}"/>
                             <field name="appointment_type_id"/>
                             <field name="diagnosis"/>
                             <!-- visible while cancelling is still possible —
