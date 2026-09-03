@@ -8,7 +8,7 @@
     "author": "refreshg",
     "website": "https://github.com/refreshg/clinic",
     "category": "Healthcare",
-    "version": "19.0.48.0.0",
+    "version": "19.0.49.0.0",
     "license": "LGPL-3",
     "depends": [
         "base",
@@ -20,6 +20,7 @@
         "stock",
         "purchase",
         "sale_management",
+        "sale_pdf_quote_builder",
     ],
     "data": [
         "security/clinic_groups.xml",
@@ -29,6 +30,7 @@
         "data/clinic_cron.xml",
         "wizard/clinic_payment_wizard_views.xml",
         "wizard/clinic_cancel_wizard_views.xml",
+        "wizard/clinic_slot_finder_views.xml",
         "views/clinic_catalog_views.xml",
         "views/clinic_appointment_views.xml",
         "views/clinic_planning_views.xml",

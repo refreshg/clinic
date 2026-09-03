@@ -16,8 +16,13 @@ access_clinic_supplier_product_template,clinic.supplier.product.template,product
 access_clinic_supplier_product_product,clinic.supplier.product.product,product.model_product_product,clinic_patient_card.group_clinic_supplier,1,1,1,0
 access_clinic_supplier_supplierinfo,clinic.supplier.supplierinfo,product.model_product_supplierinfo,clinic_patient_card.group_clinic_supplier,1,1,1,1
 access_clinic_supplier_product_category,clinic.supplier.product.category,product.model_product_category,clinic_patient_card.group_clinic_supplier,1,0,0,0
-access_clinic_doctor_sale_order,clinic.doctor.sale.order,sale.model_sale_order,clinic_patient_card.group_clinic_doctor,1,0,0,0
-access_clinic_doctor_sale_order_line,clinic.doctor.sale.order.line,sale.model_sale_order_line,clinic_patient_card.group_clinic_doctor,1,0,0,0
+access_clinic_doctor_sale_order,clinic.doctor.sale.order,sale.model_sale_order,clinic_patient_card.group_clinic_doctor,1,1,1,0
+access_clinic_doctor_sale_order_line,clinic.doctor.sale.order.line,sale.model_sale_order_line,clinic_patient_card.group_clinic_doctor,1,1,1,1
 access_clinic_direction_user,clinic.direction.user,model_clinic_direction,base.group_user,1,0,0,0
 access_clinic_direction_manager,clinic.direction.manager,model_clinic_direction,base.group_system,1,1,1,1
 access_clinic_cancel_wizard_user,clinic.cancel.wizard.user,model_clinic_cancel_wizard,base.group_user,1,1,1,1
+access_clinic_slot_finder_user,clinic.slot.finder.user,model_clinic_slot_finder,base.group_user,1,1,1,1
+access_clinic_slot_finder_line_user,clinic.slot.finder.line.user,model_clinic_slot_finder_line,base.group_user,1,1,1,1
+access_clinic_doctor_quotation_document,clinic.doctor.quotation.document,sale_pdf_quote_builder.model_quotation_document,clinic_patient_card.group_clinic_doctor,1,0,0,0
+access_clinic_doctor_sale_template,clinic.doctor.sale.order.template,sale_management.model_sale_order_template,clinic_patient_card.group_clinic_doctor,1,0,0,0
+access_clinic_doctor_sale_template_line,clinic.doctor.sale.order.template.line,sale_management.model_sale_order_template_line,clinic_patient_card.group_clinic_doctor,1,0,0,0

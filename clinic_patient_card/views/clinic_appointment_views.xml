@@ -117,11 +117,16 @@
                 <div name="clinic_body" invisible="not is_clinic">
                     <!-- Quick jumps to the patient (reviewer: proper buttons
                          instead of the tiny m2o arrow) -->
-                    <div class="d-flex gap-2 mb-2" invisible="not patient_id">
+                    <div class="d-flex gap-2 mb-2">
+                        <button name="action_find_slots" type="object"
+                                string="🕐 თავისუფალი დროები" class="btn-secondary"
+                                invisible="clinic_state not in ('requested', 'booked')"/>
                         <button name="action_open_patient" type="object"
-                                string="👤 პაციენტის ანკეტა" class="btn-secondary"/>
+                                string="👤 პაციენტის ანკეტა" class="btn-secondary"
+                                invisible="not patient_id"/>
                         <button name="action_open_patient_card" type="object"
-                                string="🪪 პაციენტის ბარათი" class="btn-secondary"/>
+                                string="🪪 პაციენტის ბარათი" class="btn-secondary"
+                                invisible="not patient_id"/>
                     </div>
                     <group>
                         <group>

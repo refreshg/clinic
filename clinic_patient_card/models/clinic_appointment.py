@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta
 
+import pytz
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
@@ -609,6 +611,107 @@ class CalendarEvent(models.Model):
                 "sticky": False,
             },
         }
+
+    def action_find_slots(self):
+        """Open the free-slot finder prefilled from this visit."""
+        self.ensure_one()
+        wiz = self.env["clinic.slot.finder"].create({
+            "event_id": self.id,
+            "direction_id": self.direction_id.id,
+            "duration": self.duration or 0.5,
+        })
+        wiz.action_search()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Free Slots"),
+            "res_model": "clinic.slot.finder",
+            "res_id": wiz.id,
+            "view_mode": "form",
+            "target": "new",
+        }
+
+    @api.model
+    def clinic_free_slots(self, direction_id, duration, date_from=None, days=5):
+        """Free slots per direction+duration (reviewer batch #2, scenario 1).
+
+        Returns [{start, stop, dentist_id, dentist, room}] within working
+        hours, skipping busy intervals of each doctor of the direction.
+        `duration` in hours; slots stepped on the 10-minute grid.
+        """
+        duration = duration or 0.5
+        company = self.env.company
+        workdays = company._clinic_workdays()
+        w_start = company.clinic_work_start or 9.0
+        w_end = company.clinic_work_end or 18.0
+        doctor_group = self.env.ref("clinic_patient_card.group_clinic_doctor")
+        dom = [("all_group_ids", "in", doctor_group.id)]
+        if direction_id:
+            dom.append(("direction_id", "=", direction_id))
+        doctors = self.env["res.users"].search(dom)
+        if not doctors:
+            return []
+        tz = pytz.timezone(self.env.user.tz or "UTC")
+        now_local = pytz.UTC.localize(fields.Datetime.now()).astimezone(tz)
+        day0 = (tz.localize(fields.Datetime.to_datetime(date_from))
+                if date_from else now_local)
+        # busy intervals per doctor over the horizon (sudo: doctors' rule
+        # must not hide other doctors' load from reception)
+        horizon_start = day0.replace(hour=0, minute=0, second=0, microsecond=0)
+        horizon_end = horizon_start + timedelta(days=days + 1)
+        busy = self.sudo().search_read([
+            ("is_clinic", "=", True),
+            ("dentist_id", "in", doctors.ids),
+            ("clinic_state", "not in", ("cancelled", "no_show", "requested")),
+            ("start", "<", fields.Datetime.to_string(horizon_end.astimezone(pytz.UTC).replace(tzinfo=None))),
+            ("stop", ">", fields.Datetime.to_string(horizon_start.astimezone(pytz.UTC).replace(tzinfo=None))),
+        ], ["dentist_id", "start", "stop"])
+        by_doc = {}
+        for b in busy:
+            s = pytz.UTC.localize(b["start"]).astimezone(tz)
+            e = pytz.UTC.localize(b["stop"]).astimezone(tz)
+            by_doc.setdefault(b["dentist_id"][0], []).append((s, e))
+        slots = []
+        step = timedelta(minutes=10)
+        dur = timedelta(hours=duration)
+        for d in range(days):
+            day = horizon_start + timedelta(days=d)
+            if workdays and ((day.weekday()) not in workdays):
+                continue
+            open_dt = day + timedelta(hours=w_start)
+            close_dt = day + timedelta(hours=w_end)
+            for doc in doctors:
+                cur = open_dt
+                intervals = sorted(by_doc.get(doc.id, []))
+                while cur + dur <= close_dt:
+                    if cur < now_local:  # never offer the past
+                        cur += step
+                        continue
+                    end = cur + dur
+                    clash = next((iv for iv in intervals
+                                  if iv[0] < end and iv[1] > cur), None)
+                    if clash:
+                        # jump to the end of the clash, snapped up to 10 min
+                        cur = clash[1]
+                        extra = (10 - cur.minute % 10) % 10
+                        cur += timedelta(minutes=extra,
+                                         seconds=-cur.second,
+                                         microseconds=-cur.microsecond)
+                        continue
+                    slots.append({
+                        "start": fields.Datetime.to_string(
+                            cur.astimezone(pytz.UTC).replace(tzinfo=None)),
+                        "stop": fields.Datetime.to_string(
+                            end.astimezone(pytz.UTC).replace(tzinfo=None)),
+                        "label": cur.strftime("%d.%m %H:%M"),
+                        "dentist_id": doc.id,
+                        "dentist": doc.name,
+                        "room": doc.default_room_id.name or "",
+                    })
+                    cur += step
+                    if len(slots) >= 400:
+                        break
+        slots.sort(key=lambda s: (s["start"], s["dentist"]))
+        return slots[:120]
 
     def _clinic_admin_users(self):
         group = self.env.ref(

@@ -477,7 +477,7 @@ class ResPartner(models.Model):
             "res_model": "sale.order",
             "view_mode": "form",
             "target": "current",
-            "context": {"default_partner_id": self.id},
+            "context": {"default_partner_id": self.id, "default_is_clinic_retail": True},
         }
 
     def action_open_card_page(self):

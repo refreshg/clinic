@@ -103,6 +103,14 @@ export const clinicArrivedService = {
             );
             chimeArrived();
         });
+        // A doctor drafted a retail sale — the admin must approve it.
+        bus_service.subscribe("clinic_sale_request", (payload) => {
+            notification.add(
+                `${(payload && payload.doctor) || ""} → ${(payload && payload.patient) || ""} (${(payload && payload.order) || ""})`,
+                { title: _t("Doctor sale request"), type: "warning", sticky: true }
+            );
+            chimeAlert();
+        });
         // Dispensary control due in 2 weeks — time to call the patient.
         bus_service.subscribe("clinic_dispensary_due", (payload) => {
             notification.add(

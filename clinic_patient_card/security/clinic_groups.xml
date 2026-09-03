@@ -107,6 +107,30 @@
         </field>
     </record>
 
+    <!-- Batch #2: a doctor may DRAFT a retail sale request for a patient but
+         may only edit their own drafts; reading stays open (patient sale
+         history on the card). The admin approves/rejects. -->
+    <record id="rule_clinic_doctor_sale_write" model="ir.rule">
+        <field name="name">Clinic Doctor: edit own draft sale requests only</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="groups" eval="[(4, ref('group_clinic_doctor'))]"/>
+        <field name="domain_force">[('user_id', '=', user.id), ('state', '=', 'draft')]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_clinic_doctor_sale_line_write" model="ir.rule">
+        <field name="name">Clinic Doctor: edit own draft sale request lines</field>
+        <field name="model_id" ref="sale.model_sale_order_line"/>
+        <field name="groups" eval="[(4, ref('group_clinic_doctor'))]"/>
+        <field name="domain_force">[('order_id.user_id', '=', user.id), ('order_id.state', '=', 'draft')]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
     <!-- ══ Appointment visibility ══════════════════════════════════════
          GLOBAL rule (no groups) so it AND-restricts every user: a CLINIC visit
          is only readable by its own dentist or by a Clinic Administrator.
