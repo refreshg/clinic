@@ -1,15 +1,17 @@
-<!-- last-synced: 2026-09-03, commit: f7f4be0 -->
+<!-- last-synced: 2026-09-03, commit: 43e00a7 -->
 # Architecture — clinic_patient_card
 
 ## Components
 | component | where | responsibility |
 |---|---|---|
 | Patient card | `models/res_partner.py` + `views/res_partner_views.xml` | patient master data (~60 fields in 5 blocks), validations, search, quick actions, "რეალიზაცია" |
-| Visit workflow | `models/clinic_appointment.py` (+`clinic_room/appointment_type`) | clinic_state machine on `calendar.event`, schedule guards, overlap constraint, reserve/dispensary, history pushes, notifications |
+| Visit workflow | `models/clinic_appointment.py` (+`clinic_room/appointment_type/clinic_direction`) | clinic_state machine on `calendar.event`, schedule guards, overlap constraint, reserve/dispensary, directions, free-slot search (`clinic_free_slots`), history pushes, notifications |
 | Scheduling config | `models/res_company.py` | clinic-wide workdays/hours + room-overlap toggle ("Clinic Schedule" tab) |
 | Payment | `wizard/clinic_payment_wizard.py` | procedures → draft invoice (std `account`), mixed cash/terminal split, stamps amounts on the visit |
+| Cancel / slot wizards | `wizard/clinic_cancel_wizard.py`, `wizard/clinic_slot_finder.py` | reason-on-Cancel popup; free-slot list → writes the picked slot onto the visit |
+| Doctor retail requests | `models/sale_order.py` (is_clinic_retail) | doctor drafts a sale → admin approve (auto-invoice) / reject with visible comment |
 | Planning board | `static/src/planning/` (OWL, tag `clinic_planning`) | 10-min day grid per dentist, drag-to-size booking, popup visit form, off-hours hatch, Reserve panel, history/cancelled buttons |
-| Live alerts | `static/src/clinic_arrived_service.js` | bus subscriber + WebAudio chimes for 5 channels |
+| Live alerts | `static/src/clinic_arrived_service.js` | bus subscriber + WebAudio chimes for 6 channels |
 | Supply Shop | `static/src/shop/` + `models/purchase_order.py` | clinic buys: cart → 1 RFQ/vendor + mirror SO |
 | Supplier portal | `static/src/supplier_portal/` + `product_template.py` + `sale_order.py` | supplier publishes products (std Inventory base), confirms own SOs |
 | Patient dashboards | `static/src/patient_dashboard/`, `static/src/patient_card_page/` | read-only visual pages over res.partner (Health-Care style; Soft-UI handoff) |
@@ -35,6 +37,7 @@ flowchart LR
     PCP[Patient card page / dashboard] --> RP
   end
   CE -- bus: arrived/dispensary --> CH[chime service → staff toasts]
+  SO -- bus: sale request --> CH
   PO -- bus: new order --> CH
   SO -- bus: confirmed --> CH
   CRON[ir.cron ×3] --> CE & PT
@@ -54,5 +57,5 @@ flowchart LR
   forms; ctx override on `contacts.action_contacts`.
 - OWL: 5 client actions in `registry.category("actions")`; 1 service (`clinic_arrived_service`).
 - Hooks: `post_init_hook _post_init_grant_admin`; RPC entry points: `clinic_create_rfqs`,
-  `clinic_board_config`, `clinic_dentists`, `clinic_supplier_*`.
+  `clinic_board_config`, `clinic_dentists`, `clinic_free_slots`, `clinic_supplier_*`.
 - No controllers, no external APIs (EHR/Form-100 pending — PRD §9).

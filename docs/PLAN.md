@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-03, commit: f7f4be0 -->
+<!-- last-synced: 2026-09-03, commit: 43e00a7 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,

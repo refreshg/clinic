@@ -1,5 +1,5 @@
-<!-- last-synced: 2026-09-03, commit: f7f4be0 -->
-# Technical spec — clinic_patient_card (whole module, v19.0.46.0.0)
+<!-- last-synced: 2026-09-03, commit: 43e00a7 -->
+# Technical spec — clinic_patient_card (whole module, v19.0.49.0.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
 decision — shipped features trace to PRD §4/§7 tables instead). D-n refs → `docs/DECISIONS.md`.
@@ -7,6 +7,16 @@ decision — shipped features trace to PRD §4/§7 tables instead). D-n refs →
 ## Data model
 
 ### NEW models (all have `ir.model.access.csv` rows; `_description` set)
+**`clinic.direction`** — specialty catalogue (batch #2). name✓(translate), sequence, active.
+Seeded: თერაპია/ქირურგია/ორთოდონტია/ორთოპედია (`data/clinic_direction_data.xml`, noupdate).
+
+**`clinic.cancel.wizard`** (Transient) — event_id✓, reason✓(Text); `action_confirm` writes
+cancel_reason + state=cancelled (reason typed in the Cancel popup, batch #2).
+
+**`clinic.slot.finder`(+`.line`)** (Transient) — direction_id, duration, date_from,
+line_ids(start/stop/dentist_id/room); `action_search` fills lines from
+`calendar.event.clinic_free_slots`; line `action_pick` writes start/stop/dentist back.
+
 **`clinic.room`** — treatment rooms.
 | field | type | req | notes |
 |---|---|---|---|
@@ -58,6 +68,7 @@ summary(Html), note. Mixed: cash+terminal must equal total (float_compare).
 | dental | last_dental_visit_date, treatment_plan_status, tooth_ids, odontogram_html(compute), has_bruxism, periodontitis_risk, dental_other_notes, procedure_history_ids |
 | financial | preferred_payment_method, discount_percent/_fixed, loyalty_status, insurance_company_id(M2o partner, domain is_insurance_company)/policy_no/valid_until/notes, is_insurance_company |
 | profile | document_ids, no_show_rate, ltv_forecast, risk_level, risk_notes |
+| family | family_member_ids (M2m self, clinic_family_member_rel — linked patient profiles) |
 | search | `_rec_names_search += phone, patient_ref` (+vat via base); `_compute_display_name` appends `· vat · phone` under ctx `clinic_show_ids` |
 | constrains | `_check_patient_email` (latin `EMAIL_RE`), `_check_patient_phone` (digits), `_check_patient_vat` (digits + unique among patients, python search_count) |
 
@@ -65,12 +76,14 @@ summary(Html), note. Mixed: cash+terminal must equal total (float_compare).
 | group | fields |
 |---|---|
 | core | is_clinic, patient_id(M2o partner — required via constrain when is_clinic), dentist_id(M2o users), assistant_id(M2o users), room_id, appointment_type_id, clinic_state(Sel: requested/booked/confirmed/arrived/in_progress/done/paid/cancelled/no_show; tracked) |
-| medical | diagnosis, procedure_line_ids(o2m clinic.procedure.history), tooth_display(compute) |
+| medical | diagnosis (string **Comment**, batch #2), procedure_line_ids(o2m clinic.procedure.history), tooth_display(compute) |
 | money | currency_id, amount_paid, amount_cash, amount_terminal, payment_method |
 | tracking | checkin_time, treat_start_time, treat_end_time, waiting_minutes, chair_minutes, parent_appointment_id, parent_visit_info(compute), was_rescheduled, duration_edited, cancel_reason |
 | dispensary | is_dispensary, dispensary_notified |
+| batch #2 | direction_id(M2o clinic.direction; auto from dentist), family_link_id(M2o partner, domain = patient family), family_member_domain_ids(compute), referral_source(related patient, rw) |
 
-**`res.users`**: default_room_id (M2o clinic.room; "Clinic" tab on user form) + `clinic_dentists()`
+**`res.users`**: default_room_id (M2o clinic.room) + direction_id (M2o clinic.direction —
+doctor specialty for slot search/autofill); both on the "Clinic" tab + `clinic_dentists()`
 (board columns: admins get all doctors, a plain doctor only themself).
 **`res.company`**: clinic_workday_mon..sun(Bool), clinic_work_start/_end(Float, widget
 float_time), clinic_block_room_overlap(Bool, default True); "Clinic Schedule" tab; helper
@@ -82,6 +95,10 @@ float_time), clinic_block_room_overlap(Bool, default True); "Clinic Schedule" ta
 vendor + mirror SO), `_clinic_notify_vendor/_confirmed`, button_confirm hook.
 **`sale.order`**: is_clinic_order, clinic_supplier_id, clinic_purchase_id;
 `action_confirm` → `_clinic_notify_clinic_confirmed` (mirror-confirms PO).
+Batch #2: is_clinic_retail flag; create() pins user_id to the drafting doctor + notifies
+admins (activity + bus `clinic_sale_request`); action_confirm auto-invoices retail orders;
+default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesmen;
+`_compute_available_quotation_document_ids` runs sudo (D-14).
 `sale.order.line._action_launch_stock_rule` → no-op for clinic orders (D-2).
 
 ## Business logic (trigger → condition → action; Standard coverage per row)
@@ -103,6 +120,10 @@ vendor + mirror SO), `_clinic_notify_vendor/_confirmed`, button_confirm hook.
 | B14 | SO `action_confirm` by supplier | is_clinic_order | mirror-confirm PO, notify clinic (`clinic_order_confirmed`) | custom (D-2) |
 | B15 | partner create/write | is_patient | validations (latin email, digit phone/vat, unique vat) | custom (reviewer) — base_vat not used |
 | B16 | Contacts app create | — | `default_is_patient=True` via ctx override on `contacts.action_contacts` | std context config |
+| B17 | „🕐 თავისუფალი დროები" / `clinic_free_slots` | direction+duration | free 10-min slots inside company schedule minus busy visits of direction doctors (sudo search, tz-aware, no past); wizard pick writes slot onto the visit | custom (no Community slot engine — D-8 umbrella; batch #2 plan) |
+| B18 | doctor creates sale.order `is_clinic_retail` | plain doctor | admins get to-do + `clinic_sale_request` toast; doctor auto-follows; admin Confirm → auto draft invoice; Cancel+comment visible to doctor; own-drafts rules block self-confirm | std sale/invoice + custom flow (D-13, D-14) |
+| B19 | `action_cancel` | is_clinic | opens clinic.cancel.wizard popup (reason required) → cancelled | custom (reviewer: reason on the button itself) |
+| B20 | onchange dentist / create | is_clinic | auto room (default_room_id) + auto direction (users.direction_id); subject auto "Patient — Type" (field hidden) | custom (batch #2) |
 
 ## Standard-first check
 | requirement | standard feature checked | covers? | if no → custom + ref |
@@ -120,6 +141,10 @@ vendor + mirror SO), `_clinic_notify_vendor/_confirmed`, button_confirm hook.
 | signature | `signature` widget | yes | on clinic.patient.document |
 | vat uniqueness | base_vat | no (format-checks EU vat) | python constrain B15 |
 | Georgian UI | i18n ka.po | yes | regen pending (PLAN M2) |
+| free-slot search | Enterprise appointment | no (Community) | clinic_free_slots + wizard (batch #2 plan) |
+| doctor sale request | sale.order draft flow | yes (reused) | flag + notify only (D-13) |
+| specialty catalogue | hr.job / hr | no (hr not installed; doctors = users) | clinic.direction config model (batch #2 plan) |
+| family links | partner parent_id/child_ids | no (that models company/address hierarchy) | family_member_ids M2m (batch #2 plan) |
 
 ## Views / UI
 | view / action | xml id | key points |
@@ -130,6 +155,9 @@ vendor + mirror SO), `_clinic_notify_vendor/_confirmed`, button_confirm hook.
 | Cancelled list | `view_clinic_visit_cancelled_*`, `action_clinic_visit_cancelled` | cancelled/no_show OR was_rescheduled; cancel_reason; today/date filters |
 | Planning board (OWL) | tag `clinic_planning`, `action_clinic_planning` | 10-min grid (HOUR_PX=96), hover cell, drag-to-size (1 cell=10min), popup form (target=new, UTC-serialized defaults), off-hours hatch via `clinic_board_config()`, Reserve side panel (+Add/✓), status pills (paid≠done), ✎ edited badge, dispensary dashed outline |
 | Supply Shop / Supplier portal / Dashboard / Card page (OWL) | tags `clinic_supply_shop`, `clinic_supplier_portal`, `clinic_patient_dashboard`, `clinic_patient_card_page` | see ARCHITECTURE.md |
+| Visit form (batch #2) | same inherit | Subject/label hidden for clinic (auto-name), Duration row MOVED above Start (2× position=move), notebook invisible → clinic_body div in main body (patient/direction/type/family-link/referral/comment + procedures/time-tracking/previous-visit), 🕐/👤/🪪 buttons; cancel via popup |
+| Referrals | `view_clinic_referral_list/_search`, `action_clinic_referrals`, menu Configuration→Referrals (admin) | patients grouped by referral_source, month/30d filters |
+| Directions | `view_clinic_direction_list`, `action_clinic_direction`, menu Configuration→Directions | editable list, seq handle |
 | Company form inherit | "Clinic Schedule" tab | workdays, hours, room-overlap toggle |
 | Users form inherit | "Clinic" tab | default_room_id |
 | Menus | Clinic root: staff=Planning/Configuration/Supply Shop; supplier=My Shop/My Inventory/My Orders | gated by groups |
@@ -138,9 +166,10 @@ vendor + mirror SO), `_clinic_notify_vendor/_confirmed`, button_confirm hook.
 - Groups (`security/clinic_groups.xml`): `group_clinic_admin` (implies partner_manager,
   purchase_user, stock_user), `group_clinic_doctor` (partner_manager), `group_clinic_supplier`
   (purchase_user, stock_user, sale_salesman). Privilege `privilege_clinic`.
-- ACL (`ir.model.access.csv`): CRUD for the 8 clinic models (user read / manager rw pattern);
-  supplier rows for product.template/product/supplierinfo/category.
-- Record rules: `rule_clinic_event_visibility` (GLOBAL: non-clinic OR own dentist OR admin-all,
+- ACL (`ir.model.access.csv`): CRUD for the 11 clinic models (incl. direction + 3 wizards) (user read / manager rw pattern);
+  supplier rows for product.template/product/supplierinfo/category; doctor rows: sale.order
+  (r/w/c), sale.order.line (rwcu), read-only sale.order.template(+line), quotation.document.
+- Record rules: doctor own-DRAFT sale write rules (`rule_clinic_doctor_sale_write`/`_line_write`, write/create only — read stays open for patient history); `rule_clinic_event_visibility` (GLOBAL: non-clinic OR own dentist OR admin-all,
   D-7); supplier own-PO / own-SO / own-template / own-product / own-supplierinfo.
 - post_init_hook `_post_init_grant_admin` → grants both clinic roles to base.user_admin.
 
@@ -148,7 +177,7 @@ vendor + mirror SO), `_clinic_notify_vendor/_confirmed`, button_confirm hook.
 - External: **none live**. EHR + Form-100 unknown targets (PRD §9, blocked).
 - Internal live channels (bus.bus → `clinic_arrived_service.js` toasts+chimes):
   `clinic_patient_arrived`, `clinic_low_stock`, `clinic_new_order`, `clinic_order_confirmed`,
-  `clinic_dispensary_due`.
+  `clinic_dispensary_due`, `clinic_sale_request`.
 - Dev access: JSON-RPC (`/jsonrpc`, password auth). JSON-2 available but unused.
 
 ## Migration / data
@@ -156,6 +185,13 @@ vendor + mirror SO), `_clinic_notify_vendor/_confirmed`, button_confirm hook.
 - Upgrade = `-u clinic_patient_card` in-place; no data migrations needed so far; ctx override
   on `contacts.action_contacts` re-asserted on every upgrade.
 - Demo data (patients/doctors/suppliers/products) was seeded via RPC, NOT in module data.
+- v19.0.49 adds dependency `sale_pdf_quote_builder` (auto-installed with sale — D-14).
+
+## Drift log
+- 2026-09-03: `diagnosis` field relabelled "Comment" (batch #2) — column unchanged.
+- 2026-09-03: `cancel_reason` removed from the form; set only via clinic.cancel.wizard.
+- 2026-09-03: card page / dashboard JS fetch credit/debit/total_invoiced in a guarded
+  separate read (doctors lack accounting groups) — pages open for every role.
 
 ## Tests
 Decision (2026-09-03, user): **no automated suite** — verification = live JSON-RPC scenarios +
