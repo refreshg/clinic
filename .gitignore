@@ -21,3 +21,4 @@ Thumbs.db
 # MS Word lock/temp files
 ~$*
 *.tmp
+*.bak

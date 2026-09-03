@@ -1,3 +1,4 @@
+<!-- last-synced: 2026-09-03, commit: f7f4be0 -->
 # Clinic — project notes for Claude
 
 ## Platform
@@ -115,3 +116,39 @@
   msgstr; export after a server restart so the fresh registry includes new field labels.
 - **Never commit secrets** (DB / SSH / admin passwords, API keys) to the repo. Instance
   and server credentials live only in local Claude memory.
+
+## Commands (dev loop = live LAN server; there is NO local Odoo)
+Passwords/keys are NOT here — they live in local Claude memory only.
+- Package: `tar --force-local -czf module.tgz -C <repo> --exclude='__pycache__' --exclude='patient-card-ui' clinic_patient_card`
+- Ship (LAN only): `scp module.tgz fmg@192.168.0.235:/tmp/clinic_module.tgz`, extract into `/opt/odoo19/addons/`
+- Upgrade module: `docker exec odoo19-odoo-1 odoo -d odoo -u clinic_patient_card --stop-after-init --no-http --db_password=<local memory>`
+- Restart: `cd /opt/odoo19 && docker compose restart odoo` · Logs: `docker logs -f odoo19-odoo-1`
+- Odoo shell: `docker exec -i odoo19-odoo-1 odoo shell -d odoo --no-http --db_password=<local memory>`
+- Smoke tests: JSON-RPC via scratchpad `odoo.js` → `http://192.168.0.235:9494/jsonrpc` (recreate per session)
+- Automated tests: none by decision (see `docs/DECISIONS.md` D-11) — verify live via RPC + browser.
+
+## Layout
+- `clinic_patient_card/` — the only Odoo addon (models/, views/, wizard/, security/, data/, static/src/, i18n/)
+- `docs/` — PRD, SPEC, PLAN, ARCHITECTURE, DECISIONS + source .docx specs + `design_handoff_patient_card/`
+- `patient-card-ui/` — React/Vite design reference for the Soft-UI card (never deployed to Odoo)
+
+## Conventions
+- Model prefix `clinic.` (`clinic.procedure.history`); core models extended via `_inherit` keep their names.
+- XML ids: `view_ / action_ / menu_ / rule_ / cron_` + snake_case (e.g. `action_clinic_visit_history`).
+- Fields snake_case; clinic additions on core models flagged `is_clinic` / `clinic_*` (e.g. `clinic_state`).
+- UI source strings in English (a few deliberate Georgian button labels); translations in `i18n/ka.po`.
+- Commits: `feat(clinic)|fix(clinic)|docs(clinic)|chore(...): ...` + the Claude co-author trailer.
+
+## Workflow
+PRD → SPEC → **PLAN (user approves BEFORE any code)** → code → live verification → `/docs-sync`.
+Standard-first: name the standard Odoo feature checked; write custom code only after stating why it
+doesn't fit and recording it as a `D-<n>` entry in `docs/DECISIONS.md`.
+Preference order: configuration → automated action → inherit & extend → new model.
+
+## Docs map
+- `docs/PRD.md` — requirements, roles, scope, user stories/AC for remaining work (Georgian)
+- `docs/SPEC.md` — data model, business rules, security, standard-first table (English)
+- `docs/PLAN.md` — remaining-roadmap milestones; **must be approved by the user**
+- `docs/ARCHITECTURE.md` — components, data flow, extension points
+- `docs/DECISIONS.md` — ADRs (D-1…)
+- `clinic_patient_card/README.md` — install / configuration / known limitations
