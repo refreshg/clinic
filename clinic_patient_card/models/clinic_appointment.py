@@ -23,7 +23,30 @@ class CalendarEvent(models.Model):
         help="Assisting doctor or resident for this visit.",
     )
     room_id = fields.Many2one("clinic.room", string="Room")
-    diagnosis = fields.Char(string="Diagnosis", copy=False)
+    # Reviewer batch #2: "Diagnosis" reads as the visit comment (shown on the
+    # board card too); same column, no data lost.
+    diagnosis = fields.Char(string="Comment", copy=False)
+    direction_id = fields.Many2one(
+        "clinic.direction", string="Direction", index=True,
+    )
+    # Link to the family member the visit relates to (e.g. parent booking for
+    # a child) — choices come from the patient's linked family profiles.
+    family_link_id = fields.Many2one(
+        "res.partner", string="Family Member Link",
+        domain="[('id', 'in', family_member_domain_ids)]",
+    )
+    family_member_domain_ids = fields.Many2many(
+        "res.partner", compute="_compute_family_member_domain",
+    )
+    # Referral source right on the booking (writes through to the patient).
+    referral_source = fields.Selection(
+        related="patient_id.referral_source", readonly=False,
+    )
+
+    @api.depends("patient_id")
+    def _compute_family_member_domain(self):
+        for ev in self:
+            ev.family_member_domain_ids = ev.patient_id.family_member_ids
     appointment_type_id = fields.Many2one(
         "clinic.appointment.type", string="Appointment Type",
     )
@@ -271,9 +294,21 @@ class CalendarEvent(models.Model):
 
     @api.onchange("dentist_id")
     def _onchange_dentist_id(self):
-        # Reviewer: picking the dentist auto-fills their room (still editable).
+        # Reviewer: picking the dentist auto-fills their room and direction
+        # (both still editable) — scenario 2: booking from the doctor's column.
         if self.dentist_id and self.dentist_id.default_room_id and not self.room_id:
             self.room_id = self.dentist_id.default_room_id
+        if self.dentist_id and self.dentist_id.direction_id and not self.direction_id:
+            self.direction_id = self.dentist_id.direction_id
+
+    @api.onchange("patient_id", "appointment_type_id")
+    def _onchange_clinic_name(self):
+        # The subject is hidden on clinic visits — keep it meaningful anyway.
+        if self.is_clinic and self.patient_id:
+            parts = [self.patient_id.name]
+            if self.appointment_type_id:
+                parts.append(self.appointment_type_id.name)
+            self.name = " — ".join(parts)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -281,11 +316,20 @@ class CalendarEvent(models.Model):
             if not vals.get("is_clinic"):
                 continue
             # Onchange doesn't run on RPC creates (e.g. from the Planning
-            # board): apply the dentist's default room here as well.
-            if vals.get("dentist_id") and not vals.get("room_id"):
+            # board): apply the dentist's default room + direction here too.
+            if vals.get("dentist_id"):
                 dentist = self.env["res.users"].browse(vals["dentist_id"])
-                if dentist.default_room_id:
+                if dentist.default_room_id and not vals.get("room_id"):
                     vals["room_id"] = dentist.default_room_id.id
+                if dentist.direction_id and not vals.get("direction_id"):
+                    vals["direction_id"] = dentist.direction_id.id
+            # Subject fallback: patient — type (the field is hidden on the form).
+            if not vals.get("name") and vals.get("patient_id"):
+                patient = self.env["res.partner"].browse(vals["patient_id"])
+                atype = vals.get("appointment_type_id") and self.env[
+                    "clinic.appointment.type"].browse(vals["appointment_type_id"])
+                vals["name"] = patient.name + (
+                    " — " + atype.name if atype else "")
             # Scheduling rules: no past bookings, working hours only.
             if vals.get("start"):
                 self._clinic_validate_schedule(
@@ -413,10 +457,17 @@ class CalendarEvent(models.Model):
         }
 
     def action_cancel(self):
-        for ev in self:
-            if not ev.cancel_reason:
-                raise UserError(_("Please set a cancellation reason before cancelling."))
-        self.write({"clinic_state": "cancelled"})
+        """Reviewer batch #2: the reason is typed right on the Cancel button —
+        a small popup, no extra page."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Cancel Visit"),
+            "res_model": "clinic.cancel.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {"default_event_id": self.id},
+        }
 
     def action_no_show(self):
         self.write({"clinic_state": "no_show"})

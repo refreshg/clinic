@@ -49,6 +49,7 @@ export class ClinicPlanning extends Component {
             waitlistOpen: false,
             hover: null,          // {d, top} — 10-min cell under the pointer
             drag: null,           // {d, s, e} — drag-selected slot range
+            patientVats: {},      // partner_id -> personal no. (card line)
         });
         onWillStart(() => this.load());
     }
@@ -133,7 +134,7 @@ export class ClinicPlanning extends Component {
                  ["start", ">=", from], ["start", "<=", to]],
                 ["name", "start", "stop", "dentist_id", "room_id", "appointment_type_id",
                  "patient_id", "clinic_state", "was_rescheduled", "duration_edited",
-                 "is_dispensary"]),
+                 "is_dispensary", "diagnosis"]),
             this.orm.searchRead("clinic.appointment.type", [], ["name", "color"]),
             this.orm.searchRead("clinic.room", [], ["name"]),
             this.orm.call("calendar.event", "fields_get", [["clinic_state"], ["selection"]]),
@@ -190,6 +191,19 @@ export class ClinicPlanning extends Component {
                 dmap.set(e.dentist_id[0], existing);
             }
         }
+        // Batch #2: the card shows the patient's personal no. as well.
+        const patientIds = [...new Set(dayEvents
+            .filter((e) => e.patient_id).map((e) => e.patient_id[0]))];
+        let patientVats = {};
+        if (patientIds.length) {
+            try {
+                const partners = await this.orm.read("res.partner", patientIds, ["vat"]);
+                patientVats = Object.fromEntries(partners.map((p) => [p.id, p.vat || ""]));
+            } catch {
+                // no partner access — cards just skip the personal no.
+            }
+        }
+        this.state.patientVats = patientVats;
         this.state.events = dayEvents;
         this.state.types = types;
         this.state.typeMap = typeMap;
@@ -239,18 +253,39 @@ export class ClinicPlanning extends Component {
     patientName(ev) {
         return ev.patient_id ? ev.patient_id[1] : "";
     }
+    patientVat(ev) {
+        return (ev.patient_id && this.state.patientVats[ev.patient_id[0]]) || "";
+    }
+    procedureName(ev) {
+        return this.typeName(ev) || ev.name || "";
+    }
     stateLabel(ev) {
+        if (this._isResch(ev)) {
+            return "გადატანილი";
+        }
         return this.state.stateLabels[ev.clinic_state] || ev.clinic_state || "";
     }
+    // Status legend for the sidebar (batch #2: every status has its colour).
+    get statusLegend() {
+        const order = ["booked", "confirmed", "arrived", "in_progress", "done",
+            "paid", "no_show", "cancelled"];
+        const out = order.map((s) => ({
+            key: s, cls: "cp_st_" + s,
+            label: this.state.stateLabels[s] || s,
+        }));
+        out.push({ key: "resch", cls: "cp_st_resch", label: "გადატანილი" });
+        return out;
+    }
+    _isResch(ev) {
+        // A rescheduled (not yet re-confirmed) visit reads as its own status.
+        return ev.was_rescheduled && ["booked", "confirmed"].includes(ev.clinic_state);
+    }
     stateClass(ev) {
-        const s = ev.clinic_state;
-        // Reviewer: "Paid" and "Done" must be distinguishable at a glance.
-        if (s === "paid") return "cp_st_paid";
-        if (s === "done") return "cp_st_done";
-        if (s === "in_progress") return "cp_st_prog";
-        if (s === "arrived" || s === "confirmed") return "cp_st_arr";
-        if (s === "cancelled" || s === "no_show") return "cp_st_cancel";
-        return "cp_st_booked";
+        // Batch #2: every status gets its own colour.
+        if (this._isResch(ev)) {
+            return "cp_st_resch";
+        }
+        return "cp_st_" + (ev.clinic_state || "booked");
     }
     edited(ev) {
         // Reviewer: a corrected time/duration must stay visible on the calendar.

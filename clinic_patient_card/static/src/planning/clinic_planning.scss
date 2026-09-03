@@ -69,6 +69,21 @@
     }
     .cp_room_row { cursor: pointer; }
 
+    // status legend dots share the pill palette
+    .cp_dot_status {
+        border-radius: 50%;
+        &.cp_st_requested { background: #c58f00; }
+        &.cp_st_booked { background: #98a2b3; }
+        &.cp_st_confirmed { background: #2f80ed; }
+        &.cp_st_arrived { background: #00acc1; }
+        &.cp_st_in_progress { background: #f2994a; }
+        &.cp_st_done { background: #27ae60; }
+        &.cp_st_paid { background: #7e57c2; }
+        &.cp_st_cancelled { background: #eb5757; }
+        &.cp_st_no_show { background: #8d3030; }
+        &.cp_st_resch { background: #b9770a; }
+    }
+
     // ---------- main grid ----------
     .cp_main { min-width: 0; }
 
@@ -197,13 +212,32 @@
                     color: #fff;
                     white-space: nowrap;
                 }
+                /* batch #2: every status gets its own colour */
+                .cp_st_requested { background: #c58f00; }
                 .cp_st_booked { background: #98a2b3; }
-                .cp_st_arr { background: #2f80ed; }
-                .cp_st_prog { background: #f2994a; }
+                .cp_st_confirmed { background: #2f80ed; }
+                .cp_st_arrived { background: #00acc1; }
+                .cp_st_in_progress { background: #f2994a; }
                 .cp_st_done { background: #27ae60; }
-                /* reviewer: "Paid" must differ from "Done" (both were green) */
                 .cp_st_paid { background: #7e57c2; }
-                .cp_st_cancel { background: #eb5757; }
+                .cp_st_cancelled { background: #eb5757; }
+                .cp_st_no_show { background: #8d3030; }
+                .cp_st_resch { background: #b9770a; }
+                .cp_ev_meta {
+                    font-size: 10px;
+                    opacity: 0.8;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .cp_ev_note {
+                    font-size: 10px;
+                    font-style: italic;
+                    opacity: 0.75;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
             }
 
             /* 10-min cell under the pointer + drag-selected range */

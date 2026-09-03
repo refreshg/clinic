@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_clinic_cancel_wizard_form" model="ir.ui.view">
+        <field name="name">clinic.cancel.wizard.form</field>
+        <field name="model">clinic.cancel.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Cancel Visit">
+                <group>
+                    <field name="event_id" invisible="1"/>
+                    <field name="reason" placeholder="Why is the visit cancelled?"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Cancel Visit"
+                            class="btn-danger"/>
+                    <button string="Back" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

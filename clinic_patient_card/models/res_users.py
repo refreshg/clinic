@@ -7,6 +7,11 @@ class ResUsers(models.Model):
 
     # The room a dentist usually works in — auto-filled on new visits.
     default_room_id = fields.Many2one("clinic.room", string="Default Room")
+    direction_id = fields.Many2one(
+        "clinic.direction", string="Clinic Direction",
+        help="The doctor's specialty — bookings filter doctors by it and the "
+             "free-slot search runs per direction.",
+    )
 
     @api.model
     def clinic_dentists(self):

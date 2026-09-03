@@ -18,3 +18,6 @@ access_clinic_supplier_supplierinfo,clinic.supplier.supplierinfo,product.model_p
 access_clinic_supplier_product_category,clinic.supplier.product.category,product.model_product_category,clinic_patient_card.group_clinic_supplier,1,0,0,0
 access_clinic_doctor_sale_order,clinic.doctor.sale.order,sale.model_sale_order,clinic_patient_card.group_clinic_doctor,1,0,0,0
 access_clinic_doctor_sale_order_line,clinic.doctor.sale.order.line,sale.model_sale_order_line,clinic_patient_card.group_clinic_doctor,1,0,0,0
+access_clinic_direction_user,clinic.direction.user,model_clinic_direction,base.group_user,1,0,0,0
+access_clinic_direction_manager,clinic.direction.manager,model_clinic_direction,base.group_system,1,1,1,1
+access_clinic_cancel_wizard_user,clinic.cancel.wizard.user,model_clinic_cancel_wizard,base.group_user,1,1,1,1

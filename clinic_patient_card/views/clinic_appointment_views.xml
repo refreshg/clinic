@@ -93,9 +93,28 @@
                 <attribute name="autofocus"/>
             </xpath>
 
-            <xpath expr="//notebook" position="inside">
-                <page name="clinic_page" string="Clinic" invisible="not is_clinic"
-                      autofocus="autofocus">
+            <!-- Batch #2: the clinic form lives in the MAIN body — no Meeting
+                 Subject, no tabs. Subject is auto-built from patient + type. -->
+            <xpath expr="//label[@for='name']" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
+            <xpath expr="//field[@name='name']" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
+            <!-- Duration above Start (reviewer): move the base rows. -->
+            <xpath expr="//field[@name='start']" position="before">
+                <xpath expr="//label[@for='duration']/following-sibling::div[1]" position="move"/>
+            </xpath>
+            <xpath expr="//field[@name='start']/preceding-sibling::div[1]" position="before">
+                <xpath expr="//label[@for='duration']" position="move"/>
+            </xpath>
+            <!-- Notes/Options tabs are meeting-only noise on a clinic visit. -->
+            <xpath expr="//notebook" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
+
+            <xpath expr="//notebook" position="before">
+                <div name="clinic_body" invisible="not is_clinic">
                     <!-- Quick jumps to the patient (reviewer: proper buttons
                          instead of the tiny m2o arrow) -->
                     <div class="d-flex gap-2 mb-2" invisible="not patient_id">
@@ -106,17 +125,15 @@
                     </div>
                     <group>
                         <group>
-                            <field name="is_clinic"/>
+                            <field name="is_clinic" invisible="1"/>
+                            <field name="family_member_domain_ids" invisible="1"/>
                             <field name="patient_id" required="is_clinic"
                                    context="{'clinic_show_ids': 1, 'default_is_patient': True}"/>
+                            <field name="direction_id"/>
                             <field name="appointment_type_id"/>
+                            <field name="family_link_id"/>
+                            <field name="referral_source"/>
                             <field name="diagnosis"/>
-                            <!-- visible while cancelling is still possible —
-                                 the reason must be typed BEFORE hitting Cancel -->
-                            <field name="cancel_reason"
-                                   placeholder="Required to cancel"
-                                   invisible="clinic_state in ('done', 'paid', 'no_show')"
-                                   required="clinic_state == 'cancelled'"/>
                         </group>
                         <group>
                             <field name="dentist_id"/>
@@ -157,7 +174,7 @@
                         <field name="parent_appointment_id"/>
                         <field name="parent_visit_info" string="Date · Procedures"/>
                     </group>
-                </page>
+                </div>
             </xpath>
         </field>
     </record>
@@ -391,6 +408,7 @@
                 <page name="clinic_prefs" string="Clinic">
                     <group>
                         <field name="default_room_id"/>
+                        <field name="direction_id"/>
                     </group>
                 </page>
             </xpath>

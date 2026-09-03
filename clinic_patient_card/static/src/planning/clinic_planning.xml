@@ -73,6 +73,17 @@
                         </t>
                     </div>
 
+                    <!-- status legend (batch #2: every status = own colour) -->
+                    <div class="cp_legend mb-3">
+                        <div class="fw-semibold mb-1">სტატუსები</div>
+                        <t t-foreach="statusLegend" t-as="st" t-key="st.key">
+                            <div class="cp_leg_row">
+                                <span t-attf-class="cp_dot cp_dot_status {{ st.cls }}"/>
+                                <span t-esc="st.label"/>
+                            </div>
+                        </t>
+                    </div>
+
                     <!-- room filter -->
                     <div class="cp_rooms">
                         <div class="fw-semibold mb-1">Rooms</div>
@@ -145,6 +156,10 @@
                                                       title="დრო/ხანგრძლივობა დაკორექტირდა">✎</span>
                                             </div>
                                             <div class="cp_ev_patmain" t-esc="patientName(ev) || ev.name"/>
+                                            <!-- batch #2: personal no. + procedure + comment on the card -->
+                                            <div t-if="patientVat(ev)" class="cp_ev_meta" t-esc="patientVat(ev)"/>
+                                            <div t-if="procedureName(ev)" class="cp_ev_meta" t-esc="procedureName(ev)"/>
+                                            <div t-if="ev.diagnosis" class="cp_ev_note" t-esc="ev.diagnosis"/>
                                         </div>
                                     </t>
                                 </div>
