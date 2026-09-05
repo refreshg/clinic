@@ -57,6 +57,12 @@ class ClinicSlotFinder(models.TransientModel):
             "target": "new",
         }
 
+    def action_close(self):
+        # a footer special="cancel" tears down the WHOLE dialog stack (the
+        # visit form behind the finder closed too) — a plain window-close
+        # action closes only this dialog
+        return {"type": "ir.actions.act_window_close"}
+
 
 class ClinicSlotFinderLine(models.TransientModel):
     _name = "clinic.slot.finder.line"

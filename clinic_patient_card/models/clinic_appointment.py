@@ -645,7 +645,12 @@ class CalendarEvent(models.Model):
         w_start = company.clinic_work_start or 9.0
         w_end = company.clinic_work_end or 18.0
         doctor_group = self.env.ref("clinic_patient_card.group_clinic_doctor")
+        # the Administrator account carries the doctor role only technically
+        # (post_init grant) — it is reception, not a treating doctor
+        admin_user = self.env.ref("base.user_admin", raise_if_not_found=False)
         dom = [("all_group_ids", "in", doctor_group.id)]
+        if admin_user:
+            dom.append(("id", "!=", admin_user.id))
         if direction_id:
             dom.append(("direction_id", "=", direction_id))
         doctors = self.env["res.users"].search(dom)

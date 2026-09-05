@@ -26,7 +26,8 @@
                     </list>
                 </field>
                 <footer>
-                    <button string="Back" class="btn-secondary" special="cancel"/>
+                    <button name="action_close" type="object" string="Back"
+                            class="btn-secondary"/>
                 </footer>
             </form>
         </field>
