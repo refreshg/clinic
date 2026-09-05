@@ -59,3 +59,4 @@ Verification for every step = live RPC + browser (no automated tests — D-11).
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
+Last session 2026-09-03: batch#2 Track A (A1-A3, v19.0.47-49) live-verified + full docs-sync (dc473e1); next: Track B phase B1 (stock locations/expiry, v19.0.50) — ONLY after the user confirms Track A browser-tested; watch out: sale_pdf_quote_builder is now a hard dependency (D-14) and doctor retail SOs pin user_id to the creator — keep both when touching sale.order.
