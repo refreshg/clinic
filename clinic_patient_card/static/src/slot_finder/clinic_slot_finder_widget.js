@@ -1,27 +1,98 @@
 /** @odoo-module **/
-// "🕐 თავისუფალი დროები" as a view WIDGET, not a form button: object buttons
-// force a save of the record first (the reviewer's complaint — a half-filled
-// visit got auto-created). A widget click saves nothing; the picked slot is
-// copied into the open form's fields and the user decides when to Save.
+// "🕐 თავისუფალი დროები" — a fully client-side dialog.
 //
-// The finder must open through the DIALOG service, not action.doAction:
-// doAction(target="new") replaces the current action dialog, silently closing
-// the visit form underneath (second reviewer complaint). FormViewDialog
-// stacks on top and leaves the action stack alone.
-import { Component } from "@odoo/owl";
+// History of this file (reviewer complaints, in order):
+//  1. a form <button> auto-saved the half-filled visit → became a widget;
+//  2. action.doAction(target="new") REPLACED the visit dialog underneath;
+//  3. FormViewDialog stacked fine, but any server-returned window-close from
+//     its buttons still landed on the ACTION dialog (the visit form) — Back
+//     looked dead and X blew up on a destroyed component.
+// So: no wizard records, no action stack. The dialog searches through one
+// RPC (calendar.event.clinic_free_slots), the pick lands in the open form
+// via record.update, and closing touches nothing but this dialog.
+import { Component, onWillStart, useState } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { deserializeDateTime } from "@web/core/l10n/dates";
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
-import { FormViewDialog } from "@web/views/view_dialogs/form_view_dialog";
+import { Dialog } from "@web/core/dialog/dialog";
+
+export class ClinicSlotFinderDialog extends Component {
+    static template = "clinic_patient_card.SlotFinderDialog";
+    static components = { Dialog };
+    static props = {
+        directionId: { type: [Number, Boolean], optional: true },
+        durationMin: { type: Number, optional: true },
+        onPick: Function,
+        close: Function,
+    };
+
+    setup() {
+        this.orm = useService("orm");
+        this.state = useState({
+            directions: [],
+            directionId: this.props.directionId || false,
+            durationMin: this.props.durationMin || 30,
+            dateFrom: "",
+            slots: [],
+            message: "",
+            searched: false,
+        });
+        onWillStart(async () => {
+            this.state.directions = await this.orm.searchRead(
+                "clinic.direction", [], ["name"]);
+            await this.search();
+        });
+    }
+
+    get durationOptions() {
+        const opts = [];
+        for (let m = 10; m <= 180; m += 10) {
+            const h = String(Math.floor(m / 60)).padStart(2, "0");
+            const mm = String(m % 60).padStart(2, "0");
+            opts.push({ value: m, label: `${h}:${mm}` });
+        }
+        return opts;
+    }
+
+    async search() {
+        const dirId = this.state.directionId ? Number(this.state.directionId) : false;
+        const slots = await this.orm.call(
+            "calendar.event", "clinic_free_slots",
+            [dirId, Number(this.state.durationMin) / 60,
+             this.state.dateFrom || false]);
+        this.state.slots = slots;
+        this.state.searched = true;
+        if (!slots.length) {
+            const dir = this.state.directions.find((d) => d.id === dirId);
+            this.state.message = dir
+                ? _t('No free slots for "%s" — check that a doctor carries this direction (user\'s Clinic tab) or try another date/duration.', dir.name)
+                : _t("No free slots in the coming days — try another date or duration.");
+        } else {
+            this.state.message = "";
+        }
+    }
+
+    pick(slot) {
+        const dirId = this.state.directionId ? Number(this.state.directionId) : false;
+        const dir = this.state.directions.find((d) => d.id === dirId);
+        this.props.onPick({
+            start: slot.start,
+            stop: slot.stop,
+            dentist_id: slot.dentist_id,
+            dentist: slot.dentist,
+            direction: dir ? [dir.id, dir.name] : false,
+        });
+        this.props.close();
+    }
+}
 
 export class ClinicSlotFinderBtn extends Component {
     static template = "clinic_patient_card.SlotFinderBtn";
     static props = { ...standardWidgetProps };
 
     setup() {
-        this.orm = useService("orm");
         this.dialog = useService("dialog");
     }
 
@@ -33,37 +104,24 @@ export class ClinicSlotFinderBtn extends Component {
         return !d.clinic_state || ["requested", "booked"].includes(d.clinic_state);
     }
 
-    async onClick() {
+    onClick() {
         const d = this.props.record.data;
-        const [wizId] = await this.orm.create("clinic.slot.finder", [{
-            direction_id: d.direction_id ? d.direction_id[0] : false,
-            duration: d.duration || 0.5,
-        }]);
-        await this.orm.call("clinic.slot.finder", "action_search", [[wizId]]);
-        this.dialog.add(FormViewDialog, {
-            resModel: "clinic.slot.finder",
-            resId: wizId,
-            title: _t("Free Slots"),
-        }, {
-            onClose: async () => {
-                const [w] = await this.orm.read(
-                    "clinic.slot.finder", [wizId],
-                    ["picked", "picked_start", "picked_stop",
-                     "picked_dentist_id", "direction_id"]);
-                if (!w || !w.picked) {
-                    return;
-                }
+        const record = this.props.record;
+        this.dialog.add(ClinicSlotFinderDialog, {
+            directionId: d.direction_id ? d.direction_id[0] : false,
+            durationMin: d.duration ? Math.round(d.duration * 60) : 30,
+            onPick: (slot) => {
                 const vals = {
-                    start: deserializeDateTime(w.picked_start),
-                    stop: deserializeDateTime(w.picked_stop),
+                    start: deserializeDateTime(slot.start),
+                    stop: deserializeDateTime(slot.stop),
                 };
-                if (w.picked_dentist_id) {
-                    vals.dentist_id = w.picked_dentist_id;
+                if (slot.dentist_id) {
+                    vals.dentist_id = [slot.dentist_id, slot.dentist];
                 }
-                if (w.direction_id) {
-                    vals.direction_id = w.direction_id;
+                if (slot.direction) {
+                    vals.direction_id = slot.direction;
                 }
-                await this.props.record.update(vals);
+                record.update(vals);
             },
         });
     }

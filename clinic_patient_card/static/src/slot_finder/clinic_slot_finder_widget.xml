@@ -1,7 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
+
     <t t-name="clinic_patient_card.SlotFinderBtn">
         <button t-if="visible" type="button" class="btn btn-secondary"
                 t-on-click="onClick">🕐 თავისუფალი დროები</button>
     </t>
+
+    <t t-name="clinic_patient_card.SlotFinderDialog">
+        <Dialog size="'lg'" title.translate="Free Slots">
+            <div class="d-flex flex-wrap gap-2 align-items-end mb-3">
+                <div>
+                    <label class="form-label mb-1">მიმართულება</label>
+                    <select class="form-select" t-model="state.directionId">
+                        <option value="">— ყველა —</option>
+                        <t t-foreach="state.directions" t-as="d" t-key="d.id">
+                            <option t-att-value="d.id">
+                                <t t-esc="d.name"/>
+                            </option>
+                        </t>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label mb-1">ხანგრძლივობა</label>
+                    <select class="form-select" t-model="state.durationMin">
+                        <t t-foreach="durationOptions" t-as="o" t-key="o.value">
+                            <option t-att-value="o.value">
+                                <t t-esc="o.label"/>
+                            </option>
+                        </t>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label mb-1">თარიღიდან</label>
+                    <input type="date" class="form-control" t-model="state.dateFrom"/>
+                </div>
+                <button class="btn btn-primary" t-on-click="search">🔍 ძიება</button>
+            </div>
+            <div t-if="state.message" class="alert alert-warning" role="alert">
+                <t t-esc="state.message"/>
+            </div>
+            <div style="max-height: 50vh; overflow-y: auto;">
+                <table class="table table-sm align-middle" t-if="state.slots.length">
+                    <thead>
+                        <tr><th>დრო</th><th>ექიმი</th><th>ოთახი</th><th/></tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="state.slots" t-as="s" t-key="s_index">
+                            <tr>
+                                <td t-esc="s.label"/>
+                                <td t-esc="s.dentist"/>
+                                <td t-esc="s.room || ''"/>
+                                <td class="text-end">
+                                    <button class="btn btn-primary btn-sm"
+                                            t-on-click="() => this.pick(s)">აირჩიე</button>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+            <t t-set-slot="footer">
+                <button class="btn btn-secondary" t-on-click="props.close">უკან</button>
+            </t>
+        </Dialog>
+    </t>
+
 </templates>
