@@ -48,14 +48,11 @@ class ClinicSlotFinder(models.TransientModel):
             "dentist_id": s["dentist_id"],
             "room": s["room"],
         } for s in slots])
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Free Slots"),
-            "res_model": self._name,
-            "res_id": self.id,
-            "view_mode": "form",
-            "target": "new",
-        }
+        # no action returned: the finder lives in a stacked FormViewDialog
+        # (see the widget) and the form reloads itself after the button —
+        # returning an act_window here would re-enter the action stack and
+        # close the visit form underneath
+        return True
 
     def action_close(self):
         # a footer special="cancel" tears down the WHOLE dialog stack (the

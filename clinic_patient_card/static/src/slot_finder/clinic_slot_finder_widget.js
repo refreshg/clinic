@@ -3,11 +3,18 @@
 // force a save of the record first (the reviewer's complaint — a half-filled
 // visit got auto-created). A widget click saves nothing; the picked slot is
 // copied into the open form's fields and the user decides when to Save.
+//
+// The finder must open through the DIALOG service, not action.doAction:
+// doAction(target="new") replaces the current action dialog, silently closing
+// the visit form underneath (second reviewer complaint). FormViewDialog
+// stacks on top and leaves the action stack alone.
 import { Component } from "@odoo/owl";
+import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { deserializeDateTime } from "@web/core/l10n/dates";
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
+import { FormViewDialog } from "@web/views/view_dialogs/form_view_dialog";
 
 export class ClinicSlotFinderBtn extends Component {
     static template = "clinic_patient_card.SlotFinderBtn";
@@ -15,7 +22,7 @@ export class ClinicSlotFinderBtn extends Component {
 
     setup() {
         this.orm = useService("orm");
-        this.action = useService("action");
+        this.dialog = useService("dialog");
     }
 
     get visible() {
@@ -33,16 +40,10 @@ export class ClinicSlotFinderBtn extends Component {
             duration: d.duration || 0.5,
         }]);
         await this.orm.call("clinic.slot.finder", "action_search", [[wizId]]);
-        // build the dialog action HERE: an act_window dict returned through
-        // orm.call skips the server normalization that fills `views`, and
-        // doAction crashes on it (reading 'map')
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Free Slots",
-            res_model: "clinic.slot.finder",
-            res_id: wizId,
-            views: [[false, "form"]],
-            target: "new",
+        this.dialog.add(FormViewDialog, {
+            resModel: "clinic.slot.finder",
+            resId: wizId,
+            title: _t("Free Slots"),
         }, {
             onClose: async () => {
                 const [w] = await this.orm.read(
