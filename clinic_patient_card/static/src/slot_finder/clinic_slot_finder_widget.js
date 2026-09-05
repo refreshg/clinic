@@ -38,6 +38,7 @@ export class ClinicSlotFinderDialog extends Component {
         directionId: { type: [Number, Boolean], optional: true },
         durationMin: { type: Number, optional: true },
         dentistId: { type: [Number, Boolean], optional: true },
+        dateFrom: { type: String, optional: true },
         dentistName: { type: String, optional: true },
         onPick: Function,
         close: Function,
@@ -49,7 +50,7 @@ export class ClinicSlotFinderDialog extends Component {
             directions: [],
             directionId: this.props.directionId || false,
             durationMin: this.props.durationMin || 30,
-            dateFrom: "",
+            dateFrom: this.props.dateFrom || "",
             dentistId: this.props.dentistId || false,
             slots: [],
             message: "",
@@ -138,6 +139,8 @@ export class ClinicSlotFinderBtn extends Component {
             durationMin: d.duration ? Math.round(d.duration * 60) : 30,
             dentistId: m2oId(d.dentist_id),
             dentistName: m2oName(d.dentist_id),
+            // open on the date the user is standing on (the visit start)
+            dateFrom: d.start ? d.start.toFormat("yyyy-MM-dd") : "",
             onPick: (slot) => {
                 const vals = {
                     start: deserializeDateTime(slot.start),
