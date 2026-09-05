@@ -448,7 +448,7 @@
         <field name="name">clinic.appointment.type.list</field>
         <field name="model">clinic.appointment.type</field>
         <field name="arch" type="xml">
-            <list editable="bottom">
+            <list editable="bottom" open_form_view="1">
                 <field name="name"/>
                 <field name="default_duration" widget="float_time"/>
                 <field name="procedure_id"/>
@@ -479,7 +479,7 @@
     <record id="action_clinic_appointment_type" model="ir.actions.act_window">
         <field name="name">Appointment Types</field>
         <field name="res_model">clinic.appointment.type</field>
-        <field name="view_mode">list</field>
+        <field name="view_mode">list,form</field>
     </record>
 
     <!-- ===================== Menus (clinic staff only) =====================
