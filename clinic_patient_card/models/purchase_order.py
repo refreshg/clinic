@@ -9,6 +9,53 @@ class PurchaseOrder(models.Model):
     is_clinic_order = fields.Boolean(string="Clinic Order", copy=False)
     # The mirror sales order created on the supplier's side.
     clinic_sale_id = fields.Many2one("sale.order", string="Supplier Sales Order", copy=False)
+    # The purchase request this RFQ was generated from (batch #2 pipeline).
+    clinic_request_id = fields.Many2one(
+        "clinic.purchase.request", string="Clinic Purchase Request", copy=False)
+
+
+class StockPicking(models.Model):
+    _inherit = "stock.picking"
+
+    def button_validate(self):
+        res = super().button_validate()
+        receipts = self.filtered(
+            lambda p: p.state == "done" and p.picking_type_code == "incoming")
+        if receipts:
+            # request pipeline: receipt validation = the "Received" moment
+            requests = receipts.mapped("purchase_id.clinic_request_id")
+            requests._clinic_on_receipt_validated()
+            receipts._clinic_notify_deficit_arrivals()
+        return res
+
+    def _clinic_notify_deficit_arrivals(self):
+        """Reviewer item 29: a product that was in deficit and could NOT be
+        ordered (its request got rejected) just arrived — tell the managers."""
+        products = self.mapped("move_ids.product_id")
+        if not products:
+            return
+        lines = self.env["clinic.purchase.request.line"].sudo().search([
+            ("product_id", "in", products.ids),
+            ("request_id.state", "=", "rejected"),
+        ])
+        if not lines:
+            return
+        admin_group = self.env.ref(
+            "clinic_patient_card.group_clinic_admin", raise_if_not_found=False)
+        if not admin_group:
+            return
+        admins = self.env["res.users"].search(
+            [("all_group_ids", "in", admin_group.id)])
+        names = ", ".join(lines.mapped("product_id.display_name"))
+        for user in admins:
+            if user.partner_id:
+                self.env["bus.bus"]._sendone(
+                    user.partner_id, "clinic_low_stock",
+                    {"count": len(lines), "items":
+                     [_("Back in stock (was in deficit): %s") % names]})
+        for req in lines.mapped("request_id"):
+            req.message_post(body=_(
+                "Requested product(s) arrived with another receipt: %s") % names)
 
     # ------------------------------------------------------------------
     # Shop -> RFQs

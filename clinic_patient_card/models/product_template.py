@@ -195,6 +195,9 @@ class ProductTemplate(models.Model):
         low = orderpoints.filtered(lambda o: o.qty_on_hand < o.product_min_qty)
         if not low:
             return
+        # batch #2: the alert also drafts a purchase request (source=low_stock)
+        # unless an open request already covers the product
+        self.env["clinic.purchase.request"]._clinic_auto_request_low_stock(low)
         admin_group = self.env.ref(
             "clinic_patient_card.group_clinic_admin", raise_if_not_found=False
         )

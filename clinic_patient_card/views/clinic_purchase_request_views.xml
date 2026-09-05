@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_clinic_purchase_request_form" model="ir.ui.view">
+        <field name="name">clinic.purchase.request.form</field>
+        <field name="model">clinic.purchase.request</field>
+        <field name="arch" type="xml">
+            <form string="Purchase Request">
+                <header>
+                    <button name="action_submit" type="object" string="Submit"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_review" type="object" string="Start Review"
+                            class="btn-primary" invisible="state != 'requested'"
+                            groups="clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_approve" type="object" string="Approve"
+                            class="btn-success" invisible="state != 'review'"
+                            groups="clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_reject" type="object" string="Reject"
+                            class="btn-danger" invisible="state not in ('requested', 'review')"
+                            groups="clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_place_order" type="object" string="Place Order (RFQ)"
+                            class="btn-primary" invisible="state != 'approved'"
+                            groups="clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_in_transit" type="object" string="In Transit"
+                            invisible="state != 'ordered'"
+                            groups="clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_delivered" type="object" string="Delivered"
+                            invisible="state not in ('ordered', 'in_transit')"
+                            groups="clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_close" type="object" string="Close"
+                            invisible="state not in ('received', 'rejected')"
+                            groups="clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_reset_draft" type="object" string="Reset to Draft"
+                            invisible="state not in ('rejected', 'requested')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,requested,review,approved,ordered,in_transit,delivered,received,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_purchases" type="object"
+                                class="oe_stat_button" icon="fa-shopping-cart"
+                                invisible="purchase_count == 0">
+                            <field name="purchase_count" widget="statinfo" string="RFQs"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="source" readonly="state != 'draft'"/>
+                            <field name="requester_id"/>
+                            <field name="date_planned" readonly="state not in ('draft', 'requested')"/>
+                        </group>
+                        <group>
+                            <field name="reject_reason" invisible="not reject_reason"/>
+                        </group>
+                    </group>
+                    <field name="line_ids" readonly="state not in ('draft', 'requested', 'review')">
+                        <list editable="bottom">
+                            <field name="product_id"/>
+                            <field name="qty"/>
+                            <field name="location_id"/>
+                            <field name="qty_on_hand"/>
+                            <field name="qty_other_cabinets"/>
+                            <field name="recommended_qty"/>
+                            <field name="suggested_vendor_id"/>
+                            <field name="last_price"/>
+                            <field name="vendor_id" optional="show"/>
+                            <button name="action_redistribute" type="object"
+                                    string="Redistribute" icon="fa-exchange"
+                                    groups="clinic_patient_card.group_clinic_admin"/>
+                        </list>
+                    </field>
+                    <group>
+                        <field name="note" placeholder="Internal note…"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_clinic_purchase_request_list" model="ir.ui.view">
+        <field name="name">clinic.purchase.request.list</field>
+        <field name="model">clinic.purchase.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="source"/>
+                <field name="requester_id"/>
+                <field name="date_planned"/>
+                <field name="state" widget="badge"
+                       decoration-info="state in ('requested', 'review')"
+                       decoration-success="state in ('approved', 'received')"
+                       decoration-warning="state in ('ordered', 'in_transit', 'delivered')"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_clinic_purchase_request_calendar" model="ir.ui.view">
+        <field name="name">clinic.purchase.request.calendar</field>
+        <field name="model">clinic.purchase.request</field>
+        <field name="arch" type="xml">
+            <calendar date_start="date_planned" color="state" quick_create="0">
+                <field name="name"/>
+                <field name="source"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_clinic_purchase_request_search" model="ir.ui.view">
+        <field name="name">clinic.purchase.request.search</field>
+        <field name="model">clinic.purchase.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="line_ids" string="Product"
+                       filter_domain="[('line_ids.product_id', 'ilike', self)]"/>
+                <filter name="f_open" string="Open"
+                        domain="[('state', 'not in', ('closed', 'rejected'))]"/>
+                <filter name="f_to_approve" string="To Review"
+                        domain="[('state', 'in', ('requested', 'review'))]"/>
+                <filter name="f_planned" string="Planned"
+                        domain="[('source', '=', 'planned')]"/>
+                <group>
+                    <filter name="g_state" string="Status" domain="[]"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="g_source" string="Source" domain="[]"
+                            context="{'group_by': 'source'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_clinic_purchase_request" model="ir.actions.act_window">
+        <field name="name">Purchase Requests</field>
+        <field name="res_model">clinic.purchase.request</field>
+        <field name="view_mode">list,form,calendar</field>
+        <field name="context">{'search_default_f_open': 1}</field>
+    </record>
+
+    <menuitem id="menu_clinic_purchase_requests" name="Purchase Requests"
+              parent="menu_clinic_stock" action="action_clinic_purchase_request" sequence="5"
+              groups="clinic_patient_card.group_clinic_admin"/>
+    <!-- doctors reach their own requests from the root (record rule scopes) -->
+    <menuitem id="menu_clinic_purchase_requests_doctor" name="Supply Requests"
+              parent="menu_clinic_root" action="action_clinic_purchase_request" sequence="19"
+              groups="clinic_patient_card.group_clinic_doctor"/>
+
+    <!-- Reject wizard -->
+    <record id="view_clinic_request_reject_wizard_form" model="ir.ui.view">
+        <field name="name">clinic.request.reject.wizard.form</field>
+        <field name="model">clinic.request.reject.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="request_id" invisible="1"/>
+                    <field name="reason" placeholder="Why is this request rejected? (required)"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Reject Request"
+                            class="btn-danger"/>
+                    <button string="Back" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

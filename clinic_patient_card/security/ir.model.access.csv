@@ -28,3 +28,8 @@ access_clinic_doctor_sale_template,clinic.doctor.sale.order.template,sale_manage
 access_clinic_doctor_sale_template_line,clinic.doctor.sale.order.template.line,sale_management.model_sale_order_template_line,clinic_patient_card.group_clinic_doctor,1,0,0,0
 access_clinic_brand_user,clinic.brand.user,model_clinic_brand,base.group_user,1,0,0,0
 access_clinic_brand_manager,clinic.brand.manager,model_clinic_brand,base.group_system,1,1,1,1
+access_clinic_purchase_request_admin,clinic.purchase.request.admin,model_clinic_purchase_request,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_purchase_request_doctor,clinic.purchase.request.doctor,model_clinic_purchase_request,clinic_patient_card.group_clinic_doctor,1,1,1,0
+access_clinic_purchase_request_line_admin,clinic.purchase.request.line.admin,model_clinic_purchase_request_line,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_purchase_request_line_doctor,clinic.purchase.request.line.doctor,model_clinic_purchase_request_line,clinic_patient_card.group_clinic_doctor,1,1,1,1
+access_clinic_request_reject_wizard,clinic.request.reject.wizard,model_clinic_request_reject_wizard,clinic_patient_card.group_clinic_admin,1,1,1,1
