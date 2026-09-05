@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-03, commit: 43e00a7 -->
+<!-- last-synced: 2026-09-05, commit: 2c3dd80 -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -6,7 +6,7 @@ visit workflow on `calendar.event` with an OWL planning board, payments, supplie
 with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
 
 ## Dependencies
-`base, contacts, product, account, mail, calendar, stock, purchase, sale_management, sale_pdf_quote_builder`
+`base, contacts, product, account, mail, calendar, stock, product_expiry, purchase, sale_management, sale_pdf_quote_builder`
 (all Community). License LGPL-3.
 
 ## Install / upgrade
@@ -26,9 +26,17 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
 - **Per-dentist defaults**: user form → *Clinic* tab → Default Room + Clinic Direction
   (specialty; drives the free-slot search and booking autofill).
 - **Catalog**: procedures = service products flagged *Clinic Procedure*; supplies flagged
-  *Clinic Supply* (+ reordering rules for the low-stock alert); insurance companies =
-  contacts flagged *Insurance Company*; rooms, appointment types, **directions** and the
-  **Referrals** analysis under Clinic → Configuration.
+  *Clinic Supply* (+ reordering rules for the low-stock alert; brand / avg-consumption /
+  last-price fields); insurance companies = contacts flagged *Insurance Company*; rooms,
+  appointment types, **directions**, **brands** and the **Referrals** analysis under
+  Clinic → Configuration.
+- **Warehouse (batch #2)**: every room auto-owns a stock location under
+  WH/Stock/Cabinets; Sterilization + Write-off/Damaged/Expired locations seeded; Clinic →
+  Stock menu = Internal Transfers / Scrap / Min-Max Rules / Warehouse Structure (all
+  standard models). Storage-Locations + Lots settings must be ON (enabled on prod).
+- **Purchase requests (batch #2)**: Clinic → Stock → Purchase Requests (admin) and
+  "Supply Requests" (doctors, own only): draft→…→received pipeline, low-stock cron
+  auto-drafts, rejection requires a comment, receipt validation completes the request.
 - **Cron jobs** (active by default): low-stock alert (daily), dispensary call reminders
   (daily, T-14d), weekly booking report to administrators.
 - New contacts created from the Contacts app default to patients

@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-03, commit: 43e00a7 -->
+<!-- last-synced: 2026-09-05, commit: 2c3dd80 -->
 # Clinic — project notes for Claude
 
 ## Platform
@@ -32,7 +32,7 @@
   waitlist/Reserve panel per dentist + dispensary 6-month flow with 14-day-before admin
   reminders and weekly booking reports. Meeting UI (Send email, RSVP "Going?", Busy row,
   attendees) hidden on clinic visits. Emails deferred (undecided what/when to send).
-- **Reviewer batch #2 Track A (ჯავშნები) — DONE (v19.0.47-49):** doctor-access bug fixed, patient toggle back, family links, referrals analysis, visit form rebuilt in the main body (directions, cancel popup, 9 status colours, card shows pn/procedure/comment), free-slot finder wizard, doctor retail sale-requests with admin approval. Track B (მაღაზია/მარაგები) pending user green-light; SMS deferred.
+- **Reviewer batch #2 — Track A DONE (v19.0.47-49) + walkthrough fix round (v19.0.51.x):** patient field in the form title, client-side slot finder (D-16), global Save/Discard buttons (D-17), doctor retail flow unlocked (forced user_id + read-only stock/account ACLs). **Track B: B1 warehouse (v19.0.50) + B2 purchase requests (v19.0.51) DONE & live; B3 shop UX v2 = WIP in git stash (not deployable).** SMS deferred.
 - Status (as of v19.0.46.0.0): Phases 1–2, Rev-A, Phase 3 (A/B/C) and Phase 4 are DONE
   and live. Extras also live: OWL Planning board (Clinic>Planning; click empty grid slot
   to book, with a ripple/ghost cue), a visual patient Dashboard (Health-Care style OWL

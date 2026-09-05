@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-03, commit: 43e00a7 -->
+<!-- last-synced: 2026-09-05, commit: 2c3dd80 -->
 # Decisions (ADR) — clinic_patient_card
 
 Format: Context → Decision → Rejected → Consequences. New custom code requires a D-entry
@@ -87,6 +87,33 @@ admins get activity + `clinic_sale_request` toast, admin confirm auto-creates th
 invoice, rejection = cancel + chatter comment (doctor auto-follows). `user_id` pinned to
 the creating doctor. · Rejected: a parallel clinic.sale.request model. · Consequences: full
 standard sale/invoice chain reused; doctors carry narrow sale ACLs.
+
+### D-15: Purchase requests = new clinic.purchase.request model
+Date 2026-09-05 (3cfc026) · Context: batch #2 demands a pipeline in FRONT of the purchase:
+4 intake sources, manager review with stock recommendations, mandatory reject comment,
+redistribute-instead-of-buy, and a 10-state lifecycle where stock moves only on receipt.
+· Decision: a dedicated model (+lines) that ENDS in standard purchase.orders (RFQ per
+vendor via clinic_request_id); receipt validation drives the received state. · Rejected:
+bare purchase.order states (no review/recommendation/reject-comment semantics),
+purchase_requisition (tenders/blanket agreements — different purpose). · Consequences: one
+extra model to maintain; the stock/purchase chain itself stays 100% standard.
+
+### D-16: Free-slot finder = pure client-side dialog
+Date 2026-09-05 (f3d42af) · Context: three form-integrated attempts failed in sequence —
+an object button auto-saves the half-filled visit; action.doAction(target=new) REPLACES the
+visit dialog; FormViewDialog stacks, but its buttons' window-close actions still land on
+the action-stack dialog (the visit form). · Decision: a view widget opens an OWL Dialog
+that calls clinic_free_slots directly and hands the pick to the open form via
+record.update — no wizard records in the UI path, no action stack, nothing saved until the
+user presses Save. · Consequences: clinic.slot.finder wizard stays as RPC fallback only.
+
+### D-17: Global Save/Discard = FormStatusIndicator template extension
+Date 2026-09-05 (aa5646a) · Context: reviewer wants obvious Save/Back on every form, but
+only when there is something to save; the standard breadcrumb cloud/✕ went unnoticed, and
+per-view special buttons cannot know the dirty state. · Decision: t-inherit extension of
+web.FormStatusIndicator relabels its buttons ("შენახვა"/"გაუქმება", btn-primary/secondary) —
+the indicator's own dirty/new gating provides exactly the wanted visibility. · Rejected:
+always-visible special="save" bars per view (shown even with nothing to save — reverted).
 
 ### D-14: Depend on sale_pdf_quote_builder + sudo its salesman-gated hooks
 Date 2026-09-03 (b6e1446) · Context: doctor's SO create crashed — sale_pdf_quote_builder's
