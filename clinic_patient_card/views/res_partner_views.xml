@@ -89,7 +89,7 @@
                         <field name="birthdate" placeholder="dd/mm/yyyy — can be typed"/>
                         <field name="age"/>
                         <field name="gender"/>
-                        <field name="parent_id" string="Workplace"
+                        <field name="parent_id" string="სამუშაო ადგილი"
                                invisible="not is_patient"/>
                     </group>
                     <group>
