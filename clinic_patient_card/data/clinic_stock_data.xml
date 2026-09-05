@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Reviewer batch #2 — warehouse structure on standard stock.location:
+         WH/Stock (= main clinic warehouse, standard)
+           ├─ Cabinets/           (view parent; one child location per clinic.room)
+           └─ Sterilization       (special-zone stock)
+         plus dedicated scrap locations so ჩამოწერა (standard Scrap), დაზიანება
+         and ვადაგასვლა each leave their own move trail. -->
+    <data noupdate="1">
+        <record id="stock_location_clinic_cabinets" model="stock.location">
+            <field name="name">Cabinets</field>
+            <field name="usage">view</field>
+            <field name="location_id" ref="stock.stock_location_stock"/>
+        </record>
+        <record id="stock_location_clinic_sterilization" model="stock.location">
+            <field name="name">Sterilization</field>
+            <field name="usage">internal</field>
+            <field name="location_id" ref="stock.stock_location_stock"/>
+        </record>
+        <!-- Odoo 19: a scrap destination is simply a usage='inventory'
+             location (the scrap_location flag is gone); pick one per reason
+             on the scrap form so each write-off cause keeps its own trail. -->
+        <record id="stock_location_clinic_writeoff" model="stock.location">
+            <field name="name">Write-off</field>
+            <field name="usage">inventory</field>
+        </record>
+        <record id="stock_location_clinic_damaged" model="stock.location">
+            <field name="name">Damaged</field>
+            <field name="usage">inventory</field>
+        </record>
+        <record id="stock_location_clinic_expired" model="stock.location">
+            <field name="name">Expired</field>
+            <field name="usage">inventory</field>
+        </record>
+
+        <!-- Seed brands (editable in Clinic → Configuration → Brands) -->
+        <record id="clinic_brand_3m" model="clinic.brand">
+            <field name="name">3M</field>
+        </record>
+        <record id="clinic_brand_gc" model="clinic.brand">
+            <field name="name">GC</field>
+        </record>
+        <record id="clinic_brand_dentsply" model="clinic.brand">
+            <field name="name">Dentsply Sirona</field>
+        </record>
+    </data>
+
+    <!-- Runs on every upgrade: give each room its own stock location. -->
+    <function model="clinic.room" name="_clinic_sync_locations"/>
+</odoo>

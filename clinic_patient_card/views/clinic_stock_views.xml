@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============ Brands (batch #2) ============ -->
+    <record id="view_clinic_brand_list" model="ir.ui.view">
+        <field name="name">clinic.brand.list</field>
+        <field name="model">clinic.brand</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_clinic_brand" model="ir.actions.act_window">
+        <field name="name">Brands</field>
+        <field name="res_model">clinic.brand</field>
+        <field name="view_mode">list</field>
+    </record>
+    <menuitem id="menu_clinic_brands" name="Brands"
+              parent="menu_clinic_config" action="action_clinic_brand" sequence="24"
+              groups="clinic_patient_card.group_clinic_admin"/>
+
+    <!-- ============ Room ↔ stock location ============ -->
+    <record id="view_clinic_room_list_location" model="ir.ui.view">
+        <field name="name">clinic.room.list.location</field>
+        <field name="model">clinic.room</field>
+        <field name="inherit_id" ref="view_clinic_room_list"/>
+        <field name="arch" type="xml">
+            <field name="note" position="after">
+                <field name="location_id" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- ============ Product: brand + consumption + last price ============ -->
+    <record id="view_product_template_form_clinic_stock" model="ir.ui.view">
+        <field name="name">product.template.form.clinic.stock</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <field name="categ_id" position="after">
+                <field name="clinic_brand_id"/>
+                <field name="clinic_avg_consumption" invisible="not is_clinic_supply"/>
+                <field name="clinic_last_purchase_price" invisible="not is_clinic_supply"/>
+                <field name="is_clinic_supply" invisible="1"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- ============ Stock operations menu (clinic admin) ============
+         All actions below are plain windows over STANDARD models — the flows
+         themselves (transfers, scrap, adjustments, min/max) are stock Odoo,
+         so every quantity change leaves a stock.move trail. -->
+    <record id="action_clinic_internal_transfers" model="ir.actions.act_window">
+        <field name="name">Internal Transfers</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('picking_type_code', '=', 'internal')]</field>
+    </record>
+    <record id="action_clinic_scrap" model="ir.actions.act_window">
+        <field name="name">Write-off / Scrap</field>
+        <field name="res_model">stock.scrap</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="action_clinic_orderpoints" model="ir.actions.act_window">
+        <field name="name">Min/Max Rules</field>
+        <field name="res_model">stock.warehouse.orderpoint</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_filter_not_snoozed': 1}</field>
+    </record>
+    <record id="action_clinic_locations" model="ir.actions.act_window">
+        <field name="name">Warehouse Structure</field>
+        <field name="res_model">stock.location</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('usage', 'in', ('internal', 'view'))]</field>
+    </record>
+
+    <menuitem id="menu_clinic_stock" name="Stock"
+              parent="menu_clinic_root" sequence="14"
+              groups="clinic_patient_card.group_clinic_admin"/>
+    <menuitem id="menu_clinic_stock_transfers" name="Internal Transfers"
+              parent="menu_clinic_stock" action="action_clinic_internal_transfers" sequence="10"
+              groups="clinic_patient_card.group_clinic_admin"/>
+    <menuitem id="menu_clinic_stock_scrap" name="Write-off / Scrap"
+              parent="menu_clinic_stock" action="action_clinic_scrap" sequence="20"
+              groups="clinic_patient_card.group_clinic_admin"/>
+    <menuitem id="menu_clinic_stock_orderpoints" name="Min/Max Rules"
+              parent="menu_clinic_stock" action="action_clinic_orderpoints" sequence="30"
+              groups="clinic_patient_card.group_clinic_admin"/>
+    <menuitem id="menu_clinic_stock_locations" name="Warehouse Structure"
+              parent="menu_clinic_stock" action="action_clinic_locations" sequence="40"
+              groups="clinic_patient_card.group_clinic_admin"/>
+
+</odoo>

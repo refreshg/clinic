@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from . import res_company
+from . import clinic_brand
 from . import product_template
 from . import purchase_order
 from . import sale_order

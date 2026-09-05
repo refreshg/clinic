@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import timedelta
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
@@ -12,6 +14,46 @@ class ProductTemplate(models.Model):
     is_clinic_procedure = fields.Boolean(string="Clinic Procedure")
     # Consumables / materials the clinic keeps in stock and reorders from vendors.
     is_clinic_supply = fields.Boolean(string="Clinic Supply")
+
+    # Reviewer batch #2 — extra info every warehouse product must show.
+    # Name/photo/category/code/UoM/qty/vendor/expiry are standard fields;
+    # only these three are missing from stock Odoo:
+    clinic_brand_id = fields.Many2one("clinic.brand", string="Brand")
+    clinic_avg_consumption = fields.Float(
+        string="Avg. Monthly Consumption", compute="_compute_clinic_stock_info",
+        digits="Product Unit of Measure",
+        help="Average quantity consumed per month over the last 90 days "
+             "(stock moves leaving internal locations: usage, scrap, delivery).")
+    clinic_last_purchase_price = fields.Float(
+        string="Last Purchase Price", compute="_compute_clinic_stock_info",
+        digits="Product Price",
+        help="Unit price of the most recent confirmed purchase order; falls "
+             "back to the first vendor pricelist line.")
+
+    def _compute_clinic_stock_info(self):
+        # sudo: doctors/staff without purchase or full stock rights must still
+        # be able to open the product form
+        Move = self.env["stock.move"].sudo()
+        Pol = self.env["purchase.order.line"].sudo()
+        since = fields.Datetime.now() - timedelta(days=90)
+        for tmpl in self:
+            variants = tmpl.product_variant_ids
+            consumed = Move._read_group(
+                [("product_id", "in", variants.ids),
+                 ("state", "=", "done"),
+                 ("date", ">=", since),
+                 ("location_id.usage", "=", "internal"),
+                 ("location_dest_id.usage", "in",
+                  ("customer", "production", "inventory"))],
+                [], ["product_uom_qty:sum"])
+            qty = consumed[0][0] if consumed else 0.0
+            tmpl.clinic_avg_consumption = (qty or 0.0) / 3.0
+            pol = Pol.search(
+                [("product_id", "in", variants.ids),
+                 ("state", "in", ("purchase", "done"))],
+                order="date_approve desc, id desc", limit=1)
+            tmpl.clinic_last_purchase_price = (
+                pol.price_unit if pol else (tmpl.seller_ids[:1].price or 0.0))
 
     # ------------------------------------------------------------------
     # Supplier self-service catalogue (OWL "My Products" panel).

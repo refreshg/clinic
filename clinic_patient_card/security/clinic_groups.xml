@@ -34,6 +34,8 @@
             (4, ref('base.group_partner_manager')),
             (4, ref('purchase.group_purchase_user')),
             (4, ref('stock.group_stock_user')),
+            (4, ref('stock.group_production_lot')),
+            (4, ref('stock.group_stock_multi_locations')),
         ]"/>
     </record>
 
