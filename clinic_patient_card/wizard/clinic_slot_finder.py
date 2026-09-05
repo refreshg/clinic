@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 
 class ClinicSlotFinder(models.TransientModel):
@@ -12,14 +12,28 @@ class ClinicSlotFinder(models.TransientModel):
     duration = fields.Float(string="Duration (hours)", default=0.5)
     date_from = fields.Date(string="From Date")
     line_ids = fields.One2many("clinic.slot.finder.line", "wizard_id")
+    message = fields.Char(readonly=True)
 
     def action_search(self):
         self.ensure_one()
         self.line_ids.unlink()
         date_from = (fields.Datetime.to_datetime(self.date_from)
                      if self.date_from else None)
-        slots = self.env["calendar.event"].clinic_free_slots(
-            self.direction_id.id, self.duration, date_from)
+        # an empty result must SAY why, not show a silent empty list
+        if self.direction_id and not self.env["res.users"].search_count([
+                ("all_group_ids", "in", self.env.ref(
+                    "clinic_patient_card.group_clinic_doctor").id),
+                ("direction_id", "=", self.direction_id.id)]):
+            self.message = _(
+                'No doctor is assigned to the "%s" direction — set it on the '
+                "user's Clinic tab (Settings → Users).") % self.direction_id.name
+            slots = []
+        else:
+            slots = self.env["calendar.event"].clinic_free_slots(
+                self.direction_id.id, self.duration, date_from)
+            self.message = (
+                _("No free slots in the coming days — try another date or "
+                  "duration.") if not slots else False)
         self.env["clinic.slot.finder.line"].create([{
             "wizard_id": self.id,
             "start": s["start"],
@@ -29,6 +43,7 @@ class ClinicSlotFinder(models.TransientModel):
         } for s in slots])
         return {
             "type": "ir.actions.act_window",
+            "name": _("Free Slots"),
             "res_model": self._name,
             "res_id": self.id,
             "view_mode": "form",
