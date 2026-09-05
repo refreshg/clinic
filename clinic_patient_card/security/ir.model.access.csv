@@ -33,3 +33,7 @@ access_clinic_purchase_request_doctor,clinic.purchase.request.doctor,model_clini
 access_clinic_purchase_request_line_admin,clinic.purchase.request.line.admin,model_clinic_purchase_request_line,clinic_patient_card.group_clinic_admin,1,1,1,1
 access_clinic_purchase_request_line_doctor,clinic.purchase.request.line.doctor,model_clinic_purchase_request_line,clinic_patient_card.group_clinic_doctor,1,1,1,1
 access_clinic_request_reject_wizard,clinic.request.reject.wizard,model_clinic_request_reject_wizard,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_doctor_stock_move,clinic.doctor.stock.move.read,stock.model_stock_move,clinic_patient_card.group_clinic_doctor,1,0,0,0
+access_clinic_doctor_stock_move_line,clinic.doctor.stock.move.line.read,stock.model_stock_move_line,clinic_patient_card.group_clinic_doctor,1,0,0,0
+access_clinic_doctor_stock_picking,clinic.doctor.stock.picking.read,stock.model_stock_picking,clinic_patient_card.group_clinic_doctor,1,0,0,0
+access_clinic_doctor_stock_quant,clinic.doctor.stock.quant.read,stock.model_stock_quant,clinic_patient_card.group_clinic_doctor,1,0,0,0

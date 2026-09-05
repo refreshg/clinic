@@ -32,9 +32,9 @@
             <xpath expr="//field[@name='category_id']" position="attributes">
                 <attribute name="invisible">is_patient</attribute>
             </xpath>
-            <xpath expr="//field[@name='company_type']" position="attributes">
-                <attribute name="invisible">is_patient</attribute>
-            </xpath>
+            <!-- The Individual/Company toggle STAYS visible on patients too
+                 (reviewer: "კომპანია არ გააუქმო მოსანიშნი — კლიენტია თუ
+                 კომპანია"); only the company field reads as Workplace. -->
             <!-- "Company" reads as "Workplace" for a patient: hide the original
                  widget and offer a plain relabelled one in the header group
                  (a label can't be swapped conditionally on one field). -->
