@@ -13,6 +13,13 @@ class ClinicSlotFinder(models.TransientModel):
     date_from = fields.Date(string="From Date")
     line_ids = fields.One2many("clinic.slot.finder.line", "wizard_id")
     message = fields.Char(readonly=True)
+    # The picked slot is stored HERE and applied to the open visit form by the
+    # slot-finder widget WITHOUT saving the visit (reviewer: nothing may be
+    # saved until the user presses Save).
+    picked = fields.Boolean(readonly=True)
+    picked_start = fields.Datetime(readonly=True)
+    picked_stop = fields.Datetime(readonly=True)
+    picked_dentist_id = fields.Many2one("res.users", readonly=True)
 
     def action_search(self):
         self.ensure_one()
@@ -63,27 +70,14 @@ class ClinicSlotFinderLine(models.TransientModel):
     room = fields.Char(string="Room")
 
     def action_pick(self):
-        """Write the chosen slot back onto the visit being edited."""
+        """Remember the chosen slot on the wizard and close; the widget on the
+        visit form copies it into the form's fields client-side, so the visit
+        itself is NOT saved until the user presses Save."""
         self.ensure_one()
-        ev = self.wizard_id.event_id
-        vals = {
-            "start": self.start,
-            "stop": self.stop,
-            "dentist_id": self.dentist_id.id,
-        }
-        if self.wizard_id.direction_id:
-            vals["direction_id"] = self.wizard_id.direction_id.id
-        if ev:
-            ev.write(vals)
-            return {"type": "ir.actions.act_window_close"}
-        # new, unsaved visit: open a prefilled form instead
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": "calendar.event",
-            "view_mode": "form",
-            "target": "new",
-            "context": {
-                "default_is_clinic": True,
-                **{"default_" + k: v for k, v in vals.items()},
-            },
-        }
+        self.wizard_id.write({
+            "picked": True,
+            "picked_start": self.start,
+            "picked_stop": self.stop,
+            "picked_dentist_id": self.dentist_id.id,
+        })
+        return {"type": "ir.actions.act_window_close"}

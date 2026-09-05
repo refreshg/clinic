@@ -125,9 +125,8 @@
                     <!-- Quick jumps to the patient (reviewer: proper buttons
                          instead of the tiny m2o arrow) -->
                     <div class="d-flex gap-2 mb-2">
-                        <button name="action_find_slots" type="object"
-                                string="🕐 თავისუფალი დროები" class="btn-secondary"
-                                invisible="clinic_state not in ('requested', 'booked')"/>
+                        <!-- widget, NOT a button: buttons auto-save the form -->
+                        <widget name="clinic_slot_finder_btn"/>
                         <button name="action_open_patient" type="object"
                                 string="👤 პაციენტის ანკეტა" class="btn-secondary"
                                 invisible="not patient_id"/>

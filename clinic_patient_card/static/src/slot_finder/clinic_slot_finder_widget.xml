@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="clinic_patient_card.SlotFinderBtn">
+        <button t-if="visible" type="button" class="btn btn-secondary"
+                t-on-click="onClick">🕐 თავისუფალი დროები</button>
+    </t>
+</templates>
