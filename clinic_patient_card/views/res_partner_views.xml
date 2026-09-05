@@ -14,14 +14,10 @@
             <!-- Remove the standard Tax ID from its default spot; re-added in
                  the header below as the personal number (single field). -->
             <xpath expr="//field[@name='vat']" position="replace"/>
-            <!-- Reviewer item 39: big, obvious Save / Discard actions on the
-                 contact card (the breadcrumb cloud/✕ icons were missed). -->
-            <xpath expr="//sheet" position="before">
-                <div class="d-flex gap-2 p-2 border-bottom bg-light sticky-top">
-                    <button special="save" string="💾 შენახვა" class="btn btn-primary"/>
-                    <button special="cancel" string="↩ გაუქმება" class="btn btn-secondary"/>
-                </div>
-            </xpath>
+            <!-- Reviewer item 39 is handled globally: the form status
+                 indicator (breadcrumb) renders labelled Save/Discard buttons
+                 on every form, only while there is something to save — see
+                 static/src/clinic_form_buttons.xml. -->
 
             <!-- The base "Contacts & Addresses" page is autofocused by default;
                  drop it so only the Patient Card page opens by default. -->

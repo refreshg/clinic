@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!-- Reviewer item 39: obvious Save / Discard EVERYWHERE. The standard
+         status indicator already appears only when there is something to
+         save (dirty or new record) — we only turn its tiny cloud/✕ icons
+         into labelled buttons. -->
+    <t t-name="clinic_patient_card.FormStatusIndicator"
+       t-inherit="web.FormStatusIndicator" t-inherit-mode="extension">
+        <xpath expr="//button[@t-ref='save']" position="attributes">
+            <attribute name="class">o_form_button_save btn btn-primary btn-sm px-2 py-1 me-1 text-nowrap</attribute>
+        </xpath>
+        <xpath expr="//button[@t-ref='save']/i" position="after">
+            <span class="ms-1">შენახვა</span>
+        </xpath>
+        <xpath expr="//button[hasclass('o_form_button_cancel')]" position="attributes">
+            <attribute name="class">o_form_button_cancel btn btn-secondary btn-sm px-2 py-1 text-nowrap</attribute>
+        </xpath>
+        <xpath expr="//button[hasclass('o_form_button_cancel')]/i" position="after">
+            <span class="ms-1">გაუქმება</span>
+        </xpath>
+    </t>
+</templates>
