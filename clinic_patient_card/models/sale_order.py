@@ -52,13 +52,6 @@ class SaleOrder(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        for vals in vals_list:
-            if vals.get("is_clinic_retail"):
-                # the request belongs to its creator — otherwise the partner's
-                # salesperson takes over user_id and the doctor's own-drafts
-                # record rule locks them out of their own request
-                vals.setdefault("user_id", self.env.uid)
-        orders = super().create(vals_list)
         doctor_group = self.env.ref(
             "clinic_patient_card.group_clinic_doctor", raise_if_not_found=False)
         admin_group = self.env.ref(
@@ -67,6 +60,18 @@ class SaleOrder(models.Model):
         is_plain_doctor = (
             doctor_group and doctor_group in user.all_group_ids
             and not (admin_group and admin_group in user.all_group_ids))
+        for vals in vals_list:
+            if vals.get("is_clinic_retail"):
+                # the request belongs to its creator — otherwise the partner's
+                # salesperson takes over user_id and the doctor's own-drafts
+                # record rule locks them out of their own request. The web
+                # form SENDS user_id (partner's salesperson via onchange), so
+                # for a plain doctor it must be overridden, not defaulted.
+                if is_plain_doctor:
+                    vals["user_id"] = self.env.uid
+                else:
+                    vals.setdefault("user_id", self.env.uid)
+        orders = super().create(vals_list)
         for order in orders:
             if order.is_clinic_retail and is_plain_doctor:
                 # doctor's request: keep them in the loop + ping the admins
