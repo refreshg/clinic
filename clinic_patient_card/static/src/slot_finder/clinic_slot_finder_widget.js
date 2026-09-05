@@ -18,12 +18,27 @@ import { deserializeDateTime } from "@web/core/l10n/dates";
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
 import { Dialog } from "@web/core/dialog/dialog";
 
+// record.data many2one values differ across Odoo versions: [id, name] tuple
+// or {id, display_name} object — read both shapes.
+function m2oId(v) {
+    if (!v) { return false; }
+    if (Array.isArray(v)) { return v[0] || false; }
+    return v.id || false;
+}
+function m2oName(v) {
+    if (!v) { return ""; }
+    if (Array.isArray(v)) { return v[1] || ""; }
+    return v.display_name || "";
+}
+
 export class ClinicSlotFinderDialog extends Component {
     static template = "clinic_patient_card.SlotFinderDialog";
     static components = { Dialog };
     static props = {
         directionId: { type: [Number, Boolean], optional: true },
         durationMin: { type: Number, optional: true },
+        dentistId: { type: [Number, Boolean], optional: true },
+        dentistName: { type: String, optional: true },
         onPick: Function,
         close: Function,
     };
@@ -35,6 +50,7 @@ export class ClinicSlotFinderDialog extends Component {
             directionId: this.props.directionId || false,
             durationMin: this.props.durationMin || 30,
             dateFrom: "",
+            dentistId: this.props.dentistId || false,
             slots: [],
             message: "",
             searched: false,
@@ -61,10 +77,15 @@ export class ClinicSlotFinderDialog extends Component {
         const slots = await this.orm.call(
             "calendar.event", "clinic_free_slots",
             [dirId, Number(this.state.durationMin) / 60,
-             this.state.dateFrom || false]);
+             this.state.dateFrom || false, 5,
+             this.state.dentistId || false]);
         this.state.slots = slots;
         this.state.searched = true;
         if (!slots.length) {
+            if (this.state.dentistId) {
+                this.state.message = _t("No free slots for this doctor in the coming days — try another date or clear the doctor filter.");
+                return;
+            }
             const dir = this.state.directions.find((d) => d.id === dirId);
             this.state.message = dir
                 ? _t('No free slots for "%s" — check that a doctor carries this direction (user\'s Clinic tab) or try another date/duration.', dir.name)
@@ -72,6 +93,11 @@ export class ClinicSlotFinderDialog extends Component {
         } else {
             this.state.message = "";
         }
+    }
+
+    clearDentist() {
+        this.state.dentistId = false;
+        this.search();
     }
 
     pick(slot) {
@@ -108,8 +134,10 @@ export class ClinicSlotFinderBtn extends Component {
         const d = this.props.record.data;
         const record = this.props.record;
         this.dialog.add(ClinicSlotFinderDialog, {
-            directionId: d.direction_id ? d.direction_id[0] : false,
+            directionId: m2oId(d.direction_id),
             durationMin: d.duration ? Math.round(d.duration * 60) : 30,
+            dentistId: m2oId(d.dentist_id),
+            dentistName: m2oName(d.dentist_id),
             onPick: (slot) => {
                 const vals = {
                     start: deserializeDateTime(slot.start),

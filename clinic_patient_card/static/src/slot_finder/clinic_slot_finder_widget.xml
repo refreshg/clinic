@@ -36,6 +36,12 @@
                 </div>
                 <button class="btn btn-primary" t-on-click="search">🔍 ძიება</button>
             </div>
+            <div t-if="state.dentistId" class="mb-2">
+                <span class="badge text-bg-info">
+                    მხოლოდ: <t t-esc="props.dentistName"/>
+                    <a href="#" class="ms-2 text-white" t-on-click.prevent="clearDentist">✕</a>
+                </span>
+            </div>
             <div t-if="state.message" class="alert alert-warning" role="alert">
                 <t t-esc="state.message"/>
             </div>

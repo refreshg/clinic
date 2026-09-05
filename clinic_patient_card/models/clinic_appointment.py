@@ -632,7 +632,8 @@ class CalendarEvent(models.Model):
         }
 
     @api.model
-    def clinic_free_slots(self, direction_id, duration, date_from=None, days=5):
+    def clinic_free_slots(self, direction_id, duration, date_from=None, days=5,
+                          dentist_id=None):
         """Free slots per direction+duration (reviewer batch #2, scenario 1).
 
         Returns [{start, stop, dentist_id, dentist, room}] within working
@@ -651,7 +652,11 @@ class CalendarEvent(models.Model):
         dom = [("all_group_ids", "in", doctor_group.id)]
         if admin_user:
             dom.append(("id", "!=", admin_user.id))
-        if direction_id:
+        if dentist_id:
+            # the visit is being booked with a specific doctor — only their
+            # free time matters (reviewer)
+            dom.append(("id", "=", dentist_id))
+        elif direction_id:
             dom.append(("direction_id", "=", direction_id))
         doctors = self.env["res.users"].search(dom)
         if not doctors:
