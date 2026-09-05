@@ -537,14 +537,24 @@ export class ClinicPlanning extends Component {
     _openNewVisit(dentist, startHour, endHour) {
         // The form reads default datetimes as UTC — serialize the local pick
         // properly, otherwise 11:10 shows up as 15:10 (+4h) on the form.
+        // Add the hours as MINUTES onto the day's midnight: passing hour/minute
+        // components directly makes luxon return an Invalid DateTime when the
+        // rounding lands on minute 60 or the hour hits the day boundary, and
+        // that serializes to the literal string "Invalid DateTime" → RPC crash.
         const [y, mo, d] = this.state.date.split("-").map(Number);
+        const day = DateTime.local(y, mo, d);
         const toUTC = (hour) => {
-            const h = Math.floor(hour);
-            const m = Math.round((hour - h) * 60);
-            return serializeDateTime(DateTime.local(y, mo, d, h, m));
+            if (!day.isValid || !isFinite(hour)) {
+                return false;
+            }
+            const dt = day.plus({ minutes: Math.round(hour * 60) });
+            return dt.isValid ? serializeDateTime(dt) : false;
         };
         const start = toUTC(startHour);
         const stop = toUTC(endHour);
+        if (!start || !stop) {
+            return; // never ship broken defaults to the form
+        }
         // dialog on top of the board — the calendar stays visible behind,
         // and the grid refreshes as soon as the dialog closes
         this.action.doAction({
