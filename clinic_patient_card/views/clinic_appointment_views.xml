@@ -68,6 +68,12 @@
             <xpath expr="//field[@name='videocall_location']" position="attributes">
                 <attribute name="invisible">is_clinic</attribute>
             </xpath>
+            <!-- ...and the whole videocall widget row: the "+ Odoo meeting"
+                 / join / clear buttons live NEXT TO the field, so hiding the
+                 field alone left them visible (reviewer). -->
+            <xpath expr="//div[@name='videocall_location_div']" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
             <xpath expr="//div[hasclass('mb-2')][@colspan='2']" position="attributes">
                 <attribute name="invisible">is_clinic</attribute>
             </xpath>
@@ -158,8 +164,9 @@
                             <field name="payment_method" invisible="1"/>
                         </group>
                     </group>
-                    <group string="Procedures"
-                           invisible="clinic_state in ('requested','booked','confirmed')">
+                    <!-- visible from booking on: the reviewer records the
+                         visit purpose/procedure while registering -->
+                    <group string="Procedures">
                         <field name="procedure_line_ids" nolabel="1" colspan="2">
                             <list editable="bottom">
                                 <field name="status"/>
