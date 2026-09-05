@@ -101,6 +101,13 @@
             <xpath expr="//field[@name='name']" position="attributes">
                 <attribute name="invisible">is_clinic</attribute>
             </xpath>
+            <!-- The Patient field takes the Subject's place, same big title
+                 size (reviewer: "სადაც Subject იყო, იქ იყოს პაციენტი"). -->
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="patient_id" invisible="not is_clinic"
+                       required="is_clinic" placeholder="პაციენტი"
+                       context="{'clinic_show_ids': 1, 'default_is_patient': True}"/>
+            </xpath>
             <!-- Duration above Start (reviewer): move the base rows. -->
             <xpath expr="//field[@name='start']" position="before">
                 <xpath expr="//label[@for='duration']/following-sibling::div[1]" position="move"/>
@@ -132,8 +139,6 @@
                         <group>
                             <field name="is_clinic" invisible="1"/>
                             <field name="family_member_domain_ids" invisible="1"/>
-                            <field name="patient_id" required="is_clinic"
-                                   context="{'clinic_show_ids': 1, 'default_is_patient': True}"/>
                             <field name="direction_id"/>
                             <field name="appointment_type_id"/>
                             <field name="family_link_id"/>
