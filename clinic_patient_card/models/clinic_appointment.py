@@ -288,10 +288,11 @@ class CalendarEvent(models.Model):
         if atype:
             if not self.name:
                 self.name = atype.name
-            # Don't stomp a slot picked on the planning board (it passes
-            # default_stop): the type's default duration applies only when the
-            # visit was started without an explicit time range.
-            if atype.default_duration and not self.env.context.get("default_stop"):
+            # onchange fires only on a USER change of the type, so applying the
+            # type's duration is always what they asked for — the earlier
+            # default_stop guard also blocked it on board-opened forms
+            # (reviewer: "ტიპს ვირჩევ და ხანგრძლივობას არ წერს").
+            if atype.default_duration:
                 self.duration = atype.default_duration
 
     @api.onchange("dentist_id")

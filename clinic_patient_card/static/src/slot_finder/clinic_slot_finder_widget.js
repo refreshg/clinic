@@ -32,8 +32,18 @@ export class ClinicSlotFinderBtn extends Component {
             direction_id: d.direction_id ? d.direction_id[0] : false,
             duration: d.duration || 0.5,
         }]);
-        const act = await this.orm.call("clinic.slot.finder", "action_search", [[wizId]]);
-        this.action.doAction(act, {
+        await this.orm.call("clinic.slot.finder", "action_search", [[wizId]]);
+        // build the dialog action HERE: an act_window dict returned through
+        // orm.call skips the server normalization that fills `views`, and
+        // doAction crashes on it (reading 'map')
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: "Free Slots",
+            res_model: "clinic.slot.finder",
+            res_id: wizId,
+            views: [[false, "form"]],
+            target: "new",
+        }, {
             onClose: async () => {
                 const [w] = await this.orm.read(
                     "clinic.slot.finder", [wizId],
