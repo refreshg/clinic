@@ -39,3 +39,6 @@ access_clinic_doctor_stock_picking,clinic.doctor.stock.picking.read,stock.model_
 access_clinic_doctor_stock_quant,clinic.doctor.stock.quant.read,stock.model_stock_quant,clinic_patient_card.group_clinic_doctor,1,0,0,0
 access_clinic_doctor_account_move,clinic.doctor.account.move.read,account.model_account_move,clinic_patient_card.group_clinic_doctor,1,0,0,0
 access_clinic_doctor_account_move_line,clinic.doctor.account.move.line.read,account.model_account_move_line,clinic_patient_card.group_clinic_doctor,1,0,0,0
+access_clinic_shop_banner_user,clinic.shop.banner.user,model_clinic_shop_banner,base.group_user,1,0,0,0
+access_clinic_shop_banner_admin,clinic.shop.banner.admin,model_clinic_shop_banner,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_shop_wishlist_user,clinic.shop.wishlist.user,model_clinic_shop_wishlist,base.group_user,1,1,1,1

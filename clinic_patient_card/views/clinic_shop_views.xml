@@ -35,4 +35,56 @@
     <menuitem id="menu_clinic_supplier_orders" name="My Orders"
               parent="menu_clinic_root" action="action_clinic_supplier_orders"
               sequence="18" groups="clinic_patient_card.group_clinic_supplier"/>
+
+    <!-- ============ Shop v2 (batch #2) ============ -->
+    <record id="view_clinic_shop_banner_list" model="ir.ui.view">
+        <field name="name">clinic.shop.banner.list</field>
+        <field name="model">clinic.shop.banner</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" open_form_view="1">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="note"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_clinic_shop_banner_form" model="ir.ui.view">
+        <field name="name">clinic.shop.banner.form</field>
+        <field name="model">clinic.shop.banner</field>
+        <field name="arch" type="xml">
+            <form string="Shop Banner">
+                <group>
+                    <group>
+                        <field name="name"/>
+                        <field name="note"/>
+                        <field name="active" widget="boolean_toggle"/>
+                    </group>
+                    <group>
+                        <field name="image" widget="image"/>
+                    </group>
+                </group>
+            </form>
+        </field>
+    </record>
+    <record id="action_clinic_shop_banner" model="ir.actions.act_window">
+        <field name="name">Shop Banners</field>
+        <field name="res_model">clinic.shop.banner</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_clinic_shop_banners" name="Shop Banners"
+              parent="menu_clinic_config" action="action_clinic_shop_banner" sequence="26"
+              groups="clinic_patient_card.group_clinic_admin"/>
+
+    <!-- category photo (storefront tiles) -->
+    <record id="view_product_category_form_clinic" model="ir.ui.view">
+        <field name="name">product.category.form.clinic.image</field>
+        <field name="model">product.category</field>
+        <field name="inherit_id" ref="product.product_category_form_view"/>
+        <field name="arch" type="xml">
+            <field name="parent_id" position="after">
+                <field name="image_128" widget="image" class="oe_avatar"/>
+            </field>
+        </field>
+    </record>
 </odoo>

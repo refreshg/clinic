@@ -158,3 +158,82 @@
         }
     }
 }
+
+/* ================= Shop v2 (batch #2 B3) ================= */
+.clinic_shop {
+    .cs_banner {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        max-height: 220px;
+        img { width: 100%; height: 220px; object-fit: cover; display: block; }
+        .cs_banner_txt {
+            position: absolute; left: 24px; bottom: 18px; color: #fff;
+            text-shadow: 0 1px 6px rgba(0,0,0,.55);
+            .cs_banner_title { font-size: 22px; font-weight: 700; }
+            .cs_banner_note { font-size: 14px; }
+        }
+        .cs_banner_nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            border: 0; background: rgba(255,255,255,.75); border-radius: 50%;
+            width: 34px; height: 34px; font-size: 20px; line-height: 1;
+            &.cs_banner_prev { left: 10px; }
+            &.cs_banner_next { right: 10px; }
+        }
+    }
+    .cs_tiles {
+        display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;
+        .cs_tile {
+            min-width: 96px; text-align: center; cursor: pointer;
+            border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px 6px;
+            background: #fff; transition: box-shadow .15s;
+            &:hover { box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+            &.cs_tile_on { border-color: #714b67; box-shadow: 0 0 0 2px rgba(113,75,103,.25); }
+            .cs_tile_img {
+                height: 52px; display: flex; align-items: center; justify-content: center;
+                font-size: 30px;
+                img { max-height: 52px; max-width: 80px; object-fit: contain; }
+            }
+            .cs_tile_name { font-size: 12px; font-weight: 600; margin-top: 4px; }
+        }
+    }
+    .cs_chip {
+        background: #eef0f3; color: #444; cursor: pointer; user-select: none;
+        &.cs_chip_on { background: #714b67; color: #fff; }
+    }
+    .cs_strip_title { font-weight: 700; margin: 14px 0 6px; }
+    .cs_strip {
+        display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px;
+        .cs_card { min-width: 190px; max-width: 190px; }
+        &.cs_strip_sm { gap: 8px; }
+    }
+    .cs_card { position: relative; }
+    .cs_badge {
+        position: absolute; top: 8px; left: 8px; z-index: 2;
+        font-size: 10px; font-weight: 700; color: #fff;
+        border-radius: 4px; padding: 2px 6px;
+        &.cs_badge_sp { background: #f2994a; }
+        &.cs_badge_new { background: #27ae60; }
+        &.cs_badge_pre { background: #2f80ed; top: 28px; }
+    }
+    .cs_wish {
+        position: absolute; top: 6px; right: 8px; z-index: 2;
+        border: 0; background: transparent; font-size: 18px; line-height: 1;
+        color: #cfd4dc; cursor: pointer;
+        &.cs_wish_on { color: #eb5757; }
+        &:hover { color: #eb5757; }
+    }
+    .cs_card_brand { font-size: 11px; color: #714b67; font-weight: 600; }
+    .cs_badge_pre_inline {
+        display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 700;
+        color: #2f80ed; border: 1px solid #2f80ed; border-radius: 4px; padding: 0 6px;
+    }
+    .cs_cmp td, .cs_cmp th { vertical-align: middle; }
+    .cs_mini {
+        min-width: 110px; max-width: 110px; text-align: center;
+        border: 1px solid #eee; border-radius: 8px; padding: 6px;
+        img { max-height: 46px; max-width: 90px; object-fit: contain; }
+        .cs_mini_name { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cs_mini_price { font-size: 12px; font-weight: 700; }
+    }
+}

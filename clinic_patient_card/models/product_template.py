@@ -30,6 +30,14 @@ class ProductTemplate(models.Model):
         help="Unit price of the most recent confirmed purchase order; falls "
              "back to the first vendor pricelist line.")
 
+    # Shop v2 storefront flags (reviewer batch #2)
+    clinic_sponsored = fields.Boolean(
+        string="Sponsored (Shop)",
+        help="Shown in the sponsored strip on the Supply Shop main page.")
+    clinic_preorder = fields.Boolean(
+        string="Pre-order Allowed",
+        help="Shop shows a pre-order badge when the vendor is out of stock.")
+
     def _compute_clinic_stock_info(self):
         # sudo: doctors/staff without purchase or full stock rights must still
         # be able to open the product form
@@ -182,6 +190,107 @@ class ProductTemplate(models.Model):
             ("partner_id", "=", vendor.id),
         ])
         sis.unlink()
+        return True
+
+    # ------------------------------------------------------------------
+    # Supply Shop v2 — one RPC feeds the whole storefront (reviewer batch #2:
+    # category tiles+photos, brands, banners, sponsored/new strips,
+    # bestsellers, wishlist, repeat-last-order, vendor price comparison).
+    # ------------------------------------------------------------------
+    @api.model
+    def clinic_shop_data(self):
+        env = self.env
+        b64 = self._clinic_b64
+        now = fields.Datetime.now()
+        new_after = now - timedelta(days=30)
+        sis = env["product.supplierinfo"].sudo().search(
+            [("product_tmpl_id.is_clinic_supply", "=", True)])
+        offers = []
+        for si in sis:
+            if not si.partner_id:
+                continue
+            tmpl = si.product_tmpl_id
+            prod = si.product_id or tmpl.product_variant_ids[:1]
+            if not prod:
+                continue
+            categ = tmpl.categ_id
+            top = categ
+            while top.parent_id:
+                top = top.parent_id
+            offers.append({
+                "key": "%s_%s" % (prod.id, si.partner_id.id),
+                "product_id": prod.id,
+                "name": prod.display_name,
+                "vendor_id": si.partner_id.id,
+                "vendor_name": si.partner_id.display_name,
+                "price": si.price or 0.0,
+                "delay": si.delay or 0,
+                "image": b64(prod.image_128),
+                "categ_id": categ.id or False,
+                "categ_name": categ.display_name or "",
+                "top_categ_id": top.id or False,
+                "brand_id": tmpl.clinic_brand_id.id or False,
+                "brand": tmpl.clinic_brand_id.name or "",
+                "sponsored": tmpl.clinic_sponsored,
+                "preorder": tmpl.clinic_preorder,
+                "is_new": bool(tmpl.create_date and tmpl.create_date >= new_after),
+                "qty": prod.qty_available,
+            })
+        categories = [{
+            "id": c.id, "name": c.name,
+            "parent_id": c.parent_id.id or False,
+            "image": b64(c.image_128),
+        } for c in env["product.category"].sudo().search([])]
+        banners = [{
+            "id": bn.id, "name": bn.name, "note": bn.note or "",
+            "image": b64(bn.image),
+        } for bn in env["clinic.shop.banner"].sudo().search([])]
+        # bestsellers: most purchased over the last 90 days (confirmed POs)
+        best = env["purchase.order.line"].sudo()._read_group(
+            [("order_id.state", "in", ("purchase", "done")),
+             ("order_id.date_approve", ">=", now - timedelta(days=90)),
+             ("product_id.is_clinic_supply", "=", True)],
+            ["product_id"], ["product_qty:sum"])
+        best.sort(key=lambda r: r[1], reverse=True)
+        bestseller_ids = [p.id for p, _q in best[:8]]
+        wishlist_ids = env["clinic.shop.wishlist"].search(
+            [("user_id", "=", env.uid)]).mapped("product_id").ids
+        # the current user's last shop order → "repeat last order"
+        last_po = env["purchase.order"].sudo().search(
+            [("is_clinic_order", "=", True), ("create_uid", "=", env.uid)],
+            order="id desc", limit=1)
+        last_order = False
+        if last_po:
+            last_order = {
+                "name": last_po.name,
+                "lines": [{
+                    "product_id": l.product_id.id,
+                    "vendor_id": last_po.partner_id.id,
+                    "qty": l.product_qty,
+                    "price": l.price_unit,
+                } for l in last_po.order_line if l.product_id],
+            }
+        return {
+            "offers": offers,
+            "categories": categories,
+            "banners": banners,
+            "bestseller_ids": bestseller_ids,
+            "wishlist_ids": wishlist_ids,
+            "last_order": last_order,
+        }
+
+    @api.model
+    def clinic_wishlist_toggle(self, product_id):
+        """Add/remove one product from the current user's wishlist."""
+        Wish = self.env["clinic.shop.wishlist"]
+        rec = Wish.search([
+            ("user_id", "=", self.env.uid),
+            ("product_id", "=", int(product_id)),
+        ], limit=1)
+        if rec:
+            rec.unlink()
+            return False
+        Wish.create({"product_id": int(product_id)})
         return True
 
     @api.model

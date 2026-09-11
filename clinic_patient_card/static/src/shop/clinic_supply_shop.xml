@@ -1,6 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
+    <!-- one product card (used by the grid and the strips) -->
+    <t t-name="clinic_patient_card.CsCard">
+        <div class="cs_card">
+            <span t-if="o.sponsored" class="cs_badge cs_badge_sp">დასპონსორებული</span>
+            <span t-elif="o.is_new" class="cs_badge cs_badge_new">სიახლე</span>
+            <span t-if="o.preorder and o.qty &lt;= 0" class="cs_badge cs_badge_pre">Pre-order</span>
+            <button class="cs_wish" t-att-class="{ cs_wish_on: inWishlist(o) }"
+                    t-on-click.stop="() => this.toggleWish(o)"
+                    title="Wishlist">♥</button>
+            <div class="cs_card_img cs_clickable" t-on-click="() => this.openDetail(o)">
+                <img t-if="o.image" t-att-src="'data:image/png;base64,' + o.image" alt=""/>
+                <span t-else="" class="cs_noimg">🦷</span>
+            </div>
+            <div class="cs_card_name cs_clickable" t-on-click="() => this.openDetail(o)" t-esc="o.name"/>
+            <div class="cs_card_vendor" t-esc="o.vendor_name"/>
+            <div t-if="o.brand" class="cs_card_brand" t-esc="o.brand"/>
+            <div class="cs_price"><t t-esc="o.price.toFixed(2)"/> ₾</div>
+            <button class="btn btn-primary btn-sm w-100 mt-2"
+                    t-on-click="() => this.addToCart(o)">კალათაში</button>
+        </div>
+    </t>
+
     <t t-name="clinic_patient_card.ClinicSupplyShop">
         <div class="clinic_shop">
             <div class="cs_top d-flex align-items-center flex-wrap gap-2 mb-3">
@@ -8,74 +30,147 @@
                     <h4 class="mb-0 fw-bold">Supply Shop</h4>
                     <small class="text-muted">Browse products published by suppliers, fill the cart and send.</small>
                 </div>
-                <input type="text" class="form-control cs_search" placeholder="Search..."
+                <input type="text" class="form-control cs_search" placeholder="ძიება..."
                        t-att-value="state.search" t-on-input="(ev) => this.onSearch(ev)"/>
+                <button class="btn" t-att-class="state.wishlistOnly ? 'btn-danger' : 'btn-outline-danger'"
+                        t-on-click="() => this.toggleWishlistOnly()">
+                    ♥ (<t t-esc="state.wishlist.length"/>)
+                </button>
+                <button t-if="state.lastOrder" class="btn btn-outline-primary"
+                        t-on-click="() => this.repeatLastOrder()"
+                        t-att-title="'გაიმეორე: ' + state.lastOrder.name">
+                    🔁 ბოლო შეკვეთა
+                </button>
                 <button class="btn btn-primary" t-on-click="() => this.toggleCart()">
-                    🛒 Cart (<t t-esc="cartCount"/>)
+                    🛒 კალათა (<t t-esc="cartCount"/>)
                 </button>
             </div>
 
+            <!-- banner strip (admin uploads in Configuration → Shop Banners) -->
+            <div t-if="banner and isPlainView" class="cs_banner mb-3">
+                <img t-att-src="'data:image/png;base64,' + banner.image" alt=""/>
+                <div class="cs_banner_txt">
+                    <div class="cs_banner_title" t-esc="banner.name"/>
+                    <div t-if="banner.note" class="cs_banner_note" t-esc="banner.note"/>
+                </div>
+                <t t-if="state.banners.length > 1">
+                    <button class="cs_banner_nav cs_banner_prev" t-on-click="() => this.nextBanner(-1)">‹</button>
+                    <button class="cs_banner_nav cs_banner_next" t-on-click="() => this.nextBanner(1)">›</button>
+                </t>
+            </div>
+
+            <!-- category tiles with photos + subcategory chips -->
+            <div class="cs_tiles mb-2">
+                <t t-foreach="topCategories" t-as="c" t-key="c.id">
+                    <div class="cs_tile" t-att-class="{ cs_tile_on: state.catId === c.id }"
+                         t-on-click="() => this.pickCat(c.id)">
+                        <div class="cs_tile_img">
+                            <img t-if="c.image" t-att-src="'data:image/png;base64,' + c.image" alt=""/>
+                            <span t-else="">🗂️</span>
+                        </div>
+                        <div class="cs_tile_name" t-esc="c.name"/>
+                    </div>
+                </t>
+            </div>
+            <div t-if="subCategories.length" class="mb-2 d-flex flex-wrap gap-1">
+                <span class="badge rounded-pill cs_chip"
+                      t-att-class="{ cs_chip_on: !state.subcatId }"
+                      t-on-click="() => this.pickSubcat(false)">ყველა</span>
+                <t t-foreach="subCategories" t-as="sc" t-key="sc.id">
+                    <span class="badge rounded-pill cs_chip"
+                          t-att-class="{ cs_chip_on: state.subcatId === sc.id }"
+                          t-on-click="() => this.pickSubcat(sc.id)" t-esc="sc.name"/>
+                </t>
+            </div>
+
             <div class="cs_subbar d-flex align-items-center mb-2">
-                <div class="text-muted small">Showing <t t-esc="shownOffers.length"/> results</div>
+                <div class="text-muted small">ნაპოვნია <t t-esc="shownOffers.length"/></div>
                 <select class="form-select form-select-sm cs_sort ms-auto" t-on-change="(ev) => this.onSort(ev)">
-                    <option value="name">Default sorting</option>
-                    <option value="price_asc">Price: low to high</option>
-                    <option value="price_desc">Price: high to low</option>
+                    <option value="name">სორტირება: სახელით</option>
+                    <option value="price_asc">ფასი: ზრდადი</option>
+                    <option value="price_desc">ფასი: კლებადი</option>
                 </select>
             </div>
 
             <div class="cs_layout d-flex gap-3">
-                <!-- vendor filter -->
+                <!-- filters -->
                 <div class="cs_side">
-                    <div class="fw-semibold mb-1">Suppliers</div>
-                    <t t-foreach="state.vendors" t-as="v" t-key="v.id">
+                    <div class="fw-semibold mb-1">მომწოდებლები</div>
+                    <t t-foreach="vendors" t-as="v" t-key="v.id">
                         <label class="cs_vrow">
                             <input type="checkbox" t-att-checked="!state.vendorOff[v.id]"
                                    t-on-change="() => this.toggleVendor(v.id)"/>
                             <span t-esc="v.name"/>
                         </label>
                     </t>
-                    <div t-if="state.categories.length" class="fw-semibold mb-1 mt-3">Categories</div>
-                    <t t-foreach="state.categories" t-as="c" t-key="c.id">
+                    <div t-if="brands.length" class="fw-semibold mb-1 mt-3">ბრენდები</div>
+                    <t t-foreach="brands" t-as="b" t-key="b.id">
                         <label class="cs_vrow">
-                            <input type="checkbox" t-att-checked="!state.catOff[c.id]"
-                                   t-on-change="() => this.toggleCat(c.id)"/>
-                            <span t-esc="c.name"/>
+                            <input type="checkbox" t-att-checked="!state.brandOff[b.id]"
+                                   t-on-change="() => this.toggleBrand(b.id)"/>
+                            <span t-esc="b.name"/>
                         </label>
                     </t>
                 </div>
 
-                <!-- product grid -->
+                <!-- main -->
                 <div class="cs_main flex-grow-1">
+                    <!-- front-page strips -->
+                    <t t-if="isPlainView">
+                        <t t-if="sponsoredOffers.length">
+                            <div class="cs_strip_title">⭐ დასპონსორებული</div>
+                            <div class="cs_strip">
+                                <t t-foreach="sponsoredOffers" t-as="o" t-key="'sp_' + o.key">
+                                    <t t-call="clinic_patient_card.CsCard"/>
+                                </t>
+                            </div>
+                        </t>
+                        <t t-if="newOffers.length">
+                            <div class="cs_strip_title">🆕 სიახლეები</div>
+                            <div class="cs_strip">
+                                <t t-foreach="newOffers" t-as="o" t-key="'nw_' + o.key">
+                                    <t t-call="clinic_patient_card.CsCard"/>
+                                </t>
+                            </div>
+                        </t>
+                        <t t-if="bestsellerOffers.length">
+                            <div class="cs_strip_title">🔥 ბესთსელერები</div>
+                            <div class="cs_strip">
+                                <t t-foreach="bestsellerOffers" t-as="o" t-key="'bs_' + o.key">
+                                    <t t-call="clinic_patient_card.CsCard"/>
+                                </t>
+                            </div>
+                        </t>
+                        <div class="cs_strip_title">ყველა პროდუქტი</div>
+                    </t>
+
                     <div t-if="!shownOffers.length" class="text-muted p-5 text-center">
-                        No products available from suppliers.
+                        პროდუქტები ვერ მოიძებნა.
                     </div>
                     <div t-else="" class="cs_grid">
                         <t t-foreach="shownOffers" t-as="o" t-key="o.key">
-                            <div class="cs_card">
-                                <span t-if="o.hot" class="cs_badge">Hot</span>
-                                <div class="cs_card_img cs_clickable" t-on-click="() => this.openDetail(o)">
-                                    <img t-if="o.image" t-att-src="'data:image/png;base64,' + o.image" alt=""/>
-                                    <span t-else="" class="cs_noimg">🦷</span>
-                                </div>
-                                <div class="cs_card_name cs_clickable" t-on-click="() => this.openDetail(o)" t-esc="o.name"/>
-                                <div class="cs_card_vendor" t-esc="o.vendor_name"/>
-                                <div class="cs_stars">★★★★★</div>
-                                <div class="cs_price"><t t-esc="o.price.toFixed(2)"/> ₾</div>
-                                <button class="btn btn-primary btn-sm w-100 mt-2"
-                                        t-on-click="() => this.addToCart(o)">Add to cart</button>
-                            </div>
+                            <t t-call="clinic_patient_card.CsCard"/>
                         </t>
                     </div>
+
+                    <!-- similar products while searching -->
+                    <t t-if="similarOffers.length">
+                        <div class="cs_strip_title mt-3">🔎 მსგავსი პროდუქტები</div>
+                        <div class="cs_strip">
+                            <t t-foreach="similarOffers" t-as="o" t-key="'sim_' + o.key">
+                                <t t-call="clinic_patient_card.CsCard"/>
+                            </t>
+                        </div>
+                    </t>
                 </div>
 
                 <!-- cart panel -->
                 <div t-if="state.cartOpen" class="cs_cart">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="fw-bold flex-grow-1">Cart</div>
+                        <div class="fw-bold flex-grow-1">კალათა</div>
                         <button class="btn btn-sm btn-light" t-on-click="() => this.toggleCart()">✕</button>
                     </div>
-                    <div t-if="!cartLines.length" class="text-muted small">Cart is empty.</div>
+                    <div t-if="!cartLines.length" class="text-muted small">კალათა ცარიელია.</div>
                     <t t-foreach="cartLines" t-as="l" t-key="l.key">
                         <div class="cs_cart_line">
                             <div class="flex-grow-1">
@@ -89,11 +184,11 @@
                         </div>
                     </t>
                     <div class="d-flex align-items-center mt-2 pt-2 border-top">
-                        <div class="fw-bold flex-grow-1">Total</div>
+                        <div class="fw-bold flex-grow-1">სულ</div>
                         <div class="fw-bold" t-esc="cartTotal.toFixed(2)"/>
                     </div>
                     <button class="btn btn-primary w-100 mt-2" t-att-disabled="!cartLines.length"
-                            t-on-click="() => this.checkout()">Send to Suppliers</button>
+                            t-on-click="() => this.checkout()">გაეგზავნოს მომწოდებლებს</button>
                 </div>
             </div>
 
@@ -110,18 +205,59 @@
                         <div class="cs_modal_info">
                             <h3 t-esc="state.detail.name"/>
                             <div class="text-muted mb-1" t-esc="state.detail.vendor_name"/>
+                            <div t-if="state.detail.brand" class="cs_card_brand mb-1" t-esc="state.detail.brand"/>
                             <div class="cs_modal_price"><t t-esc="state.detail.price.toFixed(2)"/> ₾</div>
                             <div t-if="state.detail.desc" class="cs_modal_desc" t-out="state.detail.desc"/>
-                            <div class="cs_stock" t-esc="state.detail.qty_available + ' in stock'"/>
+                            <div class="cs_stock">
+                                <t t-esc="state.detail.qty_available"/> მარაგში
+                                <span t-if="state.detail.preorder and state.detail.qty_available &lt;= 0"
+                                      class="cs_badge_pre_inline">Pre-order — შეკვეთა მაინც შესაძლებელია</span>
+                            </div>
                             <div class="d-flex align-items-center gap-2 mt-3">
                                 <input type="number" min="1" class="form-control cs_dqty"
                                        t-att-value="state.detail.addQty"
                                        t-on-change="(ev) => this.setDetailQty(ev)"/>
-                                <button class="btn btn-primary" t-on-click="() => this.addDetailToCart()">Add to cart</button>
+                                <button class="btn btn-primary" t-on-click="() => this.addDetailToCart()">კალათაში</button>
                             </div>
                             <div t-if="state.detail.delay" class="text-muted small mt-2">
-                                Lead time: <t t-esc="state.detail.delay"/> days
+                                მიწოდების ვადა: <t t-esc="state.detail.delay"/> დღე
                             </div>
+
+                            <!-- vendor price comparison -->
+                            <t t-if="state.detail.vendorOffers.length > 1">
+                                <div class="fw-semibold mt-3 mb-1">🏷️ ფასების შედარება მომწოდებლებში</div>
+                                <table class="table table-sm cs_cmp">
+                                    <thead><tr><th>მომწოდებელი</th><th>ფასი</th><th>ვადა</th><th/></tr></thead>
+                                    <tbody>
+                                        <t t-foreach="state.detail.vendorOffers" t-as="vo" t-key="'vo_' + vo.key">
+                                            <tr>
+                                                <td t-esc="vo.vendor_name"/>
+                                                <td><t t-esc="vo.price.toFixed(2)"/> ₾</td>
+                                                <td><t t-esc="vo.delay"/> დღე</td>
+                                                <td class="text-end">
+                                                    <button class="btn btn-outline-primary btn-sm"
+                                                            t-on-click="() => this.addToCart(vo)">კალათაში</button>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </t>
+
+                            <!-- similar products -->
+                            <t t-if="state.detail.similar.length">
+                                <div class="fw-semibold mt-3 mb-1">მსგავსი პროდუქტები</div>
+                                <div class="cs_strip cs_strip_sm">
+                                    <t t-foreach="state.detail.similar" t-as="o" t-key="'ds_' + o.key">
+                                        <div class="cs_mini cs_clickable" t-on-click="() => this.openDetail(o)">
+                                            <img t-if="o.image" t-att-src="'data:image/png;base64,' + o.image" alt=""/>
+                                            <span t-else="" class="cs_noimg">🦷</span>
+                                            <div class="cs_mini_name" t-esc="o.name"/>
+                                            <div class="cs_mini_price"><t t-esc="o.price.toFixed(2)"/> ₾</div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
                         </div>
                     </div>
                 </div>

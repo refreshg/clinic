@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Shop v2 seed categories (reviewer item: კატეგორიები ფოტოებითაც და
+         მენიუშიც). Photos are added by the clinic in Configuration. -->
+    <data noupdate="1">
+        <record id="categ_clinic_surgery" model="product.category">
+            <field name="name">ქირურგია</field>
+        </record>
+        <record id="categ_clinic_therapy" model="product.category">
+            <field name="name">თერაპია</field>
+        </record>
+        <record id="categ_clinic_orthodontics" model="product.category">
+            <field name="name">ორთოდონტია</field>
+        </record>
+        <record id="categ_clinic_orthopedics" model="product.category">
+            <field name="name">ორთოპედია</field>
+        </record>
+        <record id="categ_clinic_sterilization" model="product.category">
+            <field name="name">სტერილიზაცია</field>
+        </record>
+        <record id="categ_clinic_consumables" model="product.category">
+            <field name="name">სახარჯი მასალები</field>
+        </record>
+        <record id="categ_clinic_office" model="product.category">
+            <field name="name">საოფისე/სამეურნეო</field>
+        </record>
+    </data>
+</odoo>

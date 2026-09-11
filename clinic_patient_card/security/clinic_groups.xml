@@ -160,6 +160,14 @@
         <field name="domain_force">[(1, '=', 1)]</field>
     </record>
 
+    <!-- Shop v2: a wishlist row belongs to its user only (GLOBAL rule — the
+         model is per-user private data). -->
+    <record id="rule_clinic_wishlist_own" model="ir.rule">
+        <field name="name">Clinic Shop Wishlist: own rows only</field>
+        <field name="model_id" ref="model_clinic_shop_wishlist"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+    </record>
+
     <!-- ══ Appointment visibility ══════════════════════════════════════
          GLOBAL rule (no groups) so it AND-restricts every user: a CLINIC visit
          is only readable by its own dentist or by a Clinic Administrator.

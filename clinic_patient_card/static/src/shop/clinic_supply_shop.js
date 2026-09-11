@@ -15,130 +15,227 @@ export class ClinicSupplyShop extends Component {
         this.notification = useService("notification");
         this.state = useState({
             offers: [],
-            vendors: [],
+            categories: [],       // raw category rows
+            banners: [],
+            bestsellerIds: [],
+            wishlist: [],         // product ids
+            lastOrder: false,
             vendorOff: {},
-            categories: [],
-            catOff: {},
+            brandOff: {},
+            catId: false,         // selected top category
+            subcatId: false,
+            wishlistOnly: false,
             search: "",
             sortBy: "name",
-            cart: {},        // key `${product_id}_${vendor_id}` -> line
+            cart: {},             // `${product_id}_${vendor_id}` -> line
             cartOpen: false,
-            detail: null,    // open product detail
+            detail: null,
+            bannerIdx: 0,
         });
         onWillStart(() => this.load());
     }
 
     async load() {
-        const sis = await this.orm.searchRead(
-            "product.supplierinfo", [],
-            ["partner_id", "product_tmpl_id", "product_id", "price", "delay"]
-        );
-        // resolve a product.product id + name for each template
-        const tmplIds = [...new Set(sis.map((s) => s.product_tmpl_id && s.product_tmpl_id[0]).filter(Boolean))];
-        const prods = tmplIds.length
-            ? await this.orm.searchRead("product.product",
-                [["product_tmpl_id", "in", tmplIds]],
-                ["product_tmpl_id", "display_name"])
-            : [];
-        const byTmpl = {};
-        for (const p of prods) {
-            if (p.product_tmpl_id && !byTmpl[p.product_tmpl_id[0]]) {
-                byTmpl[p.product_tmpl_id[0]] = p;
-            }
-        }
-        const offers = [];
-        const vmap = new Map();
-        for (const s of sis) {
-            if (!s.partner_id) {
-                continue;
-            }
-            let pid, pname;
-            if (s.product_id) {
-                pid = s.product_id[0];
-                pname = s.product_id[1];
-            } else if (s.product_tmpl_id && byTmpl[s.product_tmpl_id[0]]) {
-                const pp = byTmpl[s.product_tmpl_id[0]];
-                pid = pp.id;
-                pname = pp.display_name;
-            } else {
-                continue;
-            }
-            offers.push({
-                key: `${pid}_${s.partner_id[0]}`,
-                product_id: pid,
-                name: pname,
-                vendor_id: s.partner_id[0],
-                vendor_name: s.partner_id[1],
-                price: s.price || 0,
-                delay: s.delay || 0,
-            });
-            vmap.set(s.partner_id[0], s.partner_id[1]);
-        }
-        // fetch image + category for every offered product
-        const pids = [...new Set(offers.map((o) => o.product_id))];
-        const details = pids.length
-            ? await this.orm.searchRead("product.product", [["id", "in", pids]],
-                ["image_128", "categ_id"])
-            : [];
-        const dmap = {};
-        for (const d of details) {
-            dmap[d.id] = d;
-        }
-        const cmap = new Map();
-        for (const o of offers) {
-            const d = dmap[o.product_id];
-            o.image = (d && d.image_128) || false;
-            o.hot = o.product_id % 3 === 0;
-            o.categ_id = d && d.categ_id ? d.categ_id[0] : false;
-            o.categ_name = d && d.categ_id ? d.categ_id[1] : "";
-            if (o.categ_id) {
-                cmap.set(o.categ_id, o.categ_name);
-            }
-        }
-        this.state.offers = offers;
-        this.state.vendors = [...vmap.entries()].map(([id, name]) => ({ id, name }));
-        this.state.categories = [...cmap.entries()].map(([id, name]) => ({ id, name }));
+        const data = await this.orm.call("product.template", "clinic_shop_data", []);
+        this.state.offers = data.offers;
+        this.state.categories = data.categories;
+        this.state.banners = data.banners;
+        this.state.bestsellerIds = data.bestseller_ids;
+        this.state.wishlist = data.wishlist_ids;
+        this.state.lastOrder = data.last_order;
     }
 
-    get shownOffers() {
-        const q = (this.state.search || "").toLowerCase();
-        const list = this.state.offers.filter((o) => {
-            if (this.state.vendorOff[o.vendor_id]) {
-                return false;
-            }
-            if (o.categ_id && this.state.catOff[o.categ_id]) {
-                return false;
-            }
-            if (q && !(`${o.name} ${o.vendor_name}`.toLowerCase().includes(q))) {
-                return false;
-            }
-            return true;
-        });
-        const s = this.state.sortBy;
-        const sorted = [...list];
-        if (s === "price_asc") {
-            sorted.sort((a, b) => a.price - b.price);
-        } else if (s === "price_desc") {
-            sorted.sort((a, b) => b.price - a.price);
-        } else {
-            sorted.sort((a, b) => a.name.localeCompare(b.name));
+    // ------------------------------------------------------------------
+    // catalogue structure
+    // ------------------------------------------------------------------
+    get vendors() {
+        const m = new Map();
+        for (const o of this.state.offers) {
+            m.set(o.vendor_id, o.vendor_name);
         }
-        return sorted;
+        return [...m.entries()].map(([id, name]) => ({ id, name }));
     }
+    get brands() {
+        const m = new Map();
+        for (const o of this.state.offers) {
+            if (o.brand_id) {
+                m.set(o.brand_id, o.brand);
+            }
+        }
+        return [...m.entries()].map(([id, name]) => ({ id, name }));
+    }
+    get topCategories() {
+        // top-level categories that actually hold shop offers, keeping photos
+        const used = new Set(this.state.offers.map((o) => o.top_categ_id));
+        return this.state.categories.filter(
+            (c) => !c.parent_id && used.has(c.id));
+    }
+    get subCategories() {
+        if (!this.state.catId) {
+            return [];
+        }
+        const used = new Set(this.state.offers.map((o) => o.categ_id));
+        return this.state.categories.filter(
+            (c) => c.parent_id === this.state.catId && used.has(c.id));
+    }
+    pickCat(id) {
+        this.state.catId = this.state.catId === id ? false : id;
+        this.state.subcatId = false;
+    }
+    pickSubcat(id) {
+        this.state.subcatId = this.state.subcatId === id ? false : id;
+    }
+
+    // ------------------------------------------------------------------
+    // filtering / sorting
+    // ------------------------------------------------------------------
+    _passes(o) {
+        if (this.state.vendorOff[o.vendor_id]) {
+            return false;
+        }
+        if (o.brand_id && this.state.brandOff[o.brand_id]) {
+            return false;
+        }
+        if (this.state.subcatId && o.categ_id !== this.state.subcatId) {
+            return false;
+        }
+        if (this.state.catId && !this.state.subcatId
+                && o.top_categ_id !== this.state.catId) {
+            return false;
+        }
+        if (this.state.wishlistOnly
+                && !this.state.wishlist.includes(o.product_id)) {
+            return false;
+        }
+        const q = (this.state.search || "").toLowerCase();
+        if (q && !(`${o.name} ${o.vendor_name} ${o.brand}`.toLowerCase().includes(q))) {
+            return false;
+        }
+        return true;
+    }
+    get shownOffers() {
+        const list = this.state.offers.filter((o) => this._passes(o));
+        const s = this.state.sortBy;
+        if (s === "price_asc") {
+            list.sort((a, b) => a.price - b.price);
+        } else if (s === "price_desc") {
+            list.sort((a, b) => b.price - a.price);
+        } else {
+            list.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        return list;
+    }
+    // reviewer item 14: similar products appear automatically while searching —
+    // same category as the found ones, not matching the text themselves
+    get similarOffers() {
+        const q = (this.state.search || "").toLowerCase();
+        if (!q || !this.shownOffers.length) {
+            return [];
+        }
+        const cats = new Set(this.shownOffers.map((o) => o.categ_id));
+        const shownKeys = new Set(this.shownOffers.map((o) => o.key));
+        const seen = new Set();
+        const out = [];
+        for (const o of this.state.offers) {
+            if (shownKeys.has(o.key) || !cats.has(o.categ_id)
+                    || seen.has(o.product_id)) {
+                continue;
+            }
+            seen.add(o.product_id);
+            out.push(o);
+            if (out.length >= 6) {
+                break;
+            }
+        }
+        return out;
+    }
+
+    get isPlainView() {
+        return !this.state.search && !this.state.catId
+            && !this.state.wishlistOnly;
+    }
+    _uniqueByProduct(list, limit) {
+        const seen = new Set();
+        const out = [];
+        for (const o of list) {
+            if (seen.has(o.product_id)) {
+                continue;
+            }
+            seen.add(o.product_id);
+            out.push(o);
+            if (out.length >= limit) {
+                break;
+            }
+        }
+        return out;
+    }
+    get sponsoredOffers() {
+        return this._uniqueByProduct(
+            this.state.offers.filter((o) => o.sponsored), 8);
+    }
+    get newOffers() {
+        return this._uniqueByProduct(
+            this.state.offers.filter((o) => o.is_new), 8);
+    }
+    get bestsellerOffers() {
+        const out = [];
+        for (const pid of this.state.bestsellerIds) {
+            const o = this.state.offers.find((x) => x.product_id === pid);
+            if (o) {
+                out.push(o);
+            }
+        }
+        return out;
+    }
+
     onSort(ev) {
         this.state.sortBy = ev.target.value;
     }
-
     toggleVendor(id) {
         this.state.vendorOff[id] = !this.state.vendorOff[id];
     }
-    toggleCat(id) {
-        this.state.catOff[id] = !this.state.catOff[id];
+    toggleBrand(id) {
+        this.state.brandOff[id] = !this.state.brandOff[id];
     }
     onSearch(ev) {
         this.state.search = ev.target.value;
     }
+    toggleWishlistOnly() {
+        this.state.wishlistOnly = !this.state.wishlistOnly;
+    }
 
+    // ------------------------------------------------------------------
+    // wishlist
+    // ------------------------------------------------------------------
+    inWishlist(o) {
+        return this.state.wishlist.includes(o.product_id);
+    }
+    async toggleWish(o) {
+        const on = await this.orm.call(
+            "product.template", "clinic_wishlist_toggle", [o.product_id]);
+        if (on && !this.state.wishlist.includes(o.product_id)) {
+            this.state.wishlist.push(o.product_id);
+        } else if (!on) {
+            this.state.wishlist = this.state.wishlist.filter(
+                (id) => id !== o.product_id);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // banners
+    // ------------------------------------------------------------------
+    get banner() {
+        const b = this.state.banners;
+        return b.length ? b[this.state.bannerIdx % b.length] : false;
+    }
+    nextBanner(step) {
+        const n = this.state.banners.length || 1;
+        this.state.bannerIdx = (this.state.bannerIdx + step + n) % n;
+    }
+
+    // ------------------------------------------------------------------
+    // cart
+    // ------------------------------------------------------------------
     addToCart(offer, qty = 1) {
         const key = offer.key || `${offer.product_id}_${offer.vendor_id}`;
         const c = this.state.cart[key];
@@ -156,6 +253,26 @@ export class ClinicSupplyShop extends Component {
         }
         this.state.cartOpen = true;
     }
+    // reviewer item 13: repeat the last order, still editable in the cart
+    repeatLastOrder() {
+        const lo = this.state.lastOrder;
+        if (!lo) {
+            return;
+        }
+        for (const l of lo.lines) {
+            let offer = this.state.offers.find(
+                (o) => o.product_id === l.product_id
+                    && o.vendor_id === l.vendor_id);
+            if (!offer) {
+                offer = this.state.offers.find(
+                    (o) => o.product_id === l.product_id);
+            }
+            if (offer) {
+                this.addToCart(offer, l.qty);
+            }
+        }
+        this.state.cartOpen = true;
+    }
 
     async openDetail(offer) {
         const p = await this.orm.read("product.product", [offer.product_id],
@@ -166,12 +283,24 @@ export class ClinicSupplyShop extends Component {
                 ["description_sale", "description"]);
             desc = (t.length && (t[0].description_sale || t[0].description)) || "";
         }
+        // reviewer item 15: price/vendor comparison — every vendor's offer
+        // for this product, cheapest first
+        const others = this.state.offers
+            .filter((o) => o.product_id === offer.product_id)
+            .sort((a, b) => a.price - b.price);
+        // similar products (same category), one offer per product
+        const similar = this._uniqueByProduct(
+            this.state.offers.filter(
+                (o) => o.categ_id === offer.categ_id
+                    && o.product_id !== offer.product_id), 6);
         this.state.detail = {
             ...offer,
             qty_available: p.length ? p[0].qty_available : 0,
             image_big: (p.length && p[0].image_1920) || offer.image,
             desc,
             addQty: 1,
+            vendorOffers: others,
+            similar,
         };
     }
     closeDetail() {

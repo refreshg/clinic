@@ -43,6 +43,8 @@
                 <field name="clinic_brand_id"/>
                 <field name="clinic_avg_consumption" invisible="not is_clinic_supply"/>
                 <field name="clinic_last_purchase_price" invisible="not is_clinic_supply"/>
+                <field name="clinic_sponsored" invisible="not is_clinic_supply"/>
+                <field name="clinic_preorder" invisible="not is_clinic_supply"/>
                 <field name="is_clinic_supply" invisible="1"/>
             </field>
         </field>
