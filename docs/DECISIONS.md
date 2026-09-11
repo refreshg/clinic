@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-05, commit: 2c3dd80 -->
+<!-- last-synced: 2026-09-11, commit: 52877b4 -->
 # Decisions (ADR) — clinic_patient_card
 
 Format: Context → Decision → Rejected → Consequences. New custom code requires a D-entry
@@ -114,6 +114,16 @@ per-view special buttons cannot know the dirty state. · Decision: t-inherit ext
 web.FormStatusIndicator relabels its buttons ("შენახვა"/"გაუქმება", btn-primary/secondary) —
 the indicator's own dirty/new gating provides exactly the wanted visibility. · Rejected:
 always-visible special="save" bars per view (shown even with nothing to save — reverted).
+
+### D-18: Returns = dedicated model over a hand-built reverse picking
+Date 2026-09-11 (52877b4) · Context: reviewer items 34-40 want a 48h return window with a
+mandatory reason + photo, supplier review/approve/reject-with-comment and status tracking;
+none of that exists on a bare reverse transfer, and stock.return.picking's internal API
+shifts between versions. · Decision: clinic.purchase.return (mail.thread) drives the
+pipeline; approval creates a plain outgoing picking stock→vendor built directly from the
+receipt's done moves. · Rejected: chatter-only returns; calling the return wizard's
+internals. · Consequences: the physical flow stays a standard stock.move trail; one small
+model to maintain.
 
 ### D-14: Depend on sale_pdf_quote_builder + sudo its salesman-gated hooks
 Date 2026-09-03 (b6e1446) · Context: doctor's SO create crashed — sale_pdf_quote_builder's

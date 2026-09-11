@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-05, commit: 2c3dd80 -->
+<!-- last-synced: 2026-09-11, commit: 52877b4 -->
 # Architecture — clinic_patient_card
 
 ## Components
@@ -16,7 +16,10 @@
 | Doctor retail requests | `models/sale_order.py` (is_clinic_retail) | doctor drafts a sale → admin approve (auto-invoice) / reject with visible comment |
 | Planning board | `static/src/planning/` (OWL, tag `clinic_planning`) | 10-min day grid per dentist, drag-to-size booking, popup visit form, off-hours hatch, Reserve panel, history/cancelled buttons |
 | Live alerts | `static/src/clinic_arrived_service.js` | bus subscriber + WebAudio chimes for 6 channels |
-| Supply Shop | `static/src/shop/` + `models/purchase_order.py` | clinic buys: cart → 1 RFQ/vendor + mirror SO |
+| Supply Shop v2 | `static/src/shop/` + `models/purchase_order.py` + `models/clinic_shop.py` | clinic buys: banners/strips/tiles/wishlist/comparison storefront → cart → 1 RFQ/vendor + mirror SO |
+| Supplier delivery statuses | `models/sale_order.py` (B4) | 5 manual steps on the mirror SO → PO chatter + admin toast |
+| Returns | `models/clinic_purchase_return.py` | 48h return pipeline; approve → hand-built reverse picking (D-18) |
+| Stock dashboard | `static/src/stock_dashboard/` + `purchase.order.clinic_dashboard_data` | 11 monitoring blocks (items 102-114) |
 | Supplier portal | `static/src/supplier_portal/` + `product_template.py` + `sale_order.py` | supplier publishes products (std Inventory base), confirms own SOs |
 | Patient dashboards | `static/src/patient_dashboard/`, `static/src/patient_card_page/` | read-only visual pages over res.partner (Health-Care style; Soft-UI handoff) |
 | Security | `security/clinic_groups.xml`, `ir.model.access.csv` | 3 roles, ACLs, record rules (doctor scoping GLOBAL rule, supplier own-records) |
@@ -45,6 +48,7 @@ flowchart LR
   PO -- bus: new order --> CH
   SO -- bus: confirmed --> CH
   PRQ[clinic.purchase.request] --> PO
+  PO -- 48h --> RET[clinic.purchase.return] --> ST[reverse picking]
   PO -- receipt done --> PRQ
   CRON[ir.cron ×3] --> CE & PT & PRQ
 ```
@@ -62,7 +66,7 @@ flowchart LR
   (button_validate hook — request state + deficit-arrival notify).
 - View inherits: `base.view_partner_form`, `calendar.view_calendar_event_form`, company & users
   forms; ctx override on `contacts.action_contacts`.
-- OWL: 5 client actions in `registry.category("actions")`; 1 service (`clinic_arrived_service`);
+- OWL: 6 client actions in `registry.category("actions")`; 1 service (`clinic_arrived_service`);
   1 view widget (`clinic_slot_finder_btn`); 1 core-template extension (FormStatusIndicator).
 - Hooks: `post_init_hook _post_init_grant_admin`; RPC entry points: `clinic_create_rfqs`,
   `clinic_board_config`, `clinic_dentists`, `clinic_free_slots`, `clinic_supplier_*`.

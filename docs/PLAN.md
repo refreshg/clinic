@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-05, commit: 2c3dd80 -->
+<!-- last-synced: 2026-09-11, commit: 52877b4 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -59,6 +59,6 @@ Verification for every step = live RPC + browser (no automated tests — D-11).
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-09-05: Track B B1 (warehouse, v19.0.50) + B2 (purchase requests, v19.0.51) live-verified; ჯავშნები walkthrough fix round v19.0.51.1-.18 (patient-in-title, client slot finder D-16, global Save/Discard D-17, doctor retail unlocked).
-Next: B3 shop UX v2 — HALF-DONE WORK IS IN git stash ("WIP batch#2 B3 shop v2"): pop it, finish shop XML/SCSS + manifest, THEN deploy (stash state is NOT deployable).
-Watch out: doctor retail create FORCES user_id (web sends salesperson); appointment-type duration onchange now always applies; slot-finder wizard is legacy — UI uses the client dialog.
+Last session 2026-09-11: B3 shop UX v2 (v19.0.52) + B4 receive/returns/ratings/dashboard (v19.0.53) live-verified — batch #2 (both reviewer docs) is FULLY closed; regression fix: mid-file StockPicking had broken the RFQ/mirror chain since B2.
+Next: user browser-tests B3+B4; then back to M1-M6 (emails still blocked on the clinic, ka.po regen is the first unblocked step) + the duration ა/ბ answer (PRD §9).
+Watch out: new classes go at EOF (see CLAUDE.md rule); supplier statuses are manual; vendor bill auto-drafts on receipt.

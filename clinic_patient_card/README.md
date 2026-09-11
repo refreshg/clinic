@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-05, commit: 2c3dd80 -->
+<!-- last-synced: 2026-09-11, commit: 52877b4 -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -37,6 +37,13 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
 - **Purchase requests (batch #2)**: Clinic → Stock → Purchase Requests (admin) and
   "Supply Requests" (doctors, own only): draft→…→received pipeline, low-stock cron
   auto-drafts, rejection requires a comment, receipt validation completes the request.
+- **Shop v2 (batch #2)**: category photos (Inventory → Product Categories → Image),
+  banners (Clinic → Configuration → Shop Banners), Sponsored / Pre-order flags on the
+  product; wishlist and repeat-last-order are per-user, no setup.
+- **Receive/returns (batch #2)**: supplier advances 5 delivery statuses on their order;
+  receipt validation auto-drafts the vendor bill (waybill attached by hand); the PO's
+  Return button lives 48h; ratings on the received PO feed shop/dashboard averages;
+  manager board under Clinic → Stock → 📊 Dashboard.
 - **Cron jobs** (active by default): low-stock alert (daily), dispensary call reminders
   (daily, T-14d), weekly booking report to administrators.
 - New contacts created from the Contacts app default to patients
