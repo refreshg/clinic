@@ -42,3 +42,5 @@ access_clinic_doctor_account_move_line,clinic.doctor.account.move.line.read,acco
 access_clinic_shop_banner_user,clinic.shop.banner.user,model_clinic_shop_banner,base.group_user,1,0,0,0
 access_clinic_shop_banner_admin,clinic.shop.banner.admin,model_clinic_shop_banner,clinic_patient_card.group_clinic_admin,1,1,1,1
 access_clinic_shop_wishlist_user,clinic.shop.wishlist.user,model_clinic_shop_wishlist,base.group_user,1,1,1,1
+access_clinic_purchase_return_admin,clinic.purchase.return.admin,model_clinic_purchase_return,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_purchase_return_supplier,clinic.purchase.return.supplier,model_clinic_purchase_return,clinic_patient_card.group_clinic_supplier,1,1,0,0

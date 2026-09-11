@@ -2,6 +2,7 @@
 from . import res_company
 from . import clinic_brand
 from . import clinic_purchase_request
+from . import clinic_purchase_return
 from . import product_category
 from . import clinic_shop
 from . import product_template

@@ -15,7 +15,10 @@
                 <span t-else="" class="cs_noimg">🦷</span>
             </div>
             <div class="cs_card_name cs_clickable" t-on-click="() => this.openDetail(o)" t-esc="o.name"/>
-            <div class="cs_card_vendor" t-esc="o.vendor_name"/>
+            <div class="cs_card_vendor">
+                <t t-esc="o.vendor_name"/>
+                <span t-if="o.vendor_rating" class="cs_vrating">★ <t t-esc="o.vendor_rating"/></span>
+            </div>
             <div t-if="o.brand" class="cs_card_brand" t-esc="o.brand"/>
             <div class="cs_price"><t t-esc="o.price.toFixed(2)"/> ₾</div>
             <button class="btn btn-primary btn-sm w-100 mt-2"
@@ -227,13 +230,14 @@
                             <t t-if="state.detail.vendorOffers.length > 1">
                                 <div class="fw-semibold mt-3 mb-1">🏷️ ფასების შედარება მომწოდებლებში</div>
                                 <table class="table table-sm cs_cmp">
-                                    <thead><tr><th>მომწოდებელი</th><th>ფასი</th><th>ვადა</th><th/></tr></thead>
+                                    <thead><tr><th>მომწოდებელი</th><th>ფასი</th><th>ვადა</th><th>★</th><th/></tr></thead>
                                     <tbody>
                                         <t t-foreach="state.detail.vendorOffers" t-as="vo" t-key="'vo_' + vo.key">
                                             <tr>
                                                 <td t-esc="vo.vendor_name"/>
                                                 <td><t t-esc="vo.price.toFixed(2)"/> ₾</td>
                                                 <td><t t-esc="vo.delay"/> დღე</td>
+                                                <td><t t-esc="vo.vendor_rating || '—'"/></td>
                                                 <td class="text-end">
                                                     <button class="btn btn-outline-primary btn-sm"
                                                             t-on-click="() => this.addToCart(vo)">კალათაში</button>

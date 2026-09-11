@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============ Clinic PO: supplier status, rating, 48h return ============ -->
+    <record id="view_purchase_order_form_clinic_b4" model="ir.ui.view">
+        <field name="name">purchase.order.form.clinic.b4</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_clinic_return" type="object"
+                        string="🔄 დაბრუნება" class="btn-warning"
+                        invisible="not clinic_return_allowed"
+                        groups="clinic_patient_card.group_clinic_admin"/>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="clinic_delivery_status" invisible="not is_clinic_order"/>
+                <field name="clinic_receipt_date" invisible="not clinic_receipt_date"/>
+                <field name="is_clinic_order" invisible="1"/>
+                <field name="clinic_return_allowed" invisible="1"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page name="clinic_rating" string="Rating"
+                      invisible="not is_clinic_order or not clinic_receipt_date"
+                      groups="clinic_patient_card.group_clinic_admin">
+                    <group>
+                        <group>
+                            <field name="clinic_rating_product"/>
+                            <field name="clinic_rating_vendor"/>
+                        </group>
+                        <group>
+                            <field name="clinic_rating_note"/>
+                        </group>
+                    </group>
+                </page>
+                <page name="clinic_returns" string="Returns"
+                      invisible="not is_clinic_order">
+                    <field name="clinic_return_ids" readonly="1">
+                        <list>
+                            <field name="create_date"/>
+                            <field name="reason"/>
+                            <field name="state" widget="badge"/>
+                            <field name="return_picking_id"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============ Supplier SO: manual delivery statuses ============ -->
+    <record id="view_sale_order_form_clinic_b4" model="ir.ui.view">
+        <field name="name">sale.order.form.clinic.b4</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="is_clinic_order" invisible="1"/>
+                <button name="action_clinic_status_availability" type="object"
+                        string="Availability Confirmed"
+                        invisible="not is_clinic_order or state != 'sale' or clinic_delivery_status"
+                        groups="clinic_patient_card.group_clinic_supplier"/>
+                <button name="action_clinic_status_preparing" type="object"
+                        string="Preparing"
+                        invisible="not is_clinic_order or clinic_delivery_status != 'availability'"
+                        groups="clinic_patient_card.group_clinic_supplier"/>
+                <button name="action_clinic_status_ready" type="object"
+                        string="Ready to Ship"
+                        invisible="not is_clinic_order or clinic_delivery_status != 'preparing'"
+                        groups="clinic_patient_card.group_clinic_supplier"/>
+                <button name="action_clinic_status_in_transit" type="object"
+                        string="In Transit"
+                        invisible="not is_clinic_order or clinic_delivery_status != 'ready'"
+                        groups="clinic_patient_card.group_clinic_supplier"/>
+                <button name="action_clinic_status_delivered" type="object"
+                        string="Delivered"
+                        invisible="not is_clinic_order or clinic_delivery_status != 'in_transit'"
+                        groups="clinic_patient_card.group_clinic_supplier"/>
+                <field name="clinic_delivery_status" widget="statusbar"
+                       invisible="not is_clinic_order"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============ Returns ============ -->
+    <record id="view_clinic_purchase_return_form" model="ir.ui.view">
+        <field name="name">clinic.purchase.return.form</field>
+        <field name="model">clinic.purchase.return</field>
+        <field name="arch" type="xml">
+            <form string="Return / Exchange">
+                <header>
+                    <button name="action_review" type="object" string="Start Review"
+                            invisible="state != 'requested'"
+                            groups="clinic_patient_card.group_clinic_supplier,clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_approve" type="object" string="Approve"
+                            class="btn-success" invisible="state not in ('requested', 'review')"
+                            groups="clinic_patient_card.group_clinic_supplier,clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_reject" type="object" string="Reject"
+                            class="btn-danger" invisible="state not in ('requested', 'review')"
+                            groups="clinic_patient_card.group_clinic_supplier,clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_transit" type="object" string="Return In Transit"
+                            invisible="state != 'approved'"
+                            groups="clinic_patient_card.group_clinic_supplier,clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_close" type="object" string="Close"
+                            invisible="state not in ('return_transit', 'approved', 'rejected')"
+                            groups="clinic_patient_card.group_clinic_admin"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="purchase_id"/>
+                            <field name="vendor_id"/>
+                            <field name="return_picking_id"/>
+                        </group>
+                        <group>
+                            <field name="image" widget="image"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="reason" placeholder="რატომ ბრუნდება პროდუქცია? (სავალდებულო)"/>
+                        <field name="decision_note"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="view_clinic_purchase_return_list" model="ir.ui.view">
+        <field name="name">clinic.purchase.return.list</field>
+        <field name="model">clinic.purchase.return</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="create_date"/>
+                <field name="purchase_id"/>
+                <field name="vendor_id"/>
+                <field name="reason"/>
+                <field name="state" widget="badge"
+                       decoration-info="state in ('requested', 'review')"
+                       decoration-success="state == 'approved'"
+                       decoration-warning="state == 'return_transit'"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_clinic_purchase_return" model="ir.actions.act_window">
+        <field name="name">Returns</field>
+        <field name="res_model">clinic.purchase.return</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_clinic_stock_returns" name="Returns"
+              parent="menu_clinic_stock" action="action_clinic_purchase_return" sequence="25"
+              groups="clinic_patient_card.group_clinic_admin"/>
+    <menuitem id="menu_clinic_supplier_returns" name="Returns"
+              parent="menu_clinic_root" action="action_clinic_purchase_return" sequence="19"
+              groups="clinic_patient_card.group_clinic_supplier"/>
+
+    <!-- ============ Manager dashboard ============ -->
+    <record id="action_clinic_stock_dashboard" model="ir.actions.client">
+        <field name="name">Stock Dashboard</field>
+        <field name="tag">clinic_stock_dashboard</field>
+    </record>
+    <menuitem id="menu_clinic_stock_dashboard" name="📊 Dashboard"
+              parent="menu_clinic_stock" action="action_clinic_stock_dashboard" sequence="1"
+              groups="clinic_patient_card.group_clinic_admin"/>
+
+</odoo>

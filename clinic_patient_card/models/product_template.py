@@ -205,6 +205,15 @@ class ProductTemplate(models.Model):
         new_after = now - timedelta(days=30)
         sis = env["product.supplierinfo"].sudo().search(
             [("product_tmpl_id.is_clinic_supply", "=", True)])
+        # B4 item 12: average vendor rating from the orders' star ratings
+        rating_map = {}
+        for po in env["purchase.order"].sudo().search(
+                [("is_clinic_order", "=", True),
+                 ("clinic_rating_vendor", "!=", False)]):
+            r = rating_map.setdefault(po.partner_id.id, [0, 0])
+            r[0] += int(po.clinic_rating_vendor)
+            r[1] += 1
+        vendor_ratings = {vid: round(s / n, 1) for vid, (s, n) in rating_map.items()}
         offers = []
         for si in sis:
             if not si.partner_id:
@@ -235,6 +244,7 @@ class ProductTemplate(models.Model):
                 "preorder": tmpl.clinic_preorder,
                 "is_new": bool(tmpl.create_date and tmpl.create_date >= new_after),
                 "qty": prod.qty_available,
+                "vendor_rating": vendor_ratings.get(si.partner_id.id, 0),
             })
         categories = [{
             "id": c.id, "name": c.name,

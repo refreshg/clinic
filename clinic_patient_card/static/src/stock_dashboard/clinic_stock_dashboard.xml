@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="clinic_patient_card.ClinicStockDashboard">
+        <div class="clinic_dash" t-if="state.d">
+            <h4 class="fw-bold mb-3">📊 მარაგებისა და შესყიდვების დეშბორდი</h4>
+            <div class="cd_grid">
+
+                <div class="cd_card cd_alert">
+                    <div class="cd_title">⚠️ მარაგი იწურება (<t t-esc="state.d.low.length"/>)</div>
+                    <div t-foreach="state.d.low" t-as="r" t-key="r_index" class="cd_row">
+                        <span t-esc="r.product"/> <small class="text-muted" t-esc="r.loc"/>
+                        <b class="text-danger"><t t-esc="r.qty"/>/<t t-esc="r.min"/></b>
+                    </div>
+                    <div t-if="!state.d.low.length" class="text-muted small">ყველაფერი წესრიგშია</div>
+                </div>
+
+                <div class="cd_card cs_clickable" t-on-click="() => this.openRequests()">
+                    <div class="cd_title">📝 დასამტკიცებელი მოთხოვნები (<t t-esc="state.d.to_approve.length"/>)</div>
+                    <div t-foreach="state.d.to_approve" t-as="r" t-key="r.id" class="cd_row">
+                        <span t-esc="r.name"/> <small class="text-muted" t-esc="r.source"/>
+                        <b t-esc="r.state"/>
+                    </div>
+                    <div t-if="!state.d.to_approve.length" class="text-muted small">არაფერია</div>
+                </div>
+
+                <div class="cd_card">
+                    <div class="cd_title">🚚 მიმდინარე შეკვეთები (<t t-esc="state.d.ongoing.length"/>)</div>
+                    <div t-foreach="state.d.ongoing" t-as="r" t-key="r_index" class="cd_row">
+                        <span t-esc="r.name"/> <small class="text-muted" t-esc="r.vendor"/>
+                        <b t-esc="statusLabel(r.status)"/>
+                    </div>
+                    <div t-if="!state.d.ongoing.length" class="text-muted small">არაფერია</div>
+                </div>
+
+                <div class="cd_card cd_alert">
+                    <div class="cd_title">⏰ დაგვიანებული მიწოდებები (<t t-esc="state.d.late.length"/>)</div>
+                    <div t-foreach="state.d.late" t-as="r" t-key="r_index" class="cd_row">
+                        <span t-esc="r.name"/> <small class="text-muted" t-esc="r.vendor"/>
+                        <b class="text-danger" t-esc="r.planned"/>
+                    </div>
+                    <div t-if="!state.d.late.length" class="text-muted small">დაგვიანება არაა</div>
+                </div>
+
+                <div class="cd_card">
+                    <div class="cd_title">📦 ჭარბი მარაგი (<t t-esc="state.d.excess.length"/>)</div>
+                    <div t-foreach="state.d.excess" t-as="r" t-key="r_index" class="cd_row">
+                        <span t-esc="r.product"/> <small class="text-muted" t-esc="r.loc"/>
+                        <b><t t-esc="r.qty"/>/<t t-esc="r.max"/></b>
+                    </div>
+                    <div t-if="!state.d.excess.length" class="text-muted small">ჭარბი არაა</div>
+                </div>
+
+                <div class="cd_card cd_money">
+                    <div class="cd_title">💰 თვიური შესყიდვები</div>
+                    <div class="cd_big" t-esc="money(state.d.monthly_spend)"/>
+                </div>
+
+                <div class="cd_card">
+                    <div class="cd_title">🗂️ ხარჯი კატეგორიებით (90 დღე)</div>
+                    <div t-foreach="state.d.spend_by_categ" t-as="r" t-key="r_index" class="cd_row">
+                        <span t-esc="r.categ"/><b t-esc="money(r.amount)"/>
+                    </div>
+                    <div t-if="!state.d.spend_by_categ.length" class="text-muted small">მონაცემი არაა</div>
+                </div>
+
+                <div class="cd_card">
+                    <div class="cd_title">🏆 ხშირად გამოყენებული (90 დღე)</div>
+                    <div t-foreach="state.d.top_used" t-as="r" t-key="r_index" class="cd_row">
+                        <span t-esc="r.product"/><b t-esc="r.qty"/>
+                    </div>
+                    <div t-if="!state.d.top_used.length" class="text-muted small">მონაცემი არაა</div>
+                </div>
+
+                <div class="cd_card cd_alert">
+                    <div class="cd_title">⌛ ვადის რისკი (≤30 დღე)</div>
+                    <div t-foreach="state.d.expiry" t-as="r" t-key="r_index" class="cd_row">
+                        <span><t t-esc="r.product"/> <small class="text-muted" t-esc="r.lot"/></span>
+                        <b class="text-danger" t-esc="r.date"/>
+                    </div>
+                    <div t-if="!state.d.expiry.length" class="text-muted small">რისკი არაა</div>
+                </div>
+
+                <div class="cd_card">
+                    <div class="cd_title">🤝 მომწოდებლების შესრულება</div>
+                    <div t-foreach="state.d.vendor_perf" t-as="r" t-key="r_index" class="cd_row">
+                        <span t-esc="r.vendor"/>
+                        <b>
+                            <t t-if="r.rating">★ <t t-esc="r.rating"/></t>
+                            <t t-if="r.on_time_pct !== null"> · <t t-esc="r.on_time_pct"/>%</t>
+                        </b>
+                    </div>
+                    <div t-if="!state.d.vendor_perf.length" class="text-muted small">მონაცემი არაა</div>
+                </div>
+
+                <div class="cd_card">
+                    <div class="cd_title">📅 დაგეგმილი შესყიდვები</div>
+                    <div t-foreach="state.d.planned" t-as="r" t-key="r.id" class="cd_row">
+                        <span t-esc="r.name"/><b t-esc="r.date_planned"/>
+                    </div>
+                    <div t-if="!state.d.planned.length" class="text-muted small">არაფერია დაგეგმილი</div>
+                </div>
+
+            </div>
+        </div>
+    </t>
+</templates>

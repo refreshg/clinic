@@ -17,6 +17,52 @@ class SaleOrder(models.Model):
     clinic_supplier_id = fields.Many2one("res.partner", string="Clinic Supplier", copy=False)
     clinic_purchase_id = fields.Many2one("purchase.order", string="Clinic Purchase Order", copy=False)
 
+    # Reviewer batch #2 B4 (items 18-26): the supplier advances the delivery
+    # status on THEIR sales order by hand (no courier integration by
+    # decision); every change lands on the clinic's PO chatter + a live toast.
+    clinic_delivery_status = fields.Selection([
+        ("availability", "Availability Confirmed"),
+        ("preparing", "Preparing"),
+        ("ready", "Ready to Ship"),
+        ("in_transit", "In Transit"),
+        ("delivered", "Delivered"),
+    ], string="Delivery Status", copy=False, tracking=True)
+
+    def action_clinic_status_availability(self):
+        self._clinic_set_delivery_status("availability")
+
+    def action_clinic_status_preparing(self):
+        self._clinic_set_delivery_status("preparing")
+
+    def action_clinic_status_ready(self):
+        self._clinic_set_delivery_status("ready")
+
+    def action_clinic_status_in_transit(self):
+        self._clinic_set_delivery_status("in_transit")
+
+    def action_clinic_status_delivered(self):
+        self._clinic_set_delivery_status("delivered")
+
+    def _clinic_set_delivery_status(self, status):
+        label = dict(self._fields["clinic_delivery_status"].selection)[status]
+        admin_group = self.env.ref(
+            "clinic_patient_card.group_clinic_admin", raise_if_not_found=False)
+        admins = admin_group and self.env["res.users"].search(
+            [("all_group_ids", "in", admin_group.id)]) or self.env["res.users"]
+        for order in self:
+            order.clinic_delivery_status = status
+            po = order.clinic_purchase_id
+            if po:
+                po.message_post(body=_(
+                    "Supplier status: %(status)s", status=label))
+                for user in admins:
+                    if user.partner_id:
+                        self.env["bus.bus"]._sendone(
+                            user.partner_id, "clinic_order_confirmed", {
+                                "vendor": order.clinic_supplier_id.name or "",
+                                "name": "%s — %s" % (po.name, label),
+                            })
+
     def _clinic_notify_clinic_confirmed(self):
         """Supplier confirmed the sale order -> tell the clinic + confirm the PO."""
         self.ensure_one()
