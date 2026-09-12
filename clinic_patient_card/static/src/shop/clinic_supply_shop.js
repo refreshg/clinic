@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onWillStart } from "@odoo/owl";
+import { Component, useState, onWillStart, onMounted, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
@@ -33,6 +33,15 @@ export class ClinicSupplyShop extends Component {
             bannerIdx: 0,
         });
         onWillStart(() => this.load());
+        // more than 2 banners → the pair rotates instead of stacking
+        onMounted(() => {
+            this._bannerTimer = setInterval(() => {
+                if (this.state.banners.length > 2 && !this.state.detail) {
+                    this.nextBanner(1);
+                }
+            }, 6000);
+        });
+        onWillUnmount(() => clearInterval(this._bannerTimer));
     }
 
     async load() {
@@ -296,6 +305,15 @@ export class ClinicSupplyShop extends Component {
     get banner() {
         const b = this.state.banners;
         return b.length ? b[this.state.bannerIdx % b.length] : false;
+    }
+    // the two banners currently occupying the two slots
+    get visibleBanners() {
+        const b = this.state.banners;
+        if (b.length <= 2) {
+            return b;
+        }
+        const i = this.state.bannerIdx % b.length;
+        return [b[i], b[(i + 1) % b.length]];
     }
     openBanner(bn) {
         if (bn.link) {

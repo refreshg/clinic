@@ -277,3 +277,15 @@
         }
     }
 }
+
+.clinic_shop .cs_banner_wrap {
+    position: relative;
+    .cs_banner_nav {
+        position: absolute; top: 50%; transform: translateY(-50%);
+        border: 0; background: rgba(255,255,255,.85); border-radius: 50%;
+        width: 34px; height: 34px; font-size: 20px; line-height: 1; z-index: 3;
+        box-shadow: 0 1px 4px rgba(0,0,0,.25);
+        &.cs_banner_prev { left: -6px; }
+        &.cs_banner_next { right: -6px; }
+    }
+}

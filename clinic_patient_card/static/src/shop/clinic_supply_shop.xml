@@ -51,8 +51,9 @@
 
             <!-- banner slots: two per row (reviewer reference layout);
                  a banner with a link opens it in a new tab -->
-            <div t-if="state.banners.length and isPlainView" class="cs_banner_grid mb-3">
-                <t t-foreach="state.banners" t-as="bn" t-key="bn.id">
+            <div t-if="state.banners.length and isPlainView" class="cs_banner_wrap mb-3">
+              <div class="cs_banner_grid">
+                <t t-foreach="visibleBanners" t-as="bn" t-key="bn.id">
                     <div class="cs_banner" t-att-class="{ cs_banner_link: bn.link }"
                          t-att-title="bn.link || ''"
                          t-on-click="() => this.openBanner(bn)">
@@ -63,6 +64,11 @@
                         </div>
                     </div>
                 </t>
+              </div>
+              <t t-if="state.banners.length > 2">
+                  <button class="cs_banner_nav cs_banner_prev" t-on-click="() => this.nextBanner(-1)">‹</button>
+                  <button class="cs_banner_nav cs_banner_next" t-on-click="() => this.nextBanner(1)">›</button>
+              </t>
             </div>
 
             <!-- category tiles with photos + subcategory chips -->
