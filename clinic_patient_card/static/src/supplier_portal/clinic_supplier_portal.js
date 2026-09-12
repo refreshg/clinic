@@ -52,6 +52,7 @@ export class ClinicSupplierPortal extends Component {
             brand_id: false,
             brand_is_new: false,
             brand_new: "",
+            preorder: false,
             image: false,
             image_preview: false,
         };
@@ -66,6 +67,7 @@ export class ClinicSupplierPortal extends Component {
             brand_id: p.brand_id || false,
             brand_is_new: false,
             brand_new: "",
+            preorder: !!p.preorder,
             image: undefined, // undefined => keep existing image on save
             image_preview: p.image_128 ? "data:image/png;base64," + p.image_128 : false,
         };
@@ -118,6 +120,7 @@ export class ClinicSupplierPortal extends Component {
             delay: e.delay,
             categ_id: e.categ_id,
             brand_id: e.brand_id,
+            preorder: e.preorder,
         };
         if (e.brand_is_new && e.brand_new.trim()) {
             vals.brand_new = e.brand_new.trim();

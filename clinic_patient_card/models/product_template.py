@@ -110,6 +110,7 @@ class ProductTemplate(models.Model):
                 "qty_available": tmpl.qty_available,
                 "brand_id": tmpl.clinic_brand_id.id or False,
                 "brand_name": tmpl.clinic_brand_id.name or "",
+                "preorder": tmpl.clinic_preorder,
             })
         rows.sort(key=lambda r: r["name"].lower())
         cats = self.env["product.category"].search_read([], ["id", "display_name"])
@@ -143,6 +144,9 @@ class ProductTemplate(models.Model):
         }
         if vals.get("categ_id"):
             tmpl_vals["categ_id"] = int(vals["categ_id"])
+        # the supplier decides whether their product is pre-orderable
+        if "preorder" in vals:
+            tmpl_vals["clinic_preorder"] = bool(vals["preorder"])
         # the supplier owns the brand of THEIR product (reviewer): pick an
         # existing one or type a new name — created via sudo, deduplicated
         if "brand_id" in vals or vals.get("brand_new"):

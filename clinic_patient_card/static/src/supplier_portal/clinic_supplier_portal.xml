@@ -35,6 +35,7 @@
                             <div class="csp_name" t-esc="p.name"/>
                             <div class="csp_cat" t-esc="p.categ_name"/>
                             <div t-if="p.brand_name" class="csp_cat">🏷️ <t t-esc="p.brand_name"/></div>
+                            <div t-if="p.preorder" class="csp_cat">🔵 Pre-order</div>
                             <div class="csp_price"><t t-esc="p.price.toFixed(2)"/> ₾</div>
                             <div class="csp_delay">Lead time: <t t-esc="p.delay"/> days</div>
                             <div class="csp_actions">
@@ -95,6 +96,12 @@
                                    placeholder="Brand name"
                                    t-att-value="state.editing.brand_new"
                                    t-on-input="(ev) => state.editing.brand_new = ev.target.value"/>
+
+                            <label class="csp_check mt-1">
+                                <input type="checkbox" t-att-checked="state.editing.preorder"
+                                       t-on-change="(ev) => state.editing.preorder = ev.target.checked"/>
+                                Pre-order (orderable while out of stock)
+                            </label>
 
                             <label>Image</label>
                             <input type="file" accept="image/*" class="form-control"
