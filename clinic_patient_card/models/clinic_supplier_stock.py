@@ -81,8 +81,9 @@ class ResPartnerSupplierStock(models.Model):
             "view_mode": "list",
             "view_id": self.env.ref(
                 "clinic_patient_card.view_clinic_supplier_quant_list").id,
+            # own warehouse AND the In-Transit shelf (reviewer: "გზაშია სად ვნახო")
             "domain": [("location_id.clinic_supplier_id", "=", vendor.id),
-                       ("location_id.usage", "=", "internal")],
+                       ("location_id.usage", "in", ("internal", "transit"))],
             "context": {"inventory_mode": True,
                         "default_location_id":
                             self.env.user.partner_id
