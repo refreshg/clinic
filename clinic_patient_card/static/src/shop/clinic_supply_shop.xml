@@ -75,17 +75,22 @@
                     </div>
                 </t>
             </div>
-            <div t-if="subCategories.length" class="cs_subcats mb-2">
-                <span class="cs_subcats_label">📂 ქვეკატეგორიები:</span>
-                <button type="button" class="btn btn-sm rounded-pill cs_subbtn"
-                        t-att-class="{ cs_subbtn_on: !state.subcatId }"
-                        t-on-click="() => this.pickSubcat(false)">ყველა</button>
-                <t t-foreach="subCategories" t-as="sc" t-key="sc.id">
+            <t t-foreach="chipRows" t-as="row" t-key="row.parent">
+                <div class="cs_subcats mb-2" t-att-style="row_index ? 'margin-left:' + (row_index * 22) + 'px' : ''">
+                    <span class="cs_subcats_label">
+                        <t t-if="!row_index">📂 ქვეკატეგორიები:</t>
+                        <t t-else="">↳</t>
+                    </span>
                     <button type="button" class="btn btn-sm rounded-pill cs_subbtn"
-                            t-att-class="{ cs_subbtn_on: state.subcatId === sc.id }"
-                            t-on-click="() => this.pickSubcat(sc.id)" t-esc="sc.name"/>
-                </t>
-            </div>
+                            t-att-class="{ cs_subbtn_on: !row.selectedId }"
+                            t-on-click="() => this.pickSubcat(false, row.parent)">ყველა</button>
+                    <t t-foreach="row.kids" t-as="sc" t-key="sc.id">
+                        <button type="button" class="btn btn-sm rounded-pill cs_subbtn"
+                                t-att-class="{ cs_subbtn_on: row.selectedId === sc.id }"
+                                t-on-click="() => this.pickSubcat(sc.id, row.parent)" t-esc="sc.name"/>
+                    </t>
+                </div>
+            </t>
 
             <div class="cs_subbar d-flex align-items-center mb-2">
                 <div class="text-muted small">ნაპოვნია <t t-esc="shownOffers.length"/></div>

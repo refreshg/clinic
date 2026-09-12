@@ -70,21 +70,88 @@ export class ClinicSupplyShop extends Component {
         return this.state.categories.filter(
             (c) => !c.parent_id && used.has(c.id) && c.shop_visible !== false);
     }
-    get subCategories() {
+    // ---- category tree (any depth) ----
+    get _catById() {
+        const m = new Map();
+        for (const c of this.state.categories) {
+            m.set(c.id, c);
+        }
+        return m;
+    }
+    // categories that hold offers anywhere in their subtree (incl. ancestors)
+    get _catsWithOffers() {
+        const byId = this._catById;
+        const used = new Set();
+        for (const o of this.state.offers) {
+            let c = byId.get(o.categ_id);
+            while (c && !used.has(c.id)) {
+                used.add(c.id);
+                c = byId.get(c.parent_id);
+            }
+        }
+        return used;
+    }
+    _children(parentId) {
+        const used = this._catsWithOffers;
+        return this.state.categories.filter(
+            (c) => c.parent_id === parentId && used.has(c.id)
+                && c.shop_visible !== false);
+    }
+    _descendants(catId) {
+        const out = new Set([catId]);
+        let frontier = [catId];
+        while (frontier.length) {
+            const next = [];
+            for (const c of this.state.categories) {
+                if (frontier.includes(c.parent_id) && !out.has(c.id)) {
+                    out.add(c.id);
+                    next.push(c.id);
+                }
+            }
+            frontier = next;
+        }
+        return out;
+    }
+    // one chips-row per level along the selected path — unlimited depth
+    get chipRows() {
         if (!this.state.catId) {
             return [];
         }
-        const used = new Set(this.state.offers.map((o) => o.categ_id));
-        return this.state.categories.filter(
-            (c) => c.parent_id === this.state.catId && used.has(c.id)
-                && c.shop_visible !== false);
+        const byId = this._catById;
+        // selected path: subcat and its ancestors up to (excluding) the top cat
+        const path = new Set();
+        let n = this.state.subcatId ? byId.get(this.state.subcatId) : null;
+        while (n && n.id !== this.state.catId) {
+            path.add(n.id);
+            n = byId.get(n.parent_id);
+        }
+        const rows = [];
+        let parent = this.state.catId;
+        for (;;) {
+            const kids = this._children(parent);
+            if (!kids.length) {
+                break;
+            }
+            const selected = kids.find((k) => path.has(k.id));
+            rows.push({ parent, kids, selectedId: selected ? selected.id : false });
+            if (!selected) {
+                break;
+            }
+            parent = selected.id;
+        }
+        return rows;
     }
     pickCat(id) {
         this.state.catId = this.state.catId === id ? false : id;
         this.state.subcatId = false;
     }
-    pickSubcat(id) {
-        this.state.subcatId = this.state.subcatId === id ? false : id;
+    pickSubcat(id, parent) {
+        if (!id) {
+            // "ყველა" on this row → selection climbs back to the row's parent
+            this.state.subcatId = parent === this.state.catId ? false : parent;
+        } else {
+            this.state.subcatId = this.state.subcatId === id ? (parent === this.state.catId ? false : parent) : id;
+        }
     }
 
     // ------------------------------------------------------------------
@@ -97,7 +164,8 @@ export class ClinicSupplyShop extends Component {
         if (o.brand_id && this.state.brandOff[o.brand_id]) {
             return false;
         }
-        if (this.state.subcatId && o.categ_id !== this.state.subcatId) {
+        if (this.state.subcatId
+                && !this._descendants(this.state.subcatId).has(o.categ_id)) {
             return false;
         }
         if (this.state.catId && !this.state.subcatId
