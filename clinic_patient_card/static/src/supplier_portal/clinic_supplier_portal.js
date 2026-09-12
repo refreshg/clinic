@@ -26,6 +26,7 @@ export class ClinicSupplierPortal extends Component {
             vendor: null,
             products: [],
             categories: [],
+            brands: [],
             editing: null, // {id?, name, price, delay, categ_id, image}
         });
         onWillStart(() => this.load());
@@ -36,6 +37,7 @@ export class ClinicSupplierPortal extends Component {
         this.state.vendor = res.vendor || null;
         this.state.products = res.products || [];
         this.state.categories = res.categories || [];
+        this.state.brands = res.brands || [];
         this.state.loading = false;
     }
 
@@ -47,6 +49,9 @@ export class ClinicSupplierPortal extends Component {
             price: 0,
             delay: 3,
             categ_id: this.state.categories.length ? this.state.categories[0].id : false,
+            brand_id: false,
+            brand_is_new: false,
+            brand_new: "",
             image: false,
             image_preview: false,
         };
@@ -58,6 +63,9 @@ export class ClinicSupplierPortal extends Component {
             price: p.price,
             delay: p.delay,
             categ_id: p.categ_id || false,
+            brand_id: p.brand_id || false,
+            brand_is_new: false,
+            brand_new: "",
             image: undefined, // undefined => keep existing image on save
             image_preview: p.image_128 ? "data:image/png;base64," + p.image_128 : false,
         };
@@ -72,6 +80,14 @@ export class ClinicSupplierPortal extends Component {
         } else if (field === "delay") {
             v = parseInt(v, 10) || 0;
         } else if (field === "categ_id") {
+            v = parseInt(v, 10) || false;
+        } else if (field === "brand_id") {
+            if (v === "__new") {
+                this.state.editing.brand_is_new = true;
+                this.state.editing.brand_id = false;
+                return;
+            }
+            this.state.editing.brand_is_new = false;
             v = parseInt(v, 10) || false;
         }
         this.state.editing[field] = v;
@@ -101,7 +117,11 @@ export class ClinicSupplierPortal extends Component {
             price: e.price,
             delay: e.delay,
             categ_id: e.categ_id,
+            brand_id: e.brand_id,
         };
+        if (e.brand_is_new && e.brand_new.trim()) {
+            vals.brand_new = e.brand_new.trim();
+        }
         if (e.id) {
             vals.id = e.id;
         }

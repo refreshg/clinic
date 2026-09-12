@@ -34,6 +34,7 @@
                             </div>
                             <div class="csp_name" t-esc="p.name"/>
                             <div class="csp_cat" t-esc="p.categ_name"/>
+                            <div t-if="p.brand_name" class="csp_cat">🏷️ <t t-esc="p.brand_name"/></div>
                             <div class="csp_price"><t t-esc="p.price.toFixed(2)"/> ₾</div>
                             <div class="csp_delay">Lead time: <t t-esc="p.delay"/> days</div>
                             <div class="csp_actions">
@@ -81,6 +82,19 @@
                                             t-esc="c.display_name"/>
                                 </t>
                             </select>
+
+                            <label>Brand</label>
+                            <select class="form-select" t-on-change="(ev) => this.onField('brand_id', ev)">
+                                <option value="" t-att-selected="!state.editing.brand_id and !state.editing.brand_is_new ? 'selected' : undefined">— no brand —</option>
+                                <t t-foreach="state.brands" t-as="b" t-key="b.id">
+                                    <option t-att-value="b.id" t-att-selected="b.id === state.editing.brand_id ? 'selected' : undefined" t-esc="b.name"/>
+                                </t>
+                                <option value="__new" t-att-selected="state.editing.brand_is_new ? 'selected' : undefined">+ New brand…</option>
+                            </select>
+                            <input t-if="state.editing.brand_is_new" type="text" class="form-control mt-1"
+                                   placeholder="Brand name"
+                                   t-att-value="state.editing.brand_new"
+                                   t-on-input="(ev) => state.editing.brand_new = ev.target.value"/>
 
                             <label>Image</label>
                             <input type="file" accept="image/*" class="form-control"

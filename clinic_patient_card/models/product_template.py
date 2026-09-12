@@ -108,13 +108,17 @@ class ProductTemplate(models.Model):
                 "categ_name": tmpl.categ_id.display_name,
                 "image_128": self._clinic_b64(tmpl.image_128),
                 "qty_available": tmpl.qty_available,
+                "brand_id": tmpl.clinic_brand_id.id or False,
+                "brand_name": tmpl.clinic_brand_id.name or "",
             })
         rows.sort(key=lambda r: r["name"].lower())
         cats = self.env["product.category"].search_read([], ["id", "display_name"])
+        brands = self.env["clinic.brand"].sudo().search_read([], ["id", "name"])
         return {
             "vendor": {"id": vendor.id, "name": vendor.display_name},
             "products": rows,
             "categories": cats,
+            "brands": brands,
         }
 
     @api.model
@@ -139,6 +143,18 @@ class ProductTemplate(models.Model):
         }
         if vals.get("categ_id"):
             tmpl_vals["categ_id"] = int(vals["categ_id"])
+        # the supplier owns the brand of THEIR product (reviewer): pick an
+        # existing one or type a new name — created via sudo, deduplicated
+        if "brand_id" in vals or vals.get("brand_new"):
+            Brand = self.env["clinic.brand"].sudo()
+            new_name = (vals.get("brand_new") or "").strip()
+            if new_name:
+                brand = Brand.search([("name", "=ilike", new_name)], limit=1)
+                if not brand:
+                    brand = Brand.create({"name": new_name})
+                tmpl_vals["clinic_brand_id"] = brand.id
+            else:
+                tmpl_vals["clinic_brand_id"] = int(vals["brand_id"]) if vals.get("brand_id") else False
         if "image" in vals:
             tmpl_vals["image_1920"] = vals["image"] or False
 
