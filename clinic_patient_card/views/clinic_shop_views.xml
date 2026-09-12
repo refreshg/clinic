@@ -64,7 +64,7 @@
         <field name="state">code</field>
         <field name="code">action = model.clinic_my_warehouse_action()</field>
         <!-- without groups_id only admins may run a server action from a menu -->
-        <field name="groups_id" eval="[(4, ref('group_clinic_supplier'))]"/>
+        <field name="group_ids" eval="[(4, ref('group_clinic_supplier'))]"/>
     </record>
     <menuitem id="menu_clinic_supplier_warehouse" name="My Warehouse"
               parent="menu_clinic_root" action="action_clinic_my_warehouse"
