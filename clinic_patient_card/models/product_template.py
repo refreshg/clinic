@@ -111,7 +111,11 @@ class ProductTemplate(models.Model):
                 "categ_id": tmpl.categ_id.id,
                 "categ_name": tmpl.categ_id.display_name,
                 "image_128": self._clinic_b64(tmpl.image_128),
-                "qty_available": tmpl.qty_available,
+                "qty_available": sum(
+                    q.quantity for q in self.env["stock.quant"].sudo().search(
+                        [("product_id.product_tmpl_id", "=", tmpl.id),
+                         ("location_id.clinic_supplier_id", "=", vendor.id),
+                         ("location_id.usage", "=", "internal")])),
                 "brand_id": tmpl.clinic_brand_id.id or False,
                 "brand_name": tmpl.clinic_brand_id.name or "",
                 "preorder": tmpl.clinic_preorder,
@@ -241,6 +245,14 @@ class ProductTemplate(models.Model):
             r[0] += int(po.clinic_rating_vendor)
             r[1] += 1
         vendor_ratings = {vid: round(s / n, 1) for vid, (s, n) in rating_map.items()}
+        # per-vendor availability: qty in the SUPPLIER's own location
+        Quant = env["stock.quant"].sudo()
+        vloc_qty = {}
+        for q in Quant.search(
+                [("location_id.clinic_supplier_id", "!=", False),
+                 ("location_id.usage", "=", "internal")]):
+            key = (q.location_id.clinic_supplier_id.id, q.product_id.id)
+            vloc_qty[key] = vloc_qty.get(key, 0.0) + q.quantity
         offers = []
         for si in sis:
             if not si.partner_id:
@@ -270,7 +282,8 @@ class ProductTemplate(models.Model):
                 "sponsored": tmpl.clinic_sponsored,
                 "preorder": tmpl.clinic_preorder,
                 "is_new": bool(tmpl.create_date and tmpl.create_date >= new_after),
-                "qty": prod.qty_available,
+                "qty": vloc_qty.get(
+                    (si.partner_id.commercial_partner_id.id, prod.id), 0.0),
                 "vendor_rating": vendor_ratings.get(si.partner_id.id, 0),
             })
         categories = [{

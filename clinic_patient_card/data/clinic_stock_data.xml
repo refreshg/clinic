@@ -47,4 +47,6 @@
 
     <!-- Runs on every upgrade: give each room its own stock location. -->
     <function model="clinic.room" name="_clinic_sync_locations"/>
+    <!-- ...and each supplier company its own warehouse + transit shelf. -->
+    <function model="res.partner" name="_clinic_ensure_supplier_locations"/>
 </odoo>

@@ -42,6 +42,32 @@
               parent="menu_clinic_root" action="action_clinic_supplier_orders"
               sequence="18" groups="clinic_patient_card.group_clinic_supplier"/>
 
+    <!-- ============ Supplier's own warehouse (v19.0.54) ============ -->
+    <record id="view_clinic_supplier_quant_list" model="ir.ui.view">
+        <field name="name">clinic.supplier.quant.list</field>
+        <field name="model">stock.quant</field>
+        <field name="priority">80</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" create="1" delete="0">
+                <field name="product_id"/>
+                <field name="location_id" readonly="1" optional="hide"/>
+                <field name="quantity" readonly="1" string="On Hand"/>
+                <field name="inventory_quantity" string="Counted Qty"/>
+                <button name="action_apply_inventory" type="object"
+                        string="Apply" class="btn-primary btn-sm"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_clinic_my_warehouse" model="ir.actions.server">
+        <field name="name">My Warehouse</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="state">code</field>
+        <field name="code">action = model.clinic_my_warehouse_action()</field>
+    </record>
+    <menuitem id="menu_clinic_supplier_warehouse" name="My Warehouse"
+              parent="menu_clinic_root" action="action_clinic_my_warehouse"
+              sequence="17" groups="clinic_patient_card.group_clinic_supplier"/>
+
     <!-- ============ Shop v2 (batch #2) ============ -->
     <record id="view_clinic_shop_banner_list" model="ir.ui.view">
         <field name="name">clinic.shop.banner.list</field>

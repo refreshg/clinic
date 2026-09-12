@@ -91,7 +91,9 @@ class ClinicPurchaseReturn(models.Model):
         ptype = self.env["stock.picking.type"].sudo().search(
             [("code", "=", "outgoing"),
              ("company_id", "=", self.purchase_id.company_id.id)], limit=1)
-        supplier_loc = picking.location_id  # the vendor location it came from
+        supplier_loc = (self.purchase_id.partner_id
+                        ._clinic_supplier_stock_loc()
+                        or picking.location_id)  # back into THEIR warehouse
         ret = Picking.create({
             "picking_type_id": ptype.id,
             "location_id": picking.location_dest_id.id,

@@ -43,6 +43,51 @@ class SaleOrder(models.Model):
     def action_clinic_status_delivered(self):
         self._clinic_set_delivery_status("delivered")
 
+    def _clinic_ship_from_supplier(self):
+        """In Transit pressed: goods physically leave the supplier's own
+        warehouse onto their transit shelf — the supplier's stock drops at
+        SHIPPING time (user decision), the clinic's rises only on receipt."""
+        self.ensure_one()
+        vendor = self.clinic_supplier_id
+        if not vendor:
+            return
+        src = vendor._clinic_supplier_stock_loc()
+        dst = vendor._clinic_supplier_transit_loc()
+        if not src or not dst:
+            return
+        Picking = self.env["stock.picking"].sudo()
+        ptype = self.env["stock.picking.type"].sudo().search(
+            [("code", "=", "internal"),
+             ("company_id", "=", self.company_id.id)], limit=1)
+        moves = [(0, 0, {
+            "product_id": l.product_id.id,
+            "product_uom_qty": l.product_uom_qty,
+            "location_id": src.id,
+            "location_dest_id": dst.id,
+        }) for l in self.order_line if l.product_id and l.product_uom_qty]
+        if not moves:
+            return
+        pk = Picking.create({
+            "picking_type_id": ptype.id,
+            "location_id": src.id,
+            "location_dest_id": dst.id,
+            "origin": _("Shipment of %s") % self.name,
+            "move_ids": moves,
+        })
+        try:
+            pk.action_confirm()
+            for move in pk.move_ids:
+                move.quantity = move.product_uom_qty
+                move.picked = True
+            pk.button_validate()
+            self.message_post(body=_(
+                "Shipped: supplier stock moved to In Transit (%s).") % pk.name)
+        except Exception:
+            # shipping bookkeeping must never block the status itself
+            self.message_post(body=_(
+                "Status set, but the transit transfer could not be validated "
+                "— check the supplier stock levels."))
+
     def _clinic_set_delivery_status(self, status):
         label = dict(self._fields["clinic_delivery_status"].selection)[status]
         admin_group = self.env.ref(
@@ -51,6 +96,8 @@ class SaleOrder(models.Model):
             [("all_group_ids", "in", admin_group.id)]) or self.env["res.users"]
         for order in self:
             order.clinic_delivery_status = status
+            if status == "in_transit":
+                order._clinic_ship_from_supplier()
             po = order.clinic_purchase_id
             if po:
                 po.message_post(body=_(
