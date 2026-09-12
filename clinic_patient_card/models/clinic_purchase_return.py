@@ -56,6 +56,24 @@ class ClinicPurchaseReturn(models.Model):
         self.write({"state": "return_transit"})
         self._notify_counterpart(_("Return shipment is on its way back."))
 
+    def action_returned(self):
+        """Supplier confirms the goods came back: the reverse picking is
+        validated (clinic stock finally drops) and the case closes —
+        reviewer item 40 (დაბრუნებულია/საკითხი დაიხურა)."""
+        for rec in self:
+            pk = rec.return_picking_id.sudo()
+            if pk and pk.state not in ("done", "cancel"):
+                if pk.state == "draft":
+                    pk.action_confirm()
+                pk.action_assign()
+                for move in pk.move_ids:
+                    move.quantity = move.product_uom_qty
+                    move.picked = True
+                pk.button_validate()
+            rec.state = "closed"
+        self._notify_counterpart(_(
+            "Goods returned to the supplier — clinic stock updated; case closed."))
+
     def action_close(self):
         self.write({"state": "closed"})
         self._notify_counterpart(_("Return closed."))

@@ -132,6 +132,9 @@
                     <button name="action_transit" type="object" string="Return In Transit"
                             invisible="state != 'approved'"
                             groups="clinic_patient_card.group_clinic_supplier,clinic_patient_card.group_clinic_admin"/>
+                    <button name="action_returned" type="object" string="Returned — Close"
+                            class="btn-success" invisible="state != 'return_transit'"
+                            groups="clinic_patient_card.group_clinic_supplier,clinic_patient_card.group_clinic_admin"/>
                     <button name="action_close" type="object" string="Close"
                             invisible="state not in ('return_transit', 'approved', 'rejected')"
                             groups="clinic_patient_card.group_clinic_admin"/>
