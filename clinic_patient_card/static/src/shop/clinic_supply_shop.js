@@ -268,6 +268,28 @@ export class ClinicSupplyShop extends Component {
         return out;
     }
 
+    // front page: one titled section per category (marketplace style)
+    get categorySections() {
+        const out = [];
+        for (const c of this.topCategories) {
+            const inTree = this._descendants(c.id);
+            const seen = new Set();
+            const offers = [];
+            for (const o of this.state.offers) {
+                if (!inTree.has(o.categ_id) || !this._passesFilters(o)
+                        || seen.has(o.product_id)) {
+                    continue;
+                }
+                seen.add(o.product_id);
+                offers.push(o);
+            }
+            if (offers.length) {
+                out.push({ cat: c, offers: offers.slice(0, 8), total: offers.length });
+            }
+        }
+        return out;
+    }
+
     get isPlainView() {
         return !this.state.search && !this.state.catId
             && !this.state.wishlistOnly;

@@ -321,3 +321,15 @@
         img { max-height: 80px; max-width: 110px; object-fit: contain; }
     }
 }
+
+.clinic_shop .cs_sec_head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 18px 0 6px; padding-bottom: 4px; border-bottom: 2px solid #714b67;
+    .cs_sec_title {
+        font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 8px;
+        img { height: 26px; width: 26px; object-fit: cover; border-radius: 6px; }
+        .cs_sec_count { color: #9aa0a6; font-weight: 600; font-size: 13px; }
+    }
+    .cs_sec_all { font-size: 13px; font-weight: 700; color: #714b67; text-decoration: none;
+        &:hover { text-decoration: underline; } }
+}

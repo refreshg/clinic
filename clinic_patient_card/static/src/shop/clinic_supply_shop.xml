@@ -166,17 +166,34 @@
                                 </t>
                             </div>
                         </t>
-                        <div class="cs_strip_title">ყველა პროდუქტი</div>
+                        <!-- category sections instead of one flat dump -->
+                        <t t-foreach="categorySections" t-as="sec" t-key="sec.cat.id">
+                            <div class="cs_sec_head">
+                                <span class="cs_sec_title">
+                                    <img t-if="sec.cat.image" t-att-src="'data:image/png;base64,' + sec.cat.image" alt=""/>
+                                    <t t-esc="sec.cat.name"/>
+                                    <span class="cs_sec_count">(<t t-esc="sec.total"/>)</span>
+                                </span>
+                                <a href="#" class="cs_sec_all" t-on-click.prevent="() => this.pickCat(sec.cat.id)">ყველას ნახვა →</a>
+                            </div>
+                            <div class="cs_strip">
+                                <t t-foreach="sec.offers" t-as="o" t-key="'sec_' + o.key">
+                                    <t t-call="clinic_patient_card.CsCard"/>
+                                </t>
+                            </div>
+                        </t>
                     </t>
 
-                    <div t-if="!shownOffers.length" class="text-muted p-5 text-center">
-                        პროდუქტები ვერ მოიძებნა.
-                    </div>
-                    <div t-else="" class="cs_grid">
-                        <t t-foreach="shownOffers" t-as="o" t-key="o.key">
-                            <t t-call="clinic_patient_card.CsCard"/>
-                        </t>
-                    </div>
+                    <t t-if="!isPlainView">
+                        <div t-if="!shownOffers.length" class="text-muted p-5 text-center">
+                            პროდუქტები ვერ მოიძებნა.
+                        </div>
+                        <div t-else="" class="cs_grid">
+                            <t t-foreach="shownOffers" t-as="o" t-key="o.key">
+                                <t t-call="clinic_patient_card.CsCard"/>
+                            </t>
+                        </div>
+                    </t>
 
                     <!-- similar products while searching -->
                     <t t-if="similarOffers.length">
