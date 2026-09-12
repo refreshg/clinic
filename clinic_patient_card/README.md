@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-11, commit: 52877b4 -->
+<!-- last-synced: 2026-09-12, commit: 0511206 -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -40,6 +40,10 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
 - **Shop v2 (batch #2)**: category photos (Inventory → Product Categories → Image),
   banners (Clinic → Configuration → Shop Banners), Sponsored / Pre-order flags on the
   product; wishlist and repeat-last-order are per-user, no setup.
+- **Supplier warehouse (D-19)**: every supplier company auto-gets Suppliers/<name> +
+  In Transit; supplier menus: My Locations (shelves), ↔ Move Stock, My Warehouse
+  (count/Apply), My Transfers (read-only history). Shop availability = supplier stock;
+  In Transit ships (their stock drops), the clinic receipt drains the transit shelf.
 - **Receive/returns (batch #2)**: supplier advances 5 delivery statuses on their order;
   receipt validation auto-drafts the vendor bill (waybill attached by hand); the PO's
   Return button lives 48h; ratings on the received PO feed shop/dashboard averages;

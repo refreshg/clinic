@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-11, commit: 52877b4 -->
+<!-- last-synced: 2026-09-12, commit: 0511206 -->
 # Clinic — project notes for Claude
 
 ## Platform
@@ -32,7 +32,7 @@
   waitlist/Reserve panel per dentist + dispensary 6-month flow with 14-day-before admin
   reminders and weekly booking reports. Meeting UI (Send email, RSVP "Going?", Busy row,
   attendees) hidden on clinic visits. Emails deferred (undecided what/when to send).
-- **Reviewer batch #2 — FULLY DONE (v19.0.47-53):** Track A ჯავშნები + fix round (patient-in-title, client slot finder D-16, global Save/Discard D-17); Track B B1 warehouse, B2 purchase requests, B3 shop UX v2 (banners/tiles/wishlist/comparison), B4 supplier statuses + 48h returns (D-18) + ratings + auto vendor bill + 📊 stock dashboard. Courier items skipped (user), SMS deferred.
+- **Reviewer batch #2 — FULLY DONE (v19.0.47-53):** Track A ჯავშნები + fix round (patient-in-title, client slot finder D-16, global Save/Discard D-17); Track B B1 warehouse, B2 purchase requests, B3 shop UX v2 (banners/tiles/wishlist/comparison), B4 supplier statuses + 48h returns (D-18) + ratings + auto vendor bill + 📊 stock dashboard. Courier items skipped (user), SMS deferred. Post-batch: shop fix round (v53.x — compare tray, banner slots, supplier-owned brand/pre-order/publish, D-20 read-open/write-scoped products) + supplier-owned warehouses (v54-55, D-19: shelves, Move wizard, ship-time deduction).
 - Status (as of v19.0.46.0.0): Phases 1–2, Rev-A, Phase 3 (A/B/C) and Phase 4 are DONE
   and live. Extras also live: OWL Planning board (Clinic>Planning; click empty grid slot
   to book, with a ripple/ghost cue), a visual patient Dashboard (Health-Care style OWL

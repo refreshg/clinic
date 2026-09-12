@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-11, commit: 52877b4 -->
+<!-- last-synced: 2026-09-12, commit: 0511206 -->
 # Architecture — clinic_patient_card
 
 ## Components
@@ -16,7 +16,8 @@
 | Doctor retail requests | `models/sale_order.py` (is_clinic_retail) | doctor drafts a sale → admin approve (auto-invoice) / reject with visible comment |
 | Planning board | `static/src/planning/` (OWL, tag `clinic_planning`) | 10-min day grid per dentist, drag-to-size booking, popup visit form, off-hours hatch, Reserve panel, history/cancelled buttons |
 | Live alerts | `static/src/clinic_arrived_service.js` | bus subscriber + WebAudio chimes for 6 channels |
-| Supply Shop v2 | `static/src/shop/` + `models/purchase_order.py` + `models/clinic_shop.py` | clinic buys: banners/strips/tiles/wishlist/comparison storefront → cart → 1 RFQ/vendor + mirror SO |
+| Supply Shop v2.1 | `static/src/shop/` + `models/purchase_order.py` + `models/clinic_shop.py` | clinic buys: banner slots+links, category sections (any-depth subcats), strips, wishlist, ⇄ compare tray, repeat order, localStorage cart persistence → cart → 1 RFQ/vendor + mirror SO |
+| Supplier warehouse | `models/clinic_supplier_stock.py` + `wizard/clinic_supplier_move.py` | per-supplier location pair + shelves; count/Apply, Move wizard, ship-at-In-Transit, scoped My Warehouse/Locations/Transfers menus (D-19) |
 | Supplier delivery statuses | `models/sale_order.py` (B4) | 5 manual steps on the mirror SO → PO chatter + admin toast |
 | Returns | `models/clinic_purchase_return.py` | 48h return pipeline; approve → hand-built reverse picking (D-18) |
 | Stock dashboard | `static/src/stock_dashboard/` + `purchase.order.clinic_dashboard_data` | 11 monitoring blocks (items 102-114) |
@@ -49,6 +50,7 @@ flowchart LR
   SO -- bus: confirmed --> CH
   PRQ[clinic.purchase.request] --> PO
   PO -- 48h --> RET[clinic.purchase.return] --> ST[reverse picking]
+  SUP[supplier warehouse] -- In Transit ships --> TR[transit shelf] -- receipt --> WH2[WH/Stock]
   PO -- receipt done --> PRQ
   CRON[ir.cron ×3] --> CE & PT & PRQ
 ```

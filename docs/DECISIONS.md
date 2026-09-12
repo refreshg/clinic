@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-11, commit: 52877b4 -->
+<!-- last-synced: 2026-09-12, commit: 0511206 -->
 # Decisions (ADR) — clinic_patient_card
 
 Format: Context → Decision → Rejected → Consequences. New custom code requires a D-entry
@@ -114,6 +114,30 @@ per-view special buttons cannot know the dirty state. · Decision: t-inherit ext
 web.FormStatusIndicator relabels its buttons ("შენახვა"/"გაუქმება", btn-primary/secondary) —
 the indicator's own dirty/new gating provides exactly the wanted visibility. · Rejected:
 always-visible special="save" bars per view (shown even with nothing to save — reverted).
+
+### D-19: Supplier-owned warehouses on standard locations, deduction at shipping
+Date 2026-09-12 (232d1bb, 3430f77) · Context: suppliers must manage their own stock and
+shelves; the user ruled the stock must drop when the supplier SHIPS, not when the clinic
+receives. · Decision: per-supplier location pair Suppliers/<name> (internal) + In Transit
+(transit), auto-created each upgrade; partner.property_stock_supplier = the transit shelf
+so standard receipts drain it; the mirror-SO "In Transit" button validates an internal
+picking warehouse→transit (reserving from shelves first); returns land back in their
+warehouse; shop availability/pre-order reads THEIR stock. Shelves = child locations
+(owner tag inherited); moves via a small ownership-guarded wizard. Suppliers get scoped
+read-only history (My Transfers) instead of the Inventory app. · Rejected: full Inventory
+app with per-supplier rules (huge leak surface), deduction on clinic receipt. ·
+Consequences: engine is 100% standard stock; unshipped-but-received goods show as negative
+transit — a correct signal.
+
+### D-20: Supplier product access — read open, write scoped
+Date 2026-09-12 (5996a69) · Context: the per-supplier READ rule on products crashed any
+supplier page that merely referenced a foreign product (prefetch/chatter) — the "My Orders
+redirect" hunt. · Decision: product template/variant rules keep write/create/unlink scoped
+to own catalogue but no longer restrict read; My Inventory got its own scoped action; a
+request-PO auto-creates the vendor's supplierinfo line on Place Order (B32) so own-order
+references always resolve. · Rejected: enumerating every read path with extra rules. ·
+Consequences: suppliers can see other catalogues' names/stock figures — accepted for this
+single-DB trusted marketplace.
 
 ### D-18: Returns = dedicated model over a hand-built reverse picking
 Date 2026-09-11 (52877b4) · Context: reviewer items 34-40 want a 48h return window with a

@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-11, commit: 52877b4 -->
+<!-- last-synced: 2026-09-12, commit: 0511206 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -59,6 +59,6 @@ Verification for every step = live RPC + browser (no automated tests — D-11).
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-09-11: B3 shop UX v2 (v19.0.52) + B4 receive/returns/ratings/dashboard (v19.0.53) live-verified — batch #2 (both reviewer docs) is FULLY closed; regression fix: mid-file StockPicking had broken the RFQ/mirror chain since B2.
-Next: user browser-tests B3+B4; then back to M1-M6 (emails still blocked on the clinic, ka.po regen is the first unblocked step) + the duration ა/ბ answer (PRD §9).
-Watch out: new classes go at EOF (see CLAUDE.md rule); supplier statuses are manual; vendor bill auto-drafts on receipt.
+Last session 2026-09-12: მაღაზიამარაგები walkthrough fix round v19.0.53.1-.23 (categories menu+visibility, any-depth subcats, banner slots/links, supplier-owned brands+pre-order+publish toggle, compare tray, cart persistence, To-Rate tray, Returned—Close, D-20 access model) + supplier-owned warehouses v19.0.54-55 (D-19: shelves, Move wizard, ship-time deduction, My Warehouse/Locations/Transfers).
+Next: user finishes browser tests; then M2 ka.po regen (first unblocked) and the duration ა/ბ answer (PRD §9).
+Watch out: ir.actions.server needs group_ids (19 rename); readonly list fields need force_save; shop qty now = the SUPPLIER's stock.

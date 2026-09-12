@@ -1,5 +1,5 @@
-<!-- last-synced: 2026-09-11, commit: 52877b4 -->
-# Technical spec — clinic_patient_card (whole module, v19.0.53.0.0)
+<!-- last-synced: 2026-09-12, commit: 0511206 -->
+# Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
 decision — shipped features trace to PRD §4/§7 tables instead). D-n refs → `docs/DECISIONS.md`.
@@ -35,10 +35,16 @@ builds a prefilled internal transfer from the cabinet that has stock.
 cannot be rejected without a comment (reviewer item 88).
 
 **`clinic.shop.banner`** (batch #2 B3) — storefront promo banner. name✓, image✓(≤1600×500),
-note, sequence, active. Managed in Clinic → Configuration → Shop Banners.
+note, link_url (opens in a new tab on click), show_text (untick when the artwork carries its
+own text), sequence, active. Two fixed slots side-by-side; 3+ banners rotate as a pair every
+6s with arrows. Managed in Clinic → Configuration → Shop Banners.
 
 **`clinic.shop.wishlist`** (batch #2 B3) — per-user shop wishlist. user_id✓(default self),
 product_id✓, unique(user, product); GLOBAL own-rows rule (private per-user data).
+
+**`clinic.supplier.move`** (Transient, v19.0.55) — supplier's internal move strictly inside
+their OWN warehouse tree: product✓, src/dest (both ownership-checked), qty; builds and
+validates a standard internal picking (full stock.move trail, visible in My Transfers).
 
 **`clinic.purchase.return`** (batch #2 B4, D-18) — return/exchange of a delivered clinic
 order. purchase_id✓, vendor_id(related stored), reason✓(Text), image(photo),
@@ -119,14 +125,19 @@ doctor specialty for slot search/autofill); both on the "Clinic" tab + `clinic_d
 **`res.company`**: clinic_workday_mon..sun(Bool), clinic_work_start/_end(Float, widget
 float_time), clinic_block_room_overlap(Bool, default True); "Clinic Schedule" tab; helper
 `_clinic_workdays()`.
-**`product.category`**: image_128 (batch #2 B3 — storefront tile photo; tiny inherit,
-no std image field on categories).
+**`product.category`**: image_128 (storefront tile photo) + clinic_shop_visible (default on —
+untick to keep the category tile/chips out of the shop even while it holds products).
+**`stock.location`**: clinic_supplier_id (D-19 — which supplier owns this location; children
+created under a supplier location inherit it, keeping the scoping rules airtight).
 **`product.template`**: is_clinic_procedure, is_clinic_supply; batch #2 B3:
 clinic_sponsored + clinic_preorder storefront flags, `clinic_shop_data()` (one RPC feeding
 the whole shop v2: offers with brand/badges/vendor-rating, categories+images, banners,
 bestseller ids [90-day PO qty], wishlist ids, last order for repeat) and
 `clinic_wishlist_toggle(product_id)`; batch #2 B1:
-clinic_brand_id(M2o clinic.brand), clinic_avg_consumption (sudo compute — 90-day outgoing
+clinic_brand_id(M2o clinic.brand — the SUPPLIER picks/creates brands in My Shop, name-
+deduplicated case-insensitively; the Brands dictionary menu is base.group_system only),
+clinic_shop_published (soft hide from the shop, supplier-toggled — the vendor line stays,
+unlike Remove), clinic_avg_consumption (sudo compute — 90-day outgoing
 internal→customer/production/inventory moves ÷ 3), clinic_last_purchase_price (sudo compute —
 last confirmed POL, fallback first seller price); `_clinic_notify_low_stock()` (cron; B2:
 also auto-drafts a source=low_stock purchase request unless an open one covers the product);
@@ -149,7 +160,10 @@ invoice auto, waybill attached by hand; billing failures never block the receipt
 **`sale.order`**: is_clinic_order, clinic_supplier_id, clinic_purchase_id;
 batch #2 B4: clinic_delivery_status (availability/preparing/ready/in_transit/delivered) +
 five supplier buttons — advanced BY HAND (no courier, user decision); every step posts to
-the linked PO chatter and toasts admins over `clinic_order_confirmed`.
+the linked PO chatter and toasts admins over `clinic_order_confirmed`. Pressing In Transit
+also SHIPS: a validated internal picking moves the ordered qty supplier-warehouse →
+their transit shelf (reserved from shelves first, forced negative if uncounted) — the
+supplier's stock drops at shipping time, the clinic's rises only on receipt (D-19).
 `action_confirm` → `_clinic_notify_clinic_confirmed` (mirror-confirms PO).
 Batch #2: is_clinic_retail flag; create() FORCES user_id to the drafting plain doctor (the web form sends the partner salesperson — v19.0.51.18) + notifies
 admins (activity + bus `clinic_sale_request`); action_confirm auto-invoices retail orders;
@@ -190,6 +204,11 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | B28 | „🔄 დაბრუნება" on the PO | ≤48h after receipt, no open return | reason(+photo) → supplier review → approve (auto reverse picking stock→vendor) / reject (comment required) → return-transit → closed | custom pipeline over std picking (D-18) |
 | B29 | manager rates a received order | clinic PO received | ★1-5 product + vendor + note; vendor averages in shop cards/comparison/dashboard | custom (item 28) |
 | B30 | 📊 Stock Dashboard | admin | one clinic_dashboard_data RPC renders 11 monitoring blocks | custom OWL over std data (items 102-114) |
+| B31 | supplier toggles 👁/🚫 on a product | own product | clinic_shop_published soft-hide — offers skipped by clinic_shop_data, vendor line kept | custom flag (batch #2) |
+| B32 | Place Order from a request | vendor lacks a supplierinfo on the product | the line is auto-created (last price) — ordering FROM a vendor makes them a vendor OF the product; without it the supplier's own order crashed on the unreadable product | custom glue (v19.0.53.21) |
+| B33 | supplier warehouse chain | D-19 | count (std quant Apply) → In Transit ships to the transit shelf → clinic receipt drains transit (property_stock_supplier) → returns land back in their warehouse; shop/pre-order qty = SUPPLIER's own stock | std locations/quants/pickings + thin glue (D-19) |
+| B34 | received order without a rating | admin | it queues in Stock → შესაფასებელი (inline ★ columns); a rated row leaves the tray | custom list over std POs |
+| B35 | shop compare tray | user picks ⇄ (max 4) | side-by-side table (price/vendor+★/delay/brand/category/stock) with per-column add-to-cart; cart+compare persist per-user in localStorage | custom UI |
 
 ## Standard-first check
 | requirement | standard feature checked | covers? | if no → custom + ref |
@@ -226,6 +245,8 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | supplier delivery status | — (no vendor portal status in Community) | no | selection + buttons on the mirror SO (batch #2 plan) |
 | vendor rating | rating.mixin (website-oriented) | partial (portal/website machinery) | two selection fields on the PO, averaged in RPCs (batch #2 plan) |
 | manager dashboard | std dashboards (spreadsheet is Enterprise) | no | OWL client action over one RPC (batch #2 plan) |
+| supplier warehouse | stock locations/quants/pickings/transit + property_stock_supplier | yes (engine 100% std) | thin glue: owner tag on locations, scoped menus, ship-at-transit hook, Move wizard (D-19) |
+| supplier product access | per-supplier read scoping | no (foreign refs crash pages) | READ open to internal users, WRITE scoped (D-20) |
 
 ## Views / UI
 | view / action | xml id | key points |
@@ -259,13 +280,18 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 - Groups (`security/clinic_groups.xml`): `group_clinic_admin` (implies partner_manager,
   purchase_user, stock_user, production_lot, multi_locations — batch #2 B1), `group_clinic_doctor` (partner_manager), `group_clinic_supplier`
   (purchase_user, stock_user, sale_salesman). Privilege `privilege_clinic`.
-- ACL (`ir.model.access.csv`): CRUD for the 19 clinic models (banner user-r/admin-rwcu;
+- ACL (`ir.model.access.csv`): CRUD for the 20 clinic models (+supplier.move wizard;
+  supplier rwc on stock.location scoped by rule; doctor read-only purchase.order(+line)) (banner user-r/admin-rwcu;
   wishlist user-rwcu; return admin-rwcu/supplier-rw) (user read / manager rw
   pattern; brand user-r/system-rwcu; purchase request admin-rwcu/doctor-rwc);
   supplier rows for product.template/product/supplierinfo/category; doctor rows: sale.order
   (r/w/c), sale.order.line (rwcu), read-only sale.order.template(+line), quotation.document,
   and READ-ONLY stock.move / stock.move.line / stock.picking / stock.quant /
   account.move / account.move.line (sale_stock + invoicing computes fire on SO save).
+- Supplier product/template rules are WRITE-scoped only since v19.0.53.22 (D-20): reading
+  any product never crashes their pages; My Inventory is a separately scoped action.
+  Supplier location rule: edit own subtree only. Server actions behind supplier menus
+  carry group_ids (Odoo 19: ungrouped server actions run for admins only).
 - Record rules: doctor own-DRAFT sale write rules (`rule_clinic_doctor_sale_write`/`_line_write`, write/create only — read stays open for patient history); purchase-request rules
   (doctor sees/edits own requests, admin all); wishlist own-rows GLOBAL rule; supplier
   own-returns rule; `rule_clinic_event_visibility` (GLOBAL: non-clinic OR own dentist OR admin-all,
@@ -305,6 +331,10 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   kept as RPC fallback.
 - 2026-09-05: RPC gotchas — stock.picking.move_ids_without_package and stock.move.name
   removed in 19; done qty = write {quantity, picked:true} then button_validate.
+- 2026-09-12: Odoo 19 renames — ir.actions.server.groups_id → group_ids (ParseError on
+  upgrade otherwise); a readonly list field needs force_save="1" or the client drops it
+  from create vals (stock.quant KeyError).
+- 2026-09-12: shop "stock" now means the SUPPLIER's own stock, not the clinic's (D-19).
 - 2026-09-11: REGRESSION (v19.0.51→53): the StockPicking class added in B2 sat MID-FILE, so
   every purchase.order method below it (clinic_create_rfqs, mirror chain, button_confirm
   hook) silently re-parented to stock.picking — shop checkout was broken until B4. Fixed by
