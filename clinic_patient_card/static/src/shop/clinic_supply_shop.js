@@ -420,11 +420,6 @@ export class ClinicSupplyShop extends Component {
                 ["description_sale", "description"]);
             desc = (t.length && (t[0].description_sale || t[0].description)) || "";
         }
-        // reviewer item 15: price/vendor comparison — every vendor's offer
-        // for this product, cheapest first
-        const others = this.state.offers
-            .filter((o) => o.product_id === offer.product_id)
-            .sort((a, b) => a.price - b.price);
         // similar products (same category), one offer per product
         const similar = this._uniqueByProduct(
             this.state.offers.filter(
@@ -436,7 +431,6 @@ export class ClinicSupplyShop extends Component {
             image_big: (p.length && p[0].image_1920) || offer.image,
             desc,
             addQty: 1,
-            vendorOffers: others,
             similar,
         };
     }

@@ -287,26 +287,6 @@
                             </div>
 
                             <!-- vendor price comparison -->
-                            <t t-if="state.detail.vendorOffers.length > 1">
-                                <div class="fw-semibold mt-3 mb-1">🏷️ ფასების შედარება მომწოდებლებში</div>
-                                <table class="table table-sm cs_cmp">
-                                    <thead><tr><th>მომწოდებელი</th><th>ფასი</th><th>ვადა</th><th>★</th><th/></tr></thead>
-                                    <tbody>
-                                        <t t-foreach="state.detail.vendorOffers" t-as="vo" t-key="'vo_' + vo.key">
-                                            <tr>
-                                                <td t-esc="vo.vendor_name"/>
-                                                <td><t t-esc="vo.price.toFixed(2)"/> ₾</td>
-                                                <td><t t-esc="vo.delay"/> დღე</td>
-                                                <td><t t-esc="vo.vendor_rating || '—'"/></td>
-                                                <td class="text-end">
-                                                    <button class="btn btn-outline-primary btn-sm"
-                                                            t-on-click="() => this.addToCart(vo)">კალათაში</button>
-                                                </td>
-                                            </tr>
-                                        </t>
-                                    </tbody>
-                                </table>
-                            </t>
 
                             <!-- similar products -->
                             <t t-if="state.detail.similar.length">
