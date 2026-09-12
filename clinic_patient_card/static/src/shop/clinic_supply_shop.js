@@ -297,6 +297,11 @@ export class ClinicSupplyShop extends Component {
         const b = this.state.banners;
         return b.length ? b[this.state.bannerIdx % b.length] : false;
     }
+    openBanner(bn) {
+        if (bn.link) {
+            window.open(bn.link, "_blank");
+        }
+    }
     nextBanner(step) {
         const n = this.state.banners.length || 1;
         this.state.bannerIdx = (this.state.bannerIdx + step + n) % n;

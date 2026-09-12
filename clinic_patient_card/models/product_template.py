@@ -255,6 +255,8 @@ class ProductTemplate(models.Model):
         banners = [{
             "id": bn.id, "name": bn.name, "note": bn.note or "",
             "image": b64(bn.image),
+            "link": bn.link_url or "",
+            "show_text": bn.show_text,
         } for bn in env["clinic.shop.banner"].sudo().search([])]
         # bestsellers: most purchased over the last 90 days (confirmed POs)
         best = env["purchase.order.line"].sudo()._read_group(

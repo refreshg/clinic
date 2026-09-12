@@ -11,6 +11,12 @@ class ClinicShopBanner(models.Model):
     name = fields.Char(required=True)
     image = fields.Image(required=True, max_width=1600, max_height=500)
     note = fields.Char(string="Subtitle")
+    link_url = fields.Char(
+        string="Link (URL)",
+        help="Opens in a new tab when the banner is clicked.")
+    show_text = fields.Boolean(
+        string="Show Texts on Banner", default=True,
+        help="Untick when the image already carries its own text.")
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
 

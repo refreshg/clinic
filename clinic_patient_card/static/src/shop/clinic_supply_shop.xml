@@ -49,16 +49,19 @@
                 </button>
             </div>
 
-            <!-- banner strip (admin uploads in Configuration → Shop Banners) -->
-            <div t-if="banner and isPlainView" class="cs_banner mb-3">
-                <img t-att-src="'data:image/png;base64,' + banner.image" alt=""/>
-                <div class="cs_banner_txt">
-                    <div class="cs_banner_title" t-esc="banner.name"/>
-                    <div t-if="banner.note" class="cs_banner_note" t-esc="banner.note"/>
-                </div>
-                <t t-if="state.banners.length > 1">
-                    <button class="cs_banner_nav cs_banner_prev" t-on-click="() => this.nextBanner(-1)">‹</button>
-                    <button class="cs_banner_nav cs_banner_next" t-on-click="() => this.nextBanner(1)">›</button>
+            <!-- banner slots: two per row (reviewer reference layout);
+                 a banner with a link opens it in a new tab -->
+            <div t-if="state.banners.length and isPlainView" class="cs_banner_grid mb-3">
+                <t t-foreach="state.banners" t-as="bn" t-key="bn.id">
+                    <div class="cs_banner" t-att-class="{ cs_banner_link: bn.link }"
+                         t-att-title="bn.link || ''"
+                         t-on-click="() => this.openBanner(bn)">
+                        <img t-att-src="'data:image/png;base64,' + bn.image" alt=""/>
+                        <div t-if="bn.show_text" class="cs_banner_txt">
+                            <div class="cs_banner_title" t-esc="bn.name"/>
+                            <div t-if="bn.note" class="cs_banner_note" t-esc="bn.note"/>
+                        </div>
+                    </div>
                 </t>
             </div>
 

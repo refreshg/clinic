@@ -257,3 +257,23 @@
         &.cs_subbtn_on { background: #714b67; border-color: #714b67; color: #fff; }
     }
 }
+
+.clinic_shop .cs_banner_grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    @media (max-width: 900px) { grid-template-columns: 1fr; }
+    .cs_banner {
+        max-height: none;
+        height: 170px;
+        img { height: 170px; }
+        &.cs_banner_link { cursor: pointer; }
+        &.cs_banner_link:hover { filter: brightness(1.05); }
+        .cs_banner_txt {
+            left: 0; right: 0; bottom: 0; padding: 26px 16px 10px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, .7));
+            .cs_banner_title { font-size: 18px; }
+            .cs_banner_note { font-size: 13px; }
+        }
+    }
+}

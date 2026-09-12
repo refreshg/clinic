@@ -45,6 +45,7 @@
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="note"/>
+                <field name="link_url" optional="show"/>
                 <field name="active" widget="boolean_toggle"/>
             </list>
         </field>
@@ -58,6 +59,8 @@
                     <group>
                         <field name="name"/>
                         <field name="note"/>
+                        <field name="link_url" placeholder="https://..."/>
+                        <field name="show_text"/>
                         <field name="active" widget="boolean_toggle"/>
                     </group>
                     <group>
