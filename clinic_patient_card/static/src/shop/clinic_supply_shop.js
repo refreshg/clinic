@@ -166,11 +166,18 @@ export class ClinicSupplyShop extends Component {
     // ------------------------------------------------------------------
     // filtering / sorting
     // ------------------------------------------------------------------
-    _passes(o) {
+    // vendor/brand toggles apply EVERYWHERE (grid + strips + similar)
+    _passesFilters(o) {
         if (this.state.vendorOff[o.vendor_id]) {
             return false;
         }
         if (o.brand_id && this.state.brandOff[o.brand_id]) {
+            return false;
+        }
+        return true;
+    }
+    _passes(o) {
+        if (!this._passesFilters(o)) {
             return false;
         }
         if (this.state.subcatId
@@ -216,7 +223,7 @@ export class ClinicSupplyShop extends Component {
         const out = [];
         for (const o of this.state.offers) {
             if (shownKeys.has(o.key) || !cats.has(o.categ_id)
-                    || seen.has(o.product_id)) {
+                    || seen.has(o.product_id) || !this._passesFilters(o)) {
                 continue;
             }
             seen.add(o.product_id);
@@ -249,16 +256,19 @@ export class ClinicSupplyShop extends Component {
     }
     get sponsoredOffers() {
         return this._uniqueByProduct(
-            this.state.offers.filter((o) => o.sponsored), 8);
+            this.state.offers.filter(
+                (o) => o.sponsored && this._passesFilters(o)), 8);
     }
     get newOffers() {
         return this._uniqueByProduct(
-            this.state.offers.filter((o) => o.is_new), 8);
+            this.state.offers.filter(
+                (o) => o.is_new && this._passesFilters(o)), 8);
     }
     get bestsellerOffers() {
         const out = [];
         for (const pid of this.state.bestsellerIds) {
-            const o = this.state.offers.find((x) => x.product_id === pid);
+            const o = this.state.offers.find(
+                (x) => x.product_id === pid && this._passesFilters(x));
             if (o) {
                 out.push(o);
             }
