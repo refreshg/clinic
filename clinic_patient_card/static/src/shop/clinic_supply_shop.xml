@@ -19,7 +19,7 @@
                 <t t-esc="o.vendor_name"/>
                 <span t-if="o.vendor_rating" class="cs_vrating">★ <t t-esc="o.vendor_rating"/></span>
             </div>
-            <div t-if="o.brand" class="cs_card_brand" t-esc="o.brand"/>
+            <div class="cs_card_brand" t-esc="o.brand || ' '"/>
             <div class="cs_price"><t t-esc="o.price.toFixed(2)"/> ₾</div>
             <button class="btn btn-primary btn-sm w-100 mt-2"
                     t-on-click="() => this.addToCart(o)">კალათაში</button>
