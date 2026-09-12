@@ -79,6 +79,49 @@
               parent="menu_clinic_config" action="action_clinic_shop_banner" sequence="26"
               groups="clinic_patient_card.group_clinic_admin"/>
 
+    <!-- Sponsored management: the clinic sees/toggles its sponsored products
+         in one editable list (reviewer: "კლინიკა ვერ ხედავს თავის
+         დასპონსორებულებს"). -->
+    <record id="view_clinic_sponsored_list" model="ir.ui.view">
+        <field name="name">clinic.sponsored.product.list</field>
+        <field name="model">product.template</field>
+        <field name="priority">60</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" create="0" delete="0">
+                <field name="name" readonly="1"/>
+                <field name="categ_id" readonly="1"/>
+                <field name="clinic_brand_id" readonly="1"/>
+                <field name="clinic_sponsored" widget="boolean_toggle"/>
+                <field name="clinic_preorder" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_clinic_sponsored_search" model="ir.ui.view">
+        <field name="name">clinic.sponsored.product.search</field>
+        <field name="model">product.template</field>
+        <field name="priority">60</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <filter name="f_sponsored" string="Sponsored"
+                        domain="[('clinic_sponsored', '=', True)]"/>
+                <filter name="f_preorder" string="Pre-order"
+                        domain="[('clinic_preorder', '=', True)]"/>
+            </search>
+        </field>
+    </record>
+    <record id="action_clinic_sponsored" model="ir.actions.act_window">
+        <field name="name">Sponsored Products</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list</field>
+        <field name="domain">[('is_clinic_supply', '=', True)]</field>
+        <field name="view_id" ref="view_clinic_sponsored_list"/>
+        <field name="search_view_id" ref="view_clinic_sponsored_search"/>
+    </record>
+    <menuitem id="menu_clinic_sponsored" name="Sponsored Products"
+              parent="menu_clinic_config" action="action_clinic_sponsored" sequence="28"
+              groups="clinic_patient_card.group_clinic_admin"/>
+
     <!-- Shop categories reachable straight from the Clinic menu (reviewer:
          "სად ვამატებ კატეგორიებს" — no need to hunt in Inventory). -->
     <record id="action_clinic_product_categories" model="ir.actions.act_window">
