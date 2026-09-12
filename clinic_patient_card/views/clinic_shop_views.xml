@@ -95,6 +95,7 @@
         <field name="arch" type="xml">
             <field name="parent_id" position="after">
                 <field name="image_128" widget="image" class="oe_avatar"/>
+                <field name="clinic_shop_visible"/>
             </field>
         </field>
     </record>

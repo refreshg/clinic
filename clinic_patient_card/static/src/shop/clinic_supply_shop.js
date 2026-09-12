@@ -68,7 +68,7 @@ export class ClinicSupplyShop extends Component {
         // top-level categories that actually hold shop offers, keeping photos
         const used = new Set(this.state.offers.map((o) => o.top_categ_id));
         return this.state.categories.filter(
-            (c) => !c.parent_id && used.has(c.id));
+            (c) => !c.parent_id && used.has(c.id) && c.shop_visible !== false);
     }
     get subCategories() {
         if (!this.state.catId) {
@@ -76,7 +76,8 @@ export class ClinicSupplyShop extends Component {
         }
         const used = new Set(this.state.offers.map((o) => o.categ_id));
         return this.state.categories.filter(
-            (c) => c.parent_id === this.state.catId && used.has(c.id));
+            (c) => c.parent_id === this.state.catId && used.has(c.id)
+                && c.shop_visible !== false);
     }
     pickCat(id) {
         this.state.catId = this.state.catId === id ? false : id;

@@ -250,6 +250,7 @@ class ProductTemplate(models.Model):
             "id": c.id, "name": c.name,
             "parent_id": c.parent_id.id or False,
             "image": b64(c.image_128),
+            "shop_visible": c.clinic_shop_visible,
         } for c in env["product.category"].sudo().search([])]
         banners = [{
             "id": bn.id, "name": bn.name, "note": bn.note or "",
