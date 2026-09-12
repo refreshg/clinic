@@ -10,6 +10,17 @@ class StockLocation(models.Model):
     clinic_supplier_id = fields.Many2one(
         "res.partner", string="Clinic Supplier", index=True)
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        # a shelf created under a supplier's location belongs to that
+        # supplier too (keeps the scoping rules airtight for sub-locations)
+        for vals in vals_list:
+            if vals.get("location_id") and not vals.get("clinic_supplier_id"):
+                parent = self.browse(vals["location_id"])
+                if parent.clinic_supplier_id:
+                    vals["clinic_supplier_id"] = parent.clinic_supplier_id.id
+        return super().create(vals_list)
+
 
 class ResPartnerSupplierStock(models.Model):
     _inherit = "res.partner"
@@ -69,6 +80,26 @@ class ResPartnerSupplierStock(models.Model):
         return self.env["stock.location"].sudo().search([
             ("clinic_supplier_id", "=", self.commercial_partner_id.id),
             ("usage", "=", "transit")], limit=1)
+
+    @api.model
+    def clinic_my_locations_action(self):
+        """The supplier's own shelves: list-editable, new ones default under
+        their root warehouse location."""
+        vendor = self.env.user.partner_id.commercial_partner_id
+        root = self.env.user.partner_id._clinic_supplier_stock_loc()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("My Locations"),
+            "res_model": "stock.location",
+            "view_mode": "list",
+            "view_id": self.env.ref(
+                "clinic_patient_card.view_clinic_supplier_location_list").id,
+            "domain": [("clinic_supplier_id", "=", vendor.id),
+                       ("usage", "=", "internal")],
+            "context": {"default_location_id": root.id,
+                        "default_usage": "internal",
+                        "default_clinic_supplier_id": vendor.id},
+        }
 
     @api.model
     def clinic_my_transfers_action(self):

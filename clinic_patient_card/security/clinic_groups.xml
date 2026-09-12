@@ -180,6 +180,21 @@
         </field>
     </record>
 
+    <!-- Supplier shelves: writing/creating locations is limited to THEIR
+         own warehouse subtree (reading stays standard). -->
+    <record id="rule_clinic_supplier_own_locations" model="ir.rule">
+        <field name="name">Clinic Supplier: edit own locations only</field>
+        <field name="model_id" ref="stock.model_stock_location"/>
+        <field name="groups" eval="[(4, ref('group_clinic_supplier'))]"/>
+        <field name="domain_force">
+            [('clinic_supplier_id', '=', user.partner_id.commercial_partner_id.id)]
+        </field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
     <!-- Shop v2: a wishlist row belongs to its user only (GLOBAL rule — the
          model is per-user private data). -->
     <record id="rule_clinic_wishlist_own" model="ir.rule">

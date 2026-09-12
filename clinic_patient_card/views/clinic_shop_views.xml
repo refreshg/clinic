@@ -58,6 +58,64 @@
             </list>
         </field>
     </record>
+    <!-- supplier shelves: list-editable sub-locations of their warehouse -->
+    <record id="view_clinic_supplier_location_list" model="ir.ui.view">
+        <field name="name">clinic.supplier.location.list</field>
+        <field name="model">stock.location</field>
+        <field name="priority">80</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" delete="0">
+                <field name="name" string="Shelf / Zone"/>
+                <field name="location_id" string="Inside" readonly="1" force_save="1"/>
+                <field name="clinic_supplier_id" column_invisible="1" force_save="1"/>
+                <field name="usage" column_invisible="1" force_save="1"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_clinic_my_locations" model="ir.actions.server">
+        <field name="name">My Locations</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="state">code</field>
+        <field name="code">action = model.clinic_my_locations_action()</field>
+        <field name="group_ids" eval="[(4, ref('group_clinic_supplier'))]"/>
+    </record>
+    <menuitem id="menu_clinic_supplier_locations" name="My Locations"
+              parent="menu_clinic_root" action="action_clinic_my_locations"
+              sequence="17" groups="clinic_patient_card.group_clinic_supplier"/>
+
+    <!-- internal move inside the supplier's own tree -->
+    <record id="view_clinic_supplier_move_form" model="ir.ui.view">
+        <field name="name">clinic.supplier.move.form</field>
+        <field name="model">clinic.supplier.move</field>
+        <field name="arch" type="xml">
+            <form string="Move Stock">
+                <group>
+                    <field name="product_id"/>
+                    <field name="src_location_id"
+                           domain="[('clinic_supplier_id', '!=', False), ('usage', '=', 'internal')]"/>
+                    <field name="dest_location_id"
+                           domain="[('clinic_supplier_id', '!=', False), ('usage', '=', 'internal')]"/>
+                    <field name="qty"/>
+                </group>
+                <footer>
+                    <button name="action_move" type="object" string="Move"
+                            class="btn-primary"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_clinic_supplier_move" model="ir.actions.act_window">
+        <field name="name">Move Stock</field>
+        <field name="res_model">clinic.supplier.move</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_clinic_supplier_move" name="↔ Move Stock"
+              parent="menu_clinic_root" action="action_clinic_supplier_move"
+              sequence="17" groups="clinic_patient_card.group_clinic_supplier"/>
+
     <!-- read-only movement history for the supplier: no form view on
          purpose — a picking form would expose Validate on the CLINIC's
          receipt (მიღებას მხოლოდ კლინიკა ადასტურებს) -->

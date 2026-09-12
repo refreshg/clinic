@@ -76,8 +76,10 @@ class SaleOrder(models.Model):
         })
         try:
             pk.action_confirm()
+            pk.action_assign()  # reserve from the shelves (child locations)
             for move in pk.move_ids:
-                move.quantity = move.product_uom_qty
+                if not move.quantity:
+                    move.quantity = move.product_uom_qty
                 move.picked = True
             pk.button_validate()
             self.message_post(body=_(
