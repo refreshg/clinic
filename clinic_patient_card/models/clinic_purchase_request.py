@@ -101,7 +101,22 @@ class ClinicPurchaseRequest(models.Model):
                     _("No vendor for %s — set one on the line.")
                     % line.product_id.display_name)
             by_vendor.setdefault(vendor, []).append(line)
+        Supplierinfo = self.env["product.supplierinfo"].sudo()
         for vendor, lines in by_vendor.items():
+            # ordering FROM this vendor makes them a vendor OF the product:
+            # without a supplierinfo line the supplier's own record rule
+            # would block them from reading the product on their own order
+            for l in lines:
+                tmpl = l.product_id.product_tmpl_id
+                if not Supplierinfo.search_count([
+                        ("product_tmpl_id", "=", tmpl.id),
+                        ("partner_id", "=", vendor.id)]):
+                    Supplierinfo.create({
+                        "product_tmpl_id": tmpl.id,
+                        "partner_id": vendor.id,
+                        "price": l.last_price or 0.0,
+                        "delay": 3,
+                    })
             self.env["purchase.order"].create({
                 "partner_id": vendor.id,
                 "origin": self.name,
