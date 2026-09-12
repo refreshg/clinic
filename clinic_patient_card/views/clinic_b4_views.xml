@@ -15,13 +15,14 @@
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="clinic_delivery_status" invisible="not is_clinic_order"/>
+                <field name="clinic_request_id" invisible="1"/>
                 <field name="clinic_receipt_date" invisible="not clinic_receipt_date"/>
                 <field name="is_clinic_order" invisible="1"/>
                 <field name="clinic_return_allowed" invisible="1"/>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page name="clinic_rating" string="Rating"
-                      invisible="not is_clinic_order or not clinic_receipt_date"
+                      invisible="(not is_clinic_order and not clinic_request_id) or not clinic_receipt_date"
                       groups="clinic_patient_card.group_clinic_admin">
                     <group>
                         <group>
@@ -34,7 +35,7 @@
                     </group>
                 </page>
                 <page name="clinic_returns" string="Returns"
-                      invisible="not is_clinic_order">
+                      invisible="not is_clinic_order and not clinic_request_id">
                     <field name="clinic_return_ids" readonly="1">
                         <list>
                             <field name="create_date"/>

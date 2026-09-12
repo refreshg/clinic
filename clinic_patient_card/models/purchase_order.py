@@ -41,7 +41,8 @@ class PurchaseOrder(models.Model):
             po.clinic_receipt_date = done.date_done if done else False
             # reviewer item 35: the Return button lives for 48 hours only
             po.clinic_return_allowed = bool(
-                po.is_clinic_order and done and done.date_done
+                (po.is_clinic_order or po.clinic_request_id)
+                and done and done.date_done
                 and (now - done.date_done).total_seconds() <= 48 * 3600
                 and not po.clinic_return_ids.filtered(
                     lambda r: r.state not in ("rejected", "closed")))
@@ -85,9 +86,10 @@ class PurchaseOrder(models.Model):
         to_approve = Req.search_read(
             [("state", "in", ("requested", "review"))],
             ["name", "source", "state"], limit=8)
+        clinic_po_dom = ["|", ("is_clinic_order", "=", True),
+                         ("clinic_request_id", "!=", False)]
         open_pos = Po.search(
-            [("is_clinic_order", "=", True),
-             ("state", "in", ("draft", "sent", "purchase"))])
+            clinic_po_dom + [("state", "in", ("draft", "sent", "purchase"))])
         ongoing = [{"name": p.name, "vendor": p.partner_id.name,
                     "status": p.clinic_delivery_status or p.state,
                     "amount": p.amount_total} for p in open_pos
@@ -99,13 +101,13 @@ class PurchaseOrder(models.Model):
                 and not p.clinic_receipt_date]
 
         month_pos = Po.search(
-            [("is_clinic_order", "=", True),
-             ("state", "in", ("purchase", "done")),
+            clinic_po_dom + [("state", "in", ("purchase", "done")),
              ("date_approve", ">=", fields.Datetime.to_string(month_start))])
         monthly_spend = sum(month_pos.mapped("amount_total"))
 
         by_prod = Pol._read_group(
-            [("order_id.is_clinic_order", "=", True),
+            ["|", ("order_id.is_clinic_order", "=", True),
+             ("order_id.clinic_request_id", "!=", False),
              ("order_id.state", "in", ("purchase", "done")),
              ("order_id.date_approve", ">=", now - timedelta(days=90))],
             ["product_id"], ["price_total:sum"])
@@ -141,7 +143,7 @@ class PurchaseOrder(models.Model):
                                "qty": lot.product_qty})
 
         vendors = {}
-        rated = Po.search([("is_clinic_order", "=", True)])
+        rated = Po.search(clinic_po_dom)
         for p in rated:
             v = vendors.setdefault(p.partner_id.id, {
                 "vendor": p.partner_id.name, "orders": 0,
@@ -328,7 +330,8 @@ class StockPicking(models.Model):
             # B4 item 16 (user decision): vendor bill drafts itself on
             # receipt; the waybill is attached by hand on the order
             for po in receipts.mapped("purchase_id").filtered(
-                    lambda p: p.is_clinic_order and not p.invoice_ids):
+                    lambda p: (p.is_clinic_order or p.clinic_request_id)
+                    and not p.invoice_ids):
                 try:
                     po.sudo().action_create_invoice()
                 except Exception:
