@@ -75,14 +75,15 @@
                     </div>
                 </t>
             </div>
-            <div t-if="subCategories.length" class="mb-2 d-flex flex-wrap gap-1">
-                <span class="badge rounded-pill cs_chip"
-                      t-att-class="{ cs_chip_on: !state.subcatId }"
-                      t-on-click="() => this.pickSubcat(false)">ყველა</span>
+            <div t-if="subCategories.length" class="cs_subcats mb-2">
+                <span class="cs_subcats_label">📂 ქვეკატეგორიები:</span>
+                <button type="button" class="btn btn-sm rounded-pill cs_subbtn"
+                        t-att-class="{ cs_subbtn_on: !state.subcatId }"
+                        t-on-click="() => this.pickSubcat(false)">ყველა</button>
                 <t t-foreach="subCategories" t-as="sc" t-key="sc.id">
-                    <span class="badge rounded-pill cs_chip"
-                          t-att-class="{ cs_chip_on: state.subcatId === sc.id }"
-                          t-on-click="() => this.pickSubcat(sc.id)" t-esc="sc.name"/>
+                    <button type="button" class="btn btn-sm rounded-pill cs_subbtn"
+                            t-att-class="{ cs_subbtn_on: state.subcatId === sc.id }"
+                            t-on-click="() => this.pickSubcat(sc.id)" t-esc="sc.name"/>
                 </t>
             </div>
 
