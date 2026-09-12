@@ -21,8 +21,14 @@
 
     <!-- Suppliers reach their (scoped) stock straight from standard Inventory,
          which is the base for the products they manage in "My Shop". -->
+    <record id="action_clinic_supplier_inventory" model="ir.actions.act_window">
+        <field name="name">My Inventory</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_clinic_supply', '=', True), ('seller_ids.partner_id.commercial_partner_id.user_ids', 'in', [uid])]</field>
+    </record>
     <menuitem id="menu_clinic_supplier_inventory" name="My Inventory"
-              parent="menu_clinic_root" action="stock.product_template_action_product"
+              parent="menu_clinic_root" action="action_clinic_supplier_inventory"
               sequence="17" groups="clinic_patient_card.group_clinic_supplier"/>
 
     <!-- Clinic orders reach the supplier as their own sales orders to fulfil. -->
