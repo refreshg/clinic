@@ -307,3 +307,17 @@
     .cs_price { margin-top: auto; padding-top: 6px; }
 }
 .clinic_shop .cs_strip { align-items: stretch; }
+
+.clinic_shop .cs_cmp_toggle {
+    position: absolute; top: 30px; right: 8px; z-index: 2;
+    border: 0; background: transparent; font-size: 15px; line-height: 1;
+    color: #cfd4dc; cursor: pointer; font-weight: 700;
+    &.cs_cmp_on, &:hover { color: #2f80ed; }
+}
+.clinic_shop .cs_cmp_modal {
+    max-width: 900px; width: 92vw;
+    .cs_cmp_table {
+        th { width: 140px; vertical-align: middle; background: #f8f7f9; }
+        img { max-height: 80px; max-width: 110px; object-fit: contain; }
+    }
+}

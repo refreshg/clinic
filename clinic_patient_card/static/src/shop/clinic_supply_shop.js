@@ -29,6 +29,8 @@ export class ClinicSupplyShop extends Component {
             sortBy: "name",
             cart: {},             // `${product_id}_${vendor_id}` -> line
             cartOpen: false,
+            compareKeys: [],      // offer keys picked for comparison (max 4)
+            compareOpen: false,
             detail: null,
             bannerIdx: 0,
         });
@@ -290,6 +292,39 @@ export class ClinicSupplyShop extends Component {
     }
     toggleWishlistOnly() {
         this.state.wishlistOnly = !this.state.wishlistOnly;
+    }
+
+    // ------------------------------------------------------------------
+    // compare (reviewer: pick products like real shops → side-by-side table)
+    // ------------------------------------------------------------------
+    inCompare(o) {
+        return this.state.compareKeys.includes(o.key);
+    }
+    toggleCompare(o) {
+        const k = this.state.compareKeys;
+        if (k.includes(o.key)) {
+            this.state.compareKeys = k.filter((x) => x !== o.key);
+        } else if (k.length >= 4) {
+            this.notification.add(_t("შედარებაში მაქსიმუმ 4 პროდუქტი ეტევა"), { type: "warning" });
+        } else {
+            k.push(o.key);
+        }
+    }
+    get compareOffers() {
+        return this.state.compareKeys
+            .map((k) => this.state.offers.find((o) => o.key === k))
+            .filter(Boolean);
+    }
+    openCompare() {
+        if (this.compareOffers.length >= 2) {
+            this.state.compareOpen = true;
+        } else {
+            this.notification.add(_t("აირჩიე მინიმუმ 2 პროდუქტი ⇄ ღილაკით"), { type: "info" });
+        }
+    }
+    clearCompare() {
+        this.state.compareKeys = [];
+        this.state.compareOpen = false;
     }
 
     // ------------------------------------------------------------------

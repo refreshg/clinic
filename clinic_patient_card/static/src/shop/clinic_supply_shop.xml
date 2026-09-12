@@ -10,6 +10,9 @@
             <button class="cs_wish" t-att-class="{ cs_wish_on: inWishlist(o) }"
                     t-on-click.stop="() => this.toggleWish(o)"
                     title="Wishlist">♥</button>
+            <button class="cs_cmp_toggle" t-att-class="{ cs_cmp_on: inCompare(o) }"
+                    t-on-click.stop="() => this.toggleCompare(o)"
+                    title="შედარებაში დამატება">⇄</button>
             <div class="cs_card_img cs_clickable" t-on-click="() => this.openDetail(o)">
                 <img t-if="o.image" t-att-src="'data:image/png;base64,' + o.image" alt=""/>
                 <span t-else="" class="cs_noimg">🦷</span>
@@ -43,6 +46,10 @@
                         t-on-click="() => this.repeatLastOrder()"
                         t-att-title="'გაიმეორე: ' + state.lastOrder.name">
                     🔁 ბოლო შეკვეთა
+                </button>
+                <button t-if="state.compareKeys.length" class="btn btn-outline-info"
+                        t-on-click="() => this.openCompare()">
+                    ⇄ შედარება (<t t-esc="state.compareKeys.length"/>)
                 </button>
                 <button class="btn btn-primary" t-on-click="() => this.toggleCart()">
                     🛒 კალათა (<t t-esc="cartCount"/>)
@@ -207,6 +214,44 @@
                     </div>
                     <button class="btn btn-primary w-100 mt-2" t-att-disabled="!cartLines.length"
                             t-on-click="() => this.checkout()">გაეგზავნოს მომწოდებლებს</button>
+                </div>
+            </div>
+
+            <!-- compare modal -->
+            <div t-if="state.compareOpen" class="cs_modal_backdrop" t-on-click="() => state.compareOpen = false">
+                <div class="cs_modal cs_cmp_modal" t-on-click.stop="() => {}">
+                    <button class="cs_modal_close" t-on-click="() => state.compareOpen = false">✕</button>
+                    <h5 class="fw-bold mb-3">⇄ პროდუქტების შედარება</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered cs_cmp_table">
+                            <tbody>
+                                <tr>
+                                    <th/>
+                                    <td t-foreach="compareOffers" t-as="o" t-key="o.key" class="text-center">
+                                        <img t-if="o.image" t-att-src="'data:image/png;base64,' + o.image" alt=""/>
+                                        <span t-else="" class="cs_noimg">🦷</span>
+                                        <div class="fw-bold mt-1" t-esc="o.name"/>
+                                        <a href="#" class="small text-danger"
+                                           t-on-click.prevent="() => this.toggleCompare(o)">ამოღება ✕</a>
+                                    </td>
+                                </tr>
+                                <tr><th>ფასი</th><td t-foreach="compareOffers" t-as="o" t-key="o.key" class="text-center fw-bold"><t t-esc="o.price.toFixed(2)"/> ₾</td></tr>
+                                <tr><th>მომწოდებელი</th><td t-foreach="compareOffers" t-as="o" t-key="o.key" class="text-center"><t t-esc="o.vendor_name"/><span t-if="o.vendor_rating" class="cs_vrating"> ★ <t t-esc="o.vendor_rating"/></span></td></tr>
+                                <tr><th>მიწოდების ვადა</th><td t-foreach="compareOffers" t-as="o" t-key="o.key" class="text-center"><t t-esc="o.delay"/> დღე</td></tr>
+                                <tr><th>ბრენდი</th><td t-foreach="compareOffers" t-as="o" t-key="o.key" class="text-center"><t t-esc="o.brand || '—'"/></td></tr>
+                                <tr><th>კატეგორია</th><td t-foreach="compareOffers" t-as="o" t-key="o.key" class="text-center"><t t-esc="o.categ_name || '—'"/></td></tr>
+                                <tr><th>მარაგი</th><td t-foreach="compareOffers" t-as="o" t-key="o.key" class="text-center"><t t-esc="o.qty"/><span t-if="o.preorder and o.qty &lt;= 0"> · Pre-order</span></td></tr>
+                                <tr><th/>
+                                    <td t-foreach="compareOffers" t-as="o" t-key="o.key" class="text-center">
+                                        <button class="btn btn-primary btn-sm" t-on-click="() => this.addToCart(o)">კალათაში</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-light btn-sm" t-on-click="() => this.clearCompare()">გასუფთავება</button>
+                    </div>
                 </div>
             </div>
 
