@@ -17,9 +17,11 @@
         <field name="res_model">clinic.brand</field>
         <field name="view_mode">list</field>
     </record>
+    <!-- brand dictionary maintenance is the SYSTEM admin's job (reviewer:
+         suppliers assign brands; clinic staff never manage the list) -->
     <menuitem id="menu_clinic_brands" name="Brands"
               parent="menu_clinic_config" action="action_clinic_brand" sequence="24"
-              groups="clinic_patient_card.group_clinic_admin"/>
+              groups="base.group_system"/>
 
     <!-- ============ Room ↔ stock location ============ -->
     <record id="view_clinic_room_list_location" model="ir.ui.view">
