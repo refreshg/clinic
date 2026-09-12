@@ -50,7 +50,7 @@
         <field name="arch" type="xml">
             <list editable="bottom" create="1" delete="0">
                 <field name="product_id"/>
-                <field name="location_id" readonly="1" optional="show"/>
+                <field name="location_id" readonly="1" force_save="1" optional="show"/>
                 <field name="quantity" readonly="1" string="On Hand"/>
                 <field name="inventory_quantity" string="Counted Qty"/>
                 <button name="action_apply_inventory" type="object"
