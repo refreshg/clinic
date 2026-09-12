@@ -4,6 +4,7 @@ import { Component, useState, onWillStart, onMounted, onWillUnmount } from "@odo
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
+import { user } from "@web/core/user";
 
 export class ClinicSupplyShop extends Component {
     static template = "clinic_patient_card.ClinicSupplyShop";
@@ -54,6 +55,36 @@ export class ClinicSupplyShop extends Component {
         this.state.bestsellerIds = data.bestseller_ids;
         this.state.wishlist = data.wishlist_ids;
         this.state.lastOrder = data.last_order;
+        this._restore();
+    }
+
+    // ---- cart + compare survive a page refresh (per-user localStorage) ----
+    get _storeKey() {
+        return "clinic_shop_" + (user.userId || 0);
+    }
+    _persist() {
+        try {
+            localStorage.setItem(this._storeKey, JSON.stringify({
+                cart: this.state.cart,
+                compareKeys: this.state.compareKeys,
+            }));
+        } catch (e) { /* storage full/blocked — non-fatal */ }
+    }
+    _restore() {
+        try {
+            const raw = localStorage.getItem(this._storeKey);
+            if (!raw) {
+                return;
+            }
+            const d = JSON.parse(raw);
+            this.state.cart = d.cart || {};
+            // keep only compare picks whose offers still exist
+            this.state.compareKeys = (d.compareKeys || []).filter(
+                (k) => this.state.offers.some((o) => o.key === k));
+            if (Object.keys(this.state.cart).length) {
+                this.state.cartOpen = true;
+            }
+        } catch (e) { /* corrupt storage — start clean */ }
     }
 
     // ------------------------------------------------------------------
@@ -309,6 +340,7 @@ export class ClinicSupplyShop extends Component {
         } else {
             k.push(o.key);
         }
+        this._persist();
     }
     get compareOffers() {
         return this.state.compareKeys
@@ -325,6 +357,7 @@ export class ClinicSupplyShop extends Component {
     clearCompare() {
         this.state.compareKeys = [];
         this.state.compareOpen = false;
+        this._persist();
     }
 
     // ------------------------------------------------------------------
@@ -389,6 +422,7 @@ export class ClinicSupplyShop extends Component {
             };
         }
         this.state.cartOpen = true;
+        this._persist();
     }
     // reviewer item 13: repeat the last order, still editable in the cart
     repeatLastOrder() {
@@ -451,9 +485,11 @@ export class ClinicSupplyShop extends Component {
         if (this.state.cart[key]) {
             this.state.cart[key].qty = isNaN(v) || v < 1 ? 1 : v;
         }
+        this._persist();
     }
     removeLine(key) {
         delete this.state.cart[key];
+        this._persist();
     }
     get cartLines() {
         return Object.entries(this.state.cart).map(([key, l]) => ({ key, ...l }));
@@ -481,6 +517,7 @@ export class ClinicSupplyShop extends Component {
         const poIds = await this.orm.call("purchase.order", "clinic_create_rfqs", [cart]);
         this.state.cart = {};
         this.state.cartOpen = false;
+        this._persist();
         this.notification.add(
             _t("Sent to suppliers — %s RFQ(s) created", (poIds || []).length),
             { type: "success" }
