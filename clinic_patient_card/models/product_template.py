@@ -111,6 +111,7 @@ class ProductTemplate(models.Model):
                 "brand_id": tmpl.clinic_brand_id.id or False,
                 "brand_name": tmpl.clinic_brand_id.name or "",
                 "preorder": tmpl.clinic_preorder,
+                "sponsored": tmpl.clinic_sponsored,
             })
         rows.sort(key=lambda r: r["name"].lower())
         cats = self.env["product.category"].search_read([], ["id", "display_name"])

@@ -28,6 +28,7 @@
                 <div t-else="" class="csp_grid">
                     <t t-foreach="state.products" t-as="p" t-key="p.id">
                         <div class="csp_card">
+                            <span t-if="p.sponsored" class="csp_badge_sp">⭐ დასპონსორებული</span>
                             <div class="csp_img">
                                 <img t-if="p.image_128" t-att-src="'data:image/png;base64,' + p.image_128" alt=""/>
                                 <span t-else="" class="csp_noimg">📦</span>
