@@ -139,6 +139,16 @@ export class ClinicSupplierPortal extends Component {
         });
     }
 
+    async toggleShop(p) {
+        const on = await this.orm.call(
+            "product.template", "clinic_supplier_toggle_shop", [p.id]);
+        p.shop_published = on;
+        this.notification.add(
+            on ? _t("Product is visible in the shop again.")
+               : _t("Product hidden from the shop (price kept)."),
+            { type: "info" });
+    }
+
     async unpublish(p) {
         await this.orm.call("product.template", "clinic_supplier_unpublish", [p.id]);
         await this.load();

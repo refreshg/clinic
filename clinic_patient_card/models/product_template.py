@@ -37,6 +37,10 @@ class ProductTemplate(models.Model):
     clinic_preorder = fields.Boolean(
         string="Pre-order Allowed",
         help="Shop shows a pre-order badge when the vendor is out of stock.")
+    # the SUPPLIER decides whether the product is listed in the Supply Shop
+    # (soft hide — price/vendor line stays, unlike Remove/unpublish)
+    clinic_shop_published = fields.Boolean(
+        string="Visible in Supply Shop", default=True)
 
     def _compute_clinic_stock_info(self):
         # sudo: doctors/staff without purchase or full stock rights must still
@@ -112,6 +116,7 @@ class ProductTemplate(models.Model):
                 "brand_name": tmpl.clinic_brand_id.name or "",
                 "preorder": tmpl.clinic_preorder,
                 "sponsored": tmpl.clinic_sponsored,
+                "shop_published": tmpl.clinic_shop_published,
             })
         rows.sort(key=lambda r: r["name"].lower())
         cats = self.env["product.category"].search_read([], ["id", "display_name"])
@@ -241,7 +246,7 @@ class ProductTemplate(models.Model):
                 continue
             tmpl = si.product_tmpl_id
             prod = si.product_id or tmpl.product_variant_ids[:1]
-            if not prod:
+            if not prod or not tmpl.clinic_shop_published:
                 continue
             categ = tmpl.categ_id
             top = categ
@@ -326,6 +331,22 @@ class ProductTemplate(models.Model):
             return False
         Wish.create({"product_id": int(product_id)})
         return True
+
+    @api.model
+    def clinic_supplier_toggle_shop(self, tmpl_id):
+        """Supplier shows/hides their own product in the Supply Shop."""
+        vendor = self._clinic_current_vendor()
+        if not vendor:
+            return False
+        has = self.env["product.supplierinfo"].sudo().search_count([
+            ("product_tmpl_id", "=", int(tmpl_id)),
+            ("partner_id", "=", vendor.id),
+        ])
+        if not has:
+            raise UserError(_("You can only manage your own products."))
+        tmpl = self.sudo().browse(int(tmpl_id))
+        tmpl.clinic_shop_published = not tmpl.clinic_shop_published
+        return tmpl.clinic_shop_published
 
     @api.model
     def _clinic_notify_low_stock(self):

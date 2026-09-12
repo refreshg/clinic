@@ -29,6 +29,7 @@
                     <t t-foreach="state.products" t-as="p" t-key="p.id">
                         <div class="csp_card">
                             <span t-if="p.sponsored" class="csp_badge_sp">⭐ დასპონსორებული</span>
+                            <span t-if="!p.shop_published" class="csp_badge_hidden">🚫 დამალულია მაღაზიიდან</span>
                             <div class="csp_img">
                                 <img t-if="p.image_128" t-att-src="'data:image/png;base64,' + p.image_128" alt=""/>
                                 <span t-else="" class="csp_noimg">📦</span>
@@ -41,6 +42,11 @@
                             <div class="csp_delay">Lead time: <t t-esc="p.delay"/> days</div>
                             <div class="csp_actions">
                                 <button class="btn btn-sm btn-outline-primary" t-on-click="() => this.editProduct(p)">Edit</button>
+                                <button class="btn btn-sm" t-att-class="p.shop_published ? 'btn-outline-secondary' : 'btn-outline-success'"
+                                        t-att-title="p.shop_published ? 'დამალე მაღაზიიდან' : 'დააბრუნე მაღაზიაში'"
+                                        t-on-click="() => this.toggleShop(p)">
+                                    <t t-esc="p.shop_published ? '👁 ჩანს' : '🚫 დამალული'"/>
+                                </button>
                                 <button class="btn btn-sm btn-outline-danger" t-on-click="() => this.unpublish(p)">Remove</button>
                             </div>
                         </div>
