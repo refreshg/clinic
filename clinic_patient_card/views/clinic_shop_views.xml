@@ -58,6 +58,39 @@
             </list>
         </field>
     </record>
+    <!-- read-only movement history for the supplier: no form view on
+         purpose — a picking form would expose Validate on the CLINIC's
+         receipt (მიღებას მხოლოდ კლინიკა ადასტურებს) -->
+    <record id="view_clinic_supplier_picking_list" model="ir.ui.view">
+        <field name="name">clinic.supplier.picking.list</field>
+        <field name="model">stock.picking</field>
+        <field name="priority">80</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" default_order="id desc">
+                <field name="name"/>
+                <field name="origin" optional="show"/>
+                <field name="location_id" string="From"/>
+                <field name="location_dest_id" string="To"/>
+                <field name="scheduled_date" optional="hide"/>
+                <field name="date_done"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'done'"
+                       decoration-info="state in ('assigned', 'confirmed')"
+                       decoration-danger="state == 'cancel'"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_clinic_my_transfers" model="ir.actions.server">
+        <field name="name">My Transfers</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="state">code</field>
+        <field name="code">action = model.clinic_my_transfers_action()</field>
+        <field name="group_ids" eval="[(4, ref('group_clinic_supplier'))]"/>
+    </record>
+    <menuitem id="menu_clinic_supplier_transfers" name="My Transfers"
+              parent="menu_clinic_root" action="action_clinic_my_transfers"
+              sequence="18" groups="clinic_patient_card.group_clinic_supplier"/>
+
     <record id="action_clinic_my_warehouse" model="ir.actions.server">
         <field name="name">My Warehouse</field>
         <field name="model_id" ref="base.model_res_partner"/>

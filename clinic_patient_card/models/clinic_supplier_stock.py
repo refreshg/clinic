@@ -71,6 +71,23 @@ class ResPartnerSupplierStock(models.Model):
             ("usage", "=", "transit")], limit=1)
 
     @api.model
+    def clinic_my_transfers_action(self):
+        """Read-only history of every transfer touching the supplier's own
+        locations: shipments to transit, clinic receipts, returns."""
+        vendor = self.env.user.partner_id.commercial_partner_id
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("My Transfers"),
+            "res_model": "stock.picking",
+            "view_mode": "list",
+            "view_id": self.env.ref(
+                "clinic_patient_card.view_clinic_supplier_picking_list").id,
+            "domain": ["|",
+                       ("location_id.clinic_supplier_id", "=", vendor.id),
+                       ("location_dest_id.clinic_supplier_id", "=", vendor.id)],
+        }
+
+    @api.model
     def clinic_my_warehouse_action(self):
         """Server-action entry: the supplier's own quants, inventory-editable."""
         vendor = self.env.user.partner_id.commercial_partner_id
