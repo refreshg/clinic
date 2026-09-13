@@ -280,10 +280,13 @@ export class ClinicPlanning extends Component {
         // A rescheduled (not yet re-confirmed) visit reads as its own status.
         return ev.was_rescheduled && ["booked", "confirmed"].includes(ev.clinic_state);
     }
-    isShort(ev) {
-        // <=20 min → single-line compact card (content would be clipped)
+    sizeClass(ev) {
+        // fit the card layout to the slot height so nothing ever clips:
+        // <=15 min → one line; <=35 min → two lines (no meta); else full
         const ms = deserializeDateTime(ev.stop) - deserializeDateTime(ev.start);
-        return ms <= 20 * 60 * 1000;
+        if (ms <= 15 * 60 * 1000) { return "cp_small"; }
+        if (ms <= 35 * 60 * 1000) { return "cp_mid"; }
+        return "";
     }
     stateClass(ev) {
         // Batch #2: every status gets its own colour.

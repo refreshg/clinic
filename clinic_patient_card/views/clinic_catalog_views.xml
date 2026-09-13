@@ -130,12 +130,25 @@
         <field name="view_mode">list</field>
     </record>
 
+    <!-- Patients straight from the Clinic menu (reviewer: could not find
+         the client card — it lived only in the Contacts app) -->
+    <record id="action_clinic_patients" model="ir.actions.act_window">
+        <field name="name">Patients</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_patient', '=', True)]</field>
+        <field name="context">{'default_is_patient': True}</field>
+    </record>
+
     <!-- ===================== Menus ===================== -->
     <!-- Root visible to any clinic role (incl. suppliers, who only get the
          supplier child menus below). -->
     <menuitem id="menu_clinic_root" name="Clinic" sequence="90"
               groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor,clinic_patient_card.group_clinic_supplier"/>
     <!-- Clinic-staff-only config; suppliers must not see it. -->
+    <menuitem id="menu_clinic_patients" name="Patients"
+              parent="menu_clinic_root" action="action_clinic_patients" sequence="5"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
     <menuitem id="menu_clinic_config" name="Configuration"
               parent="menu_clinic_root" sequence="10"
               groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
