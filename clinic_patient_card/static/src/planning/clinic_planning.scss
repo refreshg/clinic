@@ -598,9 +598,8 @@
     .cp_ev_note { display: none; }
     .cp_ev_time { font-size: 9.5px; line-height: 1.1; }
     .cp_ev_patmain { font-size: 12px; line-height: 1.1; margin-top: 0; }
-    .cp_ev_meta {
-        font-size: 10px; line-height: 1.1;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    /* vat + procedure are two divs — fold them onto ONE line here */
+    .cp_ev_meta { display: inline; font-size: 10px; line-height: 1.1; }
+    .cp_ev_meta + .cp_ev_meta::before { content: ' · '; }
     .cp_status { font-size: 8.5px; }
 }
