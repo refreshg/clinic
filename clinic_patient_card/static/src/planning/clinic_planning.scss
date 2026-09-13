@@ -358,3 +358,153 @@
     30% { opacity: 1; }
     100% { opacity: 0; }
 }
+
+/* ============================================================
+   Soft-UI restyle (calendar_card.png reference) — VISUAL ONLY.
+   Geometry (row heights, HOUR_PX=96) is untouched.
+   ============================================================ */
+.clinic_planning {
+    background: #f8f9fa;
+    padding: 14px 18px;
+
+    /* ---- toolbar: pill controls ---- */
+    .cp_top {
+        h4 { font-weight: 800; }
+        .btn { border-radius: 999px; padding-left: 16px; padding-right: 16px; }
+        .btn-outline-secondary {
+            background: #fff; border-color: #e5e8ec; color: #374151;
+            &:hover { background: #f1f3f5; color: #111; }
+        }
+        .btn-group .btn { border-radius: 999px !important; margin-right: 4px; }
+        .cp_dateinput, .cp_dentsel {
+            border-radius: 999px; border-color: #e5e8ec; background: #fff;
+        }
+        .btn-primary { box-shadow: 0 4px 12px rgba(113, 75, 103, .35); }
+    }
+
+    /* ---- sidebar blocks → white cards ---- */
+    .cp_side {
+        .cp_minical, .cp_legend, .cp_rooms {
+            background: #fff; border: 1px solid #eceff3; border-radius: 16px;
+            padding: 12px 14px; box-shadow: 0 1px 6px rgba(16, 24, 40, .05);
+        }
+        .cp_rooms { margin-bottom: 14px; }
+        .cp_mc_sel span {
+            background: #714b67; color: #fff; border-radius: 50%;
+        }
+    }
+
+    /* ---- the grid itself → one big white rounded card ---- */
+    .cp_grid {
+        background: #fff; border: 1px solid #eceff3; border-radius: 18px;
+        box-shadow: 0 2px 12px rgba(16, 24, 40, .06);
+        overflow: hidden;
+    }
+
+    /* doctor header chips (reference: avatar pills) */
+    .cp_headrow {
+        background: #fff; border-bottom: 1px solid #eef0f3;
+        .cp_denthead { padding: 10px 8px 8px; text-align: center; }
+        .cp_doc_chip {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #f6f7f9; border: 1px solid #e7eaee; border-radius: 999px;
+            padding: 4px 14px 4px 4px; max-width: 100%;
+        }
+        .cp_doc_ava {
+            width: 28px; height: 28px; border-radius: 50%; object-fit: cover;
+            border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+        }
+        .cp_doc_name {
+            font-weight: 700; font-size: 13px; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
+        }
+        .cp_doc_room { color: #9aa0a6; font-size: 11px; margin-top: 2px; }
+    }
+
+    /* dotted time grid (reference look), same 1px heights */
+    .cp_col { border-left: 1px solid #f0f2f5; }
+    .cp_slotline { border-bottom: 1px dotted #dde2e8 !important; }
+    .cp_tick { color: #9aa0a6; font-size: 11px; }
+    .cp_tick.major { color: #6b7280; font-weight: 600; }
+    .cp_offzone {
+        background: repeating-linear-gradient(135deg,
+            #f3f4f6 0 8px, #eceef1 8px 16px) !important;
+        opacity: .7;
+    }
+
+    /* current-time line: accent with a dot */
+    .cp_nowline {
+        background: #e5484d; height: 2px;
+        &::before {
+            content: ""; position: absolute; left: -4px; top: -3px;
+            width: 8px; height: 8px; border-radius: 50%; background: #e5484d;
+        }
+    }
+
+    /* ---- event cards: white soft cards + state accent ---- */
+    .cp_event {
+        background: #fff !important;
+        border: 1px solid #eceff3 !important;
+        border-left-width: 4px !important;   /* state accent bar */
+        border-radius: 12px !important;
+        box-shadow: 0 2px 8px rgba(16, 24, 40, .10);
+        padding: 6px 8px 6px 10px !important;
+        transition: box-shadow .12s, transform .12s;
+
+        &:hover {
+            box-shadow: 0 8px 18px rgba(16, 24, 40, .16);
+            transform: translateY(-1px);
+            z-index: 5;
+        }
+        .cp_ev_time { color: #8a919c; font-size: 10.5px; font-weight: 600; }
+        .cp_ev_patmain { font-weight: 700; font-size: 13px; color: #1f2937; }
+        .cp_ev_meta { color: #8a919c; font-size: 10.5px; }
+        .cp_ev_note { color: #9aa0a6; font-size: 10.5px; font-style: italic; }
+
+        /* status pill smaller, top-right */
+        .cp_status {
+            border-radius: 999px; font-size: 9px; padding: 1px 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
+        }
+
+        /* left accent bar per state (pills keep their own colours) */
+        &:has(.cp_st_requested)  { border-left-color: #c58f00 !important; }
+        &:has(.cp_st_booked)     { border-left-color: #98a2b3 !important; }
+        &:has(.cp_st_confirmed)  { border-left-color: #2f80ed !important; }
+        &:has(.cp_st_arrived)    { border-left-color: #00acc1 !important; }
+        &:has(.cp_st_done)       { border-left-color: #27ae60 !important; }
+        &:has(.cp_st_paid)       { border-left-color: #7e57c2 !important; }
+        &:has(.cp_st_cancelled)  { border-left-color: #eb5757 !important; }
+        &:has(.cp_st_no_show)    { border-left-color: #8d3030 !important; }
+        &:has(.cp_st_resch)      { border-left-color: #b9770a !important; }
+
+        /* the ACTIVE (in progress) visit = filled accent card (reference) */
+        &:has(.cp_st_in_progress) {
+            background: linear-gradient(160deg, #7e5474 0%, #714b67 100%) !important;
+            border-color: #714b67 !important;
+            border-left-color: #4d3246 !important;
+            .cp_ev_patmain { color: #fff; }
+            .cp_ev_time, .cp_ev_meta, .cp_ev_note { color: rgba(255, 255, 255, .85); }
+        }
+    }
+    .cp_dispensary { outline: 2px dashed #7e57c2 !important; outline-offset: 1px; }
+
+    /* hover cell + drag ghost softened */
+    .cp_hover { background: rgba(113, 75, 103, .10) !important; border-radius: 8px; }
+    .cp_drag {
+        background: rgba(113, 75, 103, .16) !important;
+        border: 1.5px dashed #714b67 !important; border-radius: 10px;
+        .cp_drag_lbl {
+            background: #714b67; color: #fff; border-radius: 999px;
+            padding: 1px 10px; font-size: 11px;
+        }
+    }
+
+    /* waitlist panel card */
+    .cp_wait {
+        background: #fff; border: 1px solid #eceff3; border-radius: 16px;
+        box-shadow: 0 2px 10px rgba(16, 24, 40, .07); padding: 12px 14px;
+        .cp_wait_row { border-bottom: 1px dashed #f0f2f5; border-radius: 8px; }
+        .cp_wait_badge { background: #7e57c2; }
+    }
+}

@@ -108,8 +108,11 @@
                             <div class="cp_hourhead"/>
                             <t t-foreach="shownDentists" t-as="d" t-key="d.id">
                                 <div class="cp_denthead">
-                                    <div class="fw-semibold" t-esc="d.name"/>
-                                    <small class="text-muted" t-esc="d.room"/>
+                                    <span class="cp_doc_chip">
+                                        <img class="cp_doc_ava" t-attf-src="/web/image/res.users/{{ d.id }}/avatar_128" alt=""/>
+                                        <span class="cp_doc_name" t-esc="d.name"/>
+                                    </span>
+                                    <small class="cp_doc_room d-block" t-esc="d.room"/>
                                 </div>
                             </t>
                         </div>
