@@ -590,11 +590,17 @@
     }
 }
 
-/* two-line card for 20-35 min visits: time + name, meta hidden */
+/* compact card for 20-35 min visits: everything stays visible
+   (time + name + vat/procedure meta), only the free-text note is dropped —
+   tightened so it all fits a 48px slot without clipping */
 .clinic_planning .cp_event.cp_mid {
-    padding: 4px 8px 4px 10px !important;
-    .cp_ev_meta, .cp_ev_note { display: none; }
-    .cp_ev_time { font-size: 10px; }
-    .cp_ev_patmain { font-size: 12.5px; line-height: 1.15; }
+    padding: 2px 8px 2px 10px !important;
+    .cp_ev_note { display: none; }
+    .cp_ev_time { font-size: 9.5px; line-height: 1.1; }
+    .cp_ev_patmain { font-size: 12px; line-height: 1.1; margin-top: 0; }
+    .cp_ev_meta {
+        font-size: 10px; line-height: 1.1;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     .cp_status { font-size: 8.5px; }
 }
