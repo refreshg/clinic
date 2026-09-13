@@ -8,7 +8,7 @@
     "author": "refreshg",
     "website": "https://github.com/refreshg/clinic",
     "category": "Healthcare",
-    "version": "19.0.55.1.0",
+    "version": "19.0.55.2.0",
     "license": "LGPL-3",
     "depends": [
         "base",
@@ -45,6 +45,7 @@
     ],
     "assets": {
         "web.assets_backend": [
+            "clinic_patient_card/static/src/scss/clinic_partner_soft.scss",
             "clinic_patient_card/static/src/clinic_arrived_service.js",
             "clinic_patient_card/static/src/clinic_form_buttons.xml",
             "clinic_patient_card/static/src/planning/clinic_planning.scss",

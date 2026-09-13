@@ -1,0 +1,162 @@
+/* ============================================================
+   Soft-UI redesign of the res.partner (patient) form — CSS ONLY.
+   The sheet gets class o_clinic_soft via a view-inherit attribute;
+   no functionality is touched (reviewer request, Image 1 style).
+   ============================================================ */
+
+/* page canvas behind the sheet → light gray */
+.o_form_view:has(.o_clinic_soft) .o_form_sheet_bg {
+    background: #f8f9fa;
+}
+
+.o_form_sheet.o_clinic_soft {
+    /* the sheet itself stops being one big white slab — cards float on gray */
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    max-width: 1180px;
+
+    /* ---------- 1. top block (avatar + name + contacts) = mint card ---------- */
+    > div.mb8 {
+        background: linear-gradient(135deg, #e7f6ef 0%, #f0faf5 100%);
+        border: 1px solid #d3ecdf;
+        border-radius: 18px;
+        padding: 18px 22px 14px;
+        box-shadow: 0 2px 10px rgba(30, 90, 60, .07);
+        margin-bottom: 14px;
+
+        .oe_avatar img,
+        img {
+            border-radius: 16px !important;
+            border: 3px solid #fff !important;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, .12);
+            background: #fff;
+        }
+        h1 .o_input, h1 span {
+            font-weight: 700;
+        }
+        .fa {
+            opacity: .75;
+        }
+    }
+
+    /* ---------- 2. stat buttons → individual white cards ---------- */
+    .oe_button_box {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 14px;
+        border: 0;
+
+        .oe_stat_button {
+            flex: 0 0 auto;
+            min-width: 128px;
+            height: auto !important;
+            background: #fff;
+            border: 1px solid #eceff3 !important;
+            border-radius: 14px;
+            padding: 10px 16px !important;
+            box-shadow: 0 2px 8px rgba(16, 24, 40, .07);
+            transition: transform .12s, box-shadow .12s;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(16, 24, 40, .13);
+                background: #fff;
+            }
+            .fa {
+                color: #714b67;
+                font-size: 17px;
+            }
+            .o_stat_value {
+                font-weight: 800;
+                font-size: 15px;
+                color: #1f2937;
+                /* mini "progress" accent under the value */
+                border-bottom: 3px solid #b9e3cd;
+                border-radius: 2px;
+                padding-bottom: 1px;
+            }
+            .o_stat_text {
+                color: #8a919c;
+                font-size: 11px;
+            }
+        }
+    }
+
+    /* ---------- 3. every field group = its own white card ---------- */
+    .o_group {
+        background: #fff;
+        border: 1px solid #eceff3;
+        border-radius: 16px;
+        padding: 14px 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 1px 6px rgba(16, 24, 40, .05);
+    }
+    /* nested groups inside a carded group must not double-card */
+    .o_group .o_group {
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+        margin-bottom: 0;
+    }
+    /* group titles as small section headers */
+    .o_horizontal_separator {
+        color: #714b67;
+        font-weight: 800;
+        letter-spacing: .4px;
+        border: 0;
+    }
+
+    /* ---------- 4. tabs → pill style (outer + nested notebooks) ---------- */
+    .o_notebook .o_notebook_headers .nav-tabs {
+        border-bottom: 0;
+        gap: 6px;
+        padding: 4px;
+        background: #eef0f3;
+        border-radius: 999px;
+        width: fit-content;
+        max-width: 100%;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+
+        .nav-item .nav-link {
+            border: 0 !important;
+            border-radius: 999px;
+            padding: 6px 16px;
+            color: #4b5563;
+            font-weight: 600;
+            background: transparent;
+
+            &:hover {
+                background: #e2e6ea;
+            }
+            &.active {
+                background: #714b67;
+                color: #fff;
+                box-shadow: 0 2px 6px rgba(113, 75, 103, .35);
+            }
+        }
+    }
+    /* notebook page body sits on its own card */
+    .o_notebook .tab-content > .tab-pane {
+        background: #fff;
+        border: 1px solid #eceff3;
+        border-radius: 16px;
+        padding: 14px 16px;
+        box-shadow: 0 1px 6px rgba(16, 24, 40, .05);
+    }
+    /* nested tab-panes (patient inner notebook) — lighter, no double frame */
+    .o_notebook .tab-content .tab-content > .tab-pane {
+        border: 0;
+        box-shadow: none;
+        padding: 6px 2px;
+    }
+
+    /* ---------- 5. quick-action buttons row: softer chips ---------- */
+    .btn-secondary, .btn-primary {
+        border-radius: 10px;
+    }
+    /* chatter side stays as-is */
+}

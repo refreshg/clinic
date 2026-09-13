@@ -14,6 +14,11 @@
             <!-- Remove the standard Tax ID from its default spot; re-added in
                  the header below as the personal number (single field). -->
             <xpath expr="//field[@name='vat']" position="replace"/>
+            <!-- Soft-UI restyle hook: CSS-only redesign lives in
+                 static/src/scss/clinic_partner_soft.scss -->
+            <xpath expr="//sheet" position="attributes">
+                <attribute name="class">o_clinic_soft</attribute>
+            </xpath>
             <!-- Reviewer item 39 is handled globally: the form status
                  indicator (breadcrumb) renders labelled Save/Discard buttons
                  on every form, only while there is something to save — see
