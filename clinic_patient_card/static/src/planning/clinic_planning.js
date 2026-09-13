@@ -280,6 +280,11 @@ export class ClinicPlanning extends Component {
         // A rescheduled (not yet re-confirmed) visit reads as its own status.
         return ev.was_rescheduled && ["booked", "confirmed"].includes(ev.clinic_state);
     }
+    isShort(ev) {
+        // <=20 min → single-line compact card (content would be clipped)
+        const ms = deserializeDateTime(ev.stop) - deserializeDateTime(ev.start);
+        return ms <= 20 * 60 * 1000;
+    }
     stateClass(ev) {
         // Batch #2: every status gets its own colour.
         if (this._isResch(ev)) {

@@ -148,7 +148,7 @@
                                              t-attf-style="top:{{ z.top }}px;height:{{ z.height }}px;"/>
                                     </t>
                                     <t t-foreach="eventsFor(d.id)" t-as="ev" t-key="ev.id">
-                                        <div t-attf-class="cp_event {{ ev.is_dispensary ? 'cp_dispensary' : '' }}"
+                                        <div t-attf-class="cp_event {{ ev.is_dispensary ? 'cp_dispensary' : '' }} {{ isShort(ev) ? 'cp_small' : '' }}"
                                              t-att-style="eventStyle(ev)"
                                              t-att-title="typeName(ev)"
                                              t-on-click.stop="() => this.openEvent(ev)">

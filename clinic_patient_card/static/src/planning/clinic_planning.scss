@@ -508,3 +508,20 @@
         .cp_wait_badge { background: #7e57c2; }
     }
 }
+
+/* compact card for <=20-min visits: one line, nothing clipped */
+.clinic_planning .cp_event.cp_small {
+    padding: 1px 8px 1px 10px !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+
+    .cp_ev_time { font-size: 10px; flex: 0 0 auto; }
+    .cp_ev_patmain {
+        font-size: 11.5px; flex: 1 1 auto; min-width: 0;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cp_status { position: static; font-size: 8px; padding: 0 6px; flex: 0 0 auto; }
+    .cp_ev_meta, .cp_ev_note, .cp_edited { display: none; }
+}
