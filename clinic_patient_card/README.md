@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-12, commit: 0511206 -->
+<!-- last-synced: 2026-09-13, commit: 91e1c22 -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -50,13 +50,16 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
   manager board under Clinic → Stock → 📊 Dashboard.
 - **Cron jobs** (active by default): low-stock alert (daily), dispensary call reminders
   (daily, T-14d), weekly booking report to administrators.
+- Patients also live under **Clinic → Patients** (kanban/list/form over is_patient) —
+  same Soft-UI form as in Contacts.
 - New contacts created from the Contacts app default to patients
   (`default_is_patient` context on `contacts.action_contacts`).
 
 ## Known limitations
 - E-mail sending: none yet — what/when is undecided (docs/PRD.md §9). SMS likewise
   deferred (no provider chosen; batch #2).
-- Soft-UI patient-card page is read-only (tooth painting not persisted yet — PLAN M3).
+- Soft-UI patient-card page is read-only (tooth painting not persisted yet — PLAN M3);
+  it opens from the visit form's 🪪 button — the partner-form buttons were removed (v55.9).
 - Odontogram on the partner form is visual-only (clickable version = PLAN M4).
 - `i18n/ka.po` is stale for the 28.08.26 batch strings (PLAN M2).
 - No automated tests by decision D-11 — verify live (RPC + browser).

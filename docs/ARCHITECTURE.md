@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-12, commit: 0511206 -->
+<!-- last-synced: 2026-09-13, commit: 91e1c22 -->
 # Architecture — clinic_patient_card
 
 ## Components

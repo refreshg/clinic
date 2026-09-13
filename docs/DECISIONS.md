@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-12, commit: 0511206 -->
+<!-- last-synced: 2026-09-13, commit: 91e1c22 -->
 # Decisions (ADR) — clinic_patient_card
 
 Format: Context → Decision → Rejected → Consequences. New custom code requires a D-entry
@@ -158,3 +158,18 @@ to depends (auto-installed with sale anyway) so our class loads later; skip its 
 `default_get` for non-salesmen; run its availability compute as sudo. · Lesson: to override
 another module's behaviour you MUST depend on it — same-model classes compose in module
 load order.
+
+### D-21: CSS-only Soft-UI restyles hooked by a marker div + :has()
+Date 2026-09-13 (78ff323..91e1c22) · Context: reviewer wanted the patient form and the
+planning board redesigned "visually only — touch no functionality". A class set on
+<sheet> in the arch never renders (the Odoo 19 form compiler drops sheet attributes), so
+there was nothing to scope the SCSS to. · Decision: inject an invisible
+<div class="o_clinic_soft"/> into the sheet via xpath and scope every rule with
+:has(> .o_clinic_soft) (asset bundles compile :has() fine). The board restyle only appends
+selectors onto existing cp_* classes; cards size to their duration (cp_small ≤15min /
+cp_mid ≤35min) via one pure JS helper, geometry (HOUR_PX=96) untouched. Groups whose every
+field is invisible are hidden with :not(:has(...)) so they don't render as empty cards.
+· Rejected: rebuilding the form as an OWL page (functionality risk); adding classes from
+JS (runtime cost for a static hook). · Consequences: the restyles are drop-out safe
+(deleting the SCSS restores the stock look); marker-div is THE pattern for targeting one
+specific form's sheet.

@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-12, commit: 0511206 -->
+<!-- last-synced: 2026-09-13, commit: 91e1c22 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -59,6 +59,6 @@ Verification for every step = live RPC + browser (no automated tests — D-11).
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-09-12: მაღაზიამარაგები walkthrough fix round v19.0.53.1-.23 (categories menu+visibility, any-depth subcats, banner slots/links, supplier-owned brands+pre-order+publish toggle, compare tray, cart persistence, To-Rate tray, Returned—Close, D-20 access model) + supplier-owned warehouses v19.0.54-55 (D-19: shelves, Move wizard, ship-time deduction, My Warehouse/Locations/Transfers).
-Next: user finishes browser tests; then M2 ka.po regen (first unblocked) and the duration ა/ბ answer (PRD §9).
-Watch out: ir.actions.server needs group_ids (19 rename); readonly list fields need force_save; shop qty now = the SUPPLIER's stock.
+Last session 2026-09-13: Soft-UI redesigns (v19.0.55.2-.9, D-21) — partner form (marker div + :has(); empty groups hidden; 🪪 card-page/dashboard buttons removed) + planning board pass 1-2 (dotted micro-grid, avatar chips, duration-sized cards) + Clinic→Patients menu.
+Next: user finishes visual review; then M2 ka.po regen (first unblocked) and the duration ა/ბ answer (PRD §9).
+Watch out: class attrs on <sheet> never render — use the o_clinic_soft marker-div pattern; board SCSS must never change row heights (HOUR_PX=96).

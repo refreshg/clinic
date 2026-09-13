@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-12, commit: 0511206 -->
+<!-- last-synced: 2026-09-13, commit: 91e1c22 -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -251,11 +251,11 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 ## Views / UI
 | view / action | xml id | key points |
 |---|---|---|
-| Partner form inherit | `view_partner_form_patient_card` | header fields (vat/birthdate/insurance/referral/Workplace), Patient Card page autofocus, nested notebook (Basic/Medical/Financial(admin)/History), quick buttons (📅 დაჯავშნე primary, 🪪 card page, dashboard), "რეალიზაცია" page replaces `sales_purchases` for patients; function/website/tags/parent_id hidden for patients (Individual/Company toggle VISIBLE again — v19.0.51.14); header company field labelled „სამუშაო ადგილი" |
+| Partner form inherit | `view_partner_form_patient_card` | header fields (vat/birthdate/insurance/referral/Workplace), Patient Card page autofocus, nested notebook (Basic/Medical/Financial(admin)/History), quick buttons (📅 დაჯავშნე primary — 🪪 card-page/dashboard buttons REMOVED v19.0.55.9; card page still opens from the visit form), "რეალიზაცია" page replaces `sales_purchases` for patients; function/website/tags/parent_id hidden for patients (Individual/Company toggle VISIBLE again — v19.0.51.14); header company field labelled „სამუშაო ადგილი"; Soft-UI hook: marker `<div class="o_clinic_soft"/>` inside sheet (D-21) |
 | Visit form inherit | `view_clinic_appointment_form` (inherits `calendar.view_calendar_event_form`) | workflow buttons per state+group; Clinic page autofocus with 👤/🪪 jump buttons; meeting UI hidden for is_clinic (Send email, Going?, show_as/privacy, location, videocall, attendees block); cancel_reason visible pre-cancel |
 | Visit history list/search | `view_clinic_visit_history_list/_search`, `action_clinic_visit_history` | date/patient/dentist/name/diagnosis/tooth_display/state/amount_paid(sum); dentist + 1w/2w/1m filters |
 | Cancelled list | `view_clinic_visit_cancelled_*`, `action_clinic_visit_cancelled` | cancelled/no_show OR was_rescheduled; cancel_reason; today/date filters |
-| Planning board (OWL) | tag `clinic_planning`, `action_clinic_planning` | 10-min grid (HOUR_PX=96), hover cell, drag-to-size (1 cell=10min), popup form (target=new, UTC-serialized defaults), off-hours hatch via `clinic_board_config()`, Reserve side panel (+Add/✓), status pills (paid≠done), ✎ edited badge, dispensary dashed outline |
+| Planning board (OWL) | tag `clinic_planning`, `action_clinic_planning` | 10-min grid (HOUR_PX=96), hover cell, drag-to-size (1 cell=10min), popup form (target=new, UTC-serialized defaults), off-hours hatch via `clinic_board_config()`, Reserve side panel (+Add/✓), status pills (paid≠done), ✎ edited badge, dispensary dashed outline; Soft-UI restyle v55.3-.7 (D-21): dotted 10-min micro-grid, avatar header chips, white cards + state accent bar (in-progress = filled), duration size classes cp_small ≤15min / cp_mid ≤35min (vat·procedure folded to one line) so no card clips |
 | Supply Shop / Supplier portal / Dashboard / Card page (OWL) | tags `clinic_supply_shop`, `clinic_supplier_portal`, `clinic_patient_dashboard`, `clinic_patient_card_page` | see ARCHITECTURE.md |
 | Visit form (batch #2) | same inherit | Subject hidden — PATIENT sits in the h1 title at Subject size; Duration row MOVED above Start (2× position=move); notebook invisible → clinic_body div (direction/type/family-link/referral/comment + procedures [visible from booking] /time-tracking/previous-visit); 🕐 widget +👤/🪪 buttons; cancel via popup; videocall_location_div ('+ Odoo meeting') hidden |
 | Referrals | `view_clinic_referral_list/_search`, `action_clinic_referrals`, menu Configuration→Referrals (admin) | patients grouped by referral_source, month/30d filters |
@@ -268,6 +268,8 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | Global Save/Discard | `static/src/clinic_form_buttons.xml` (t-inherit web.FormStatusIndicator) | labelled შენახვა/გაუქმება buttons on every form, visible only while dirty/new (D-17) |
 | Supply Shop v2 | `static/src/shop/` (rewritten) | banner carousel, category tiles+chips, brand filter, ⭐/🆕/🔥 strips, ♥ wishlist, 🔁 repeat order, similar strip, vendor comparison table with ★ |
 | Shop Banners | `view_clinic_shop_banner_list/form`, menu Configuration→Shop Banners (admin) | image upload |
+| Patients menu | `action_clinic_patients`, `menu_clinic_patients` | Clinic → Patients: kanban/list/form over is_patient (admin+doctor), default_is_patient ctx — reviewer could not find the card via Contacts |
+| Partner Soft-UI (CSS) | `static/src/scss/clinic_partner_soft.scss` | :has()-scoped: mint header card, stat-button cards, group cards (all-invisible groups hidden), pill tabs; zero logic (D-21) |
 | Clinic PO (B4) | `view_purchase_order_form_clinic_b4` | supplier-status field, Received On, 48h 🔄 Return button, Rating page, Returns page |
 | Supplier SO (B4) | `view_sale_order_form_clinic_b4` | 5 sequential status buttons + statusbar (supplier group) |
 | Returns | `view_clinic_purchase_return_form/list`, menus Stock→Returns (admin) + root Returns (supplier) | statusbar flow, photo, reverse-picking link |
@@ -319,6 +321,10 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   categories (`data/clinic_shop_seed.xml`, noupdate). v19.0.53 needs nothing special.
 
 ## Drift log
+- 2026-09-13: the Odoo 19 form compiler DROPS class attributes on `<sheet>` — a view-set
+  class never reaches the DOM; scope sheet styling via an invisible marker div + :has() (D-21).
+- 2026-09-13: partner-form 🪪 card-page / dashboard buttons removed (user request); the OWL
+  card page remains reachable from the visit form's 🪪 jump button.
 - 2026-09-03: `diagnosis` field relabelled "Comment" (batch #2) — column unchanged.
 - 2026-09-03: `cancel_reason` removed from the form; set only via clinic.cancel.wizard.
 - 2026-09-03: card page / dashboard JS fetch credit/debit/total_invoiced in a guarded
