@@ -127,12 +127,6 @@
                         <button name="action_create_booking" type="object"
                                 string="📅 დაჯავშნე" class="btn-primary"
                                 invisible="not is_patient"/>
-                        <button name="action_open_card_page" type="object"
-                                string="🪪 პაციენტის ბარათი" class="btn-secondary"
-                                invisible="not is_patient"/>
-                        <button name="action_open_dashboard" type="object"
-                                string="🩺 Open Dashboard" class="btn-secondary"
-                                invisible="not is_patient"/>
                     </div>
 
                     <!-- 1.9 Quick actions (placeholder buttons for now) -->
