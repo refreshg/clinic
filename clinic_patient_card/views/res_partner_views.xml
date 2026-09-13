@@ -16,8 +16,10 @@
             <xpath expr="//field[@name='vat']" position="replace"/>
             <!-- Soft-UI restyle hook: CSS-only redesign lives in
                  static/src/scss/clinic_partner_soft.scss -->
-            <xpath expr="//sheet" position="attributes">
-                <attribute name="class">o_clinic_soft</attribute>
+            <!-- the form compiler drops class attrs on <sheet>, so the hook
+                 is an invisible marker div matched with :has() -->
+            <xpath expr="//sheet" position="inside">
+                <div class="o_clinic_soft"/>
             </xpath>
             <!-- Reviewer item 39 is handled globally: the form status
                  indicator (breadcrumb) renders labelled Save/Discard buttons
