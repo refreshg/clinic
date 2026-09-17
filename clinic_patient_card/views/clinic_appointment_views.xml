@@ -117,8 +117,12 @@
                 <!-- "Create and edit" opens the Dentos-style registration
                      popup (form_view_ref), so reception registers a new
                      patient without leaving the booking. -->
+                <!-- no_open: the internal-link arrow would open the QUICK
+                     form for existing patients too (form_view_ref applies
+                     to every open) — the full card opens via the 👤 button. -->
                 <field name="patient_id" invisible="not is_clinic"
                        required="is_clinic" placeholder="პაციენტი"
+                       options="{'no_open': true}"
                        context="{'clinic_show_ids': 1, 'default_is_patient': True,
                                  'form_view_ref': 'clinic_patient_card.view_clinic_patient_quick_form'}"/>
             </xpath>
