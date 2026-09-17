@@ -8,7 +8,7 @@
     "author": "refreshg",
     "website": "https://github.com/refreshg/clinic",
     "category": "Healthcare",
-    "version": "19.0.60.1.0",
+    "version": "19.0.60.2.0",
     "license": "LGPL-3",
     "depends": [
         "base",
@@ -65,6 +65,8 @@
             "clinic_patient_card/static/src/supplier_portal/clinic_supplier_portal.js",
             "clinic_patient_card/static/src/supplier_portal/clinic_supplier_portal.xml",
             "clinic_patient_card/static/src/slot_finder/clinic_slot_finder_widget.js",
+            "clinic_patient_card/static/src/slot_finder/clinic_new_patient_btn.js",
+            "clinic_patient_card/static/src/slot_finder/clinic_new_patient_btn.xml",
             "clinic_patient_card/static/src/slot_finder/clinic_slot_finder_widget.xml",
             "clinic_patient_card/static/src/stock_dashboard/clinic_stock_dashboard.scss",
             "clinic_patient_card/static/src/stock_dashboard/clinic_stock_dashboard.js",

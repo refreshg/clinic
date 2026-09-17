@@ -335,6 +335,13 @@ export class ClinicVisitPage extends Component {
     }
 
     // ---- navigation -----------------------------------------------------
+    backToCalendar() {
+        this.action.doAction({
+            type: "ir.actions.client",
+            tag: "clinic_planning",
+            name: _t("Planning"),
+        }, { clearBreadcrumbs: true });
+    }
     openPatient() {
         this.action.doAction({
             type: "ir.actions.act_window",

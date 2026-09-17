@@ -160,3 +160,9 @@
         .cvp_field:first-child, .cvp_field:nth-child(7) { grid-column: 1 / -1; }
     }
 }
+
+/* back-to-calendar pill on the visit page */
+.clinic_visit_page .cvp_tabs .cvp_back {
+    background: #714b67; color: #fff;
+    &:hover { background: #5d3c54; color: #fff; }
+}

@@ -40,6 +40,7 @@
 
         <!-- ===== tabs ===== -->
         <div class="cvp_tabs">
+            <button class="cvp_back" t-on-click="backToCalendar">← კალენდარი</button>
             <button t-att-class="state.tab === 'procedures' ? 'active' : ''"
                     t-on-click="() => state.tab = 'procedures'">პროცედურები</button>
             <button t-att-class="state.tab === 'billing' ? 'active' : ''"

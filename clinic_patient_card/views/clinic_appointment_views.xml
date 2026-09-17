@@ -117,14 +117,13 @@
                 <!-- "Create and edit" opens the Dentos-style registration
                      popup (form_view_ref), so reception registers a new
                      patient without leaving the booking. -->
-                <!-- no_open: the internal-link arrow would open the QUICK
-                     form for existing patients too (form_view_ref applies
-                     to every open) — the full card opens via the 👤 button. -->
+                <!-- The internal-link arrow opens the FULL client card;
+                     registration goes through the ➕ widget below (a
+                     form_view_ref here would hijack the arrow too). -->
                 <field name="patient_id" invisible="not is_clinic"
                        required="is_clinic" placeholder="პაციენტი"
-                       options="{'no_open': true}"
-                       context="{'clinic_show_ids': 1, 'default_is_patient': True,
-                                 'form_view_ref': 'clinic_patient_card.view_clinic_patient_quick_form'}"/>
+                       options="{'no_create': true}"
+                       context="{'clinic_show_ids': 1}"/>
             </xpath>
             <!-- Duration above Start (reviewer): move the base rows. -->
             <xpath expr="//field[@name='start']" position="before">
@@ -143,7 +142,8 @@
                     <!-- Quick jumps to the patient (reviewer: proper buttons
                          instead of the tiny m2o arrow) -->
                     <div class="d-flex gap-2 mb-2">
-                        <!-- widget, NOT a button: buttons auto-save the form -->
+                        <!-- widgets, NOT buttons: buttons auto-save the form -->
+                        <widget name="clinic_new_patient_btn"/>
                         <widget name="clinic_slot_finder_btn"/>
                         <button name="action_open_patient" type="object"
                                 string="👤 პაციენტის ანკეტა" class="btn-secondary"

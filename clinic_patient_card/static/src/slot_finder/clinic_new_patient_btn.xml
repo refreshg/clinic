@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="clinic_patient_card.NewPatientBtn">
+    <button type="button" class="btn btn-secondary" t-on-click="open">
+        ➕ ახალი პაციენტი
+    </button>
+</t>
+
+</templates>
