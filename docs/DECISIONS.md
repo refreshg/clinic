@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-13, commit: 91e1c22 -->
+<!-- last-synced: 2026-09-17, commit: 677c4d3 -->
 # Decisions (ADR) — clinic_patient_card
 
 Format: Context → Decision → Rejected → Consequences. New custom code requires a D-entry
@@ -173,3 +173,29 @@ field is invisible are hidden with :not(:has(...)) so they don't render as empty
 JS (runtime cost for a static hook). · Consequences: the restyles are drop-out safe
 (deleting the SCSS restores the stock look); marker-div is THE pattern for targeting one
 specific form's sheet.
+
+### D-22: Dentos parity = new OWL visit page over existing models
+Date 2026-09-17 (e321912..5b75dd5) · Context: the client supplied Dentos™ screen
+recordings and asked to mirror the visit / patient-registration / procedures flows
+exactly. · Decision (user-approved 4-way): scope = the three flows only; the visit
+working page is a NEW OWL client action (clinic_visit_page) over the existing
+calendar.event/procedure models rather than a rebuilt form; consents ship now with
+the Community `signature` widget; patients get split first/last names with `name`
+auto-joined. New thin catalogs (clinic.icd10, clinic.complaint, clinic.prescription,
+clinic.consent) instead of external packages; e-recipe/EHR stay recorded-only.
+· Rejected: form-view-only rework (cannot reach the Dentos layout), external ICD-10
+dependency (Community has none), partial payments (full-amount guard + live debt
+display instead — revisit if asked). · Consequences: procedures/billing are edited on
+the page; the visit form keeps a read-only closed-visit summary.
+
+### D-23: Quick-create m2o via widget + FormViewDialog, not form_view_ref
+Date 2026-09-17 (682d072, db46b2e, 677c4d3) · Context: putting form_view_ref in the
+patient field's context sent EVERY open — including the internal link to an existing
+patient — to the registration popup; and the saved patient never landed in the
+booking because Odoo 19's relational model silently drops [id, name] tuples in
+record.update (it wants {id, display_name}). · Decision: the field keeps its normal
+link (full card) with no_create; a view widget (clinic_new_patient_btn) stacks
+FormViewDialog with the quick form and writes the m2o back as an object; the slot
+finder's dentist update was migrated to the object shape too. · Consequences: the
+widget pattern (slot finder, new patient) is the way to put custom dialogs on a form
+without hijacking navigation.

@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-13, commit: 91e1c22 -->
+<!-- last-synced: 2026-09-17, commit: 677c4d3 -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -48,6 +48,14 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
   receipt validation auto-drafts the vendor bill (waybill attached by hand); the PO's
   Return button lives 48h; ratings on the received PO feed shop/dashboard averages;
   manager board under Clinic → Stock → 📊 Dashboard.
+- **Dentos-parity visit flow (v56–60)**: book from the board (➕ ახალი პაციენტი
+  registers without leaving the popup; foreign citizens get passport/latin fields);
+  "📄 თანხმობის ფურცელი" walks the two consent sheets (medical one signed on
+  screen); "🧾 ვიზიტის გვერდი" (or ➜ on a board card) opens the working page —
+  sections, FDI→ICD-10→procedures with prices/discounts, billing (გადახდა needs
+  the full amount; live debt shown). Catalogs: Configuration → ICD-10 Diagnoses;
+  complaints seeded (clinic.complaint). Procedures dropdown = service products
+  flagged "Clinic Procedure".
 - **Cron jobs** (active by default): low-stock alert (daily), dispensary call reminders
   (daily, T-14d), weekly booking report to administrators.
 - Patients also live under **Clinic → Patients** (kanban/list/form over is_patient) —
@@ -56,6 +64,11 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
   (`default_is_patient` context on `contacts.action_contacts`).
 
 ## Known limitations
+- E-recipe / prescription sync: recorded locally only (rec_type kept); no external
+  transmission until EHR lands.
+- Visit billing takes the FULL amount (cash+card must equal the total); partial
+  payments are not supported yet.
+- Visit page tabs "გახარჯული მასალები" and "EHR სინქრონიზაცია" are placeholders.
 - E-mail sending: none yet — what/when is undecided (docs/PRD.md §9). SMS likewise
   deferred (no provider chosen; batch #2).
 - Soft-UI patient-card page is read-only (tooth painting not persisted yet — PLAN M3);

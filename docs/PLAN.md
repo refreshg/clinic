@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-13, commit: 91e1c22 -->
+<!-- last-synced: 2026-09-17, commit: 677c4d3 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -59,6 +59,6 @@ Verification for every step = live RPC + browser (no automated tests — D-11).
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-09-13: Soft-UI redesigns (v19.0.55.2-.9, D-21) — partner form (marker div + :has(); empty groups hidden; 🪪 card-page/dashboard buttons removed) + planning board pass 1-2 (dotted micro-grid, avatar chips, duration-sized cards) + Clinic→Patients menu.
-Next: user finishes visual review; then M2 ka.po regen (first unblocked) and the duration ა/ბ answer (PRD §9).
-Watch out: class attrs on <sheet> never render — use the o_clinic_soft marker-div pattern; board SCSS must never change row heights (HOUR_PX=96).
+Last session 2026-09-17: Dentos-parity batch D1–D4 (v19.0.56–60.4, D-22/D-23) — booking popup + ➕ quick registration (split names, foreign passport), consent sheets with on-screen signature, OWL visit working page (sections with Dentos forms, FDI→ICD-10→priced procedures, billing with live debt), full-colour board cards + tooltip + ➜, patient History visits list. All user-tested through a live fix round.
+Next: user continues browser testing (skipped video 12-53-30 still pending); then M2 ka.po regen.
+Watch out: OWL templates — no JS globals, no dynamic t-model, no comments inside t-if/t-elif chains; m2o record.update takes {id, display_name}; board dialog onClose must safeLoad.

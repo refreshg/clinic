@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-13, commit: 91e1c22 -->
+<!-- last-synced: 2026-09-17, commit: 677c4d3 -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -95,6 +95,22 @@ create() backfills partner from appointment.
 cash/card/transfer/insurance/mixed), amount_total(compute), amount_cash, amount_terminal,
 summary(Html), note. Mixed: cash+terminal must equal total (float_compare).
 
+#### Dentos-parity batch (D-22, v19.0.56–60)
+- **clinic.consent** — per-visit consent sheets: visit_id, patient_id (related),
+  consent_type (personal_data|medical), body snapshot, agree_data,
+  agree_marketing_terms, marketing_sms (yes/no, recorded only — SMS deferred),
+  signature (binary, Community `signature` widget), state draft/signed,
+  signed_date/uid. action_confirm guards (agreement / signature required),
+  chains personal_data → medical, posts to visit chatter, stores the first
+  medical signature on the partner as clinic_signature_sample.
+- **clinic.icd10** — code (unique) + name; 24 dental K00–K14 codes seeded
+  (data/clinic_icd10_seed.xml, noupdate); menu Configuration → ICD-10 (admin).
+- **clinic.complaint** — complaints catalog (name); 9 seeded; admin CRUD,
+  doctor read.
+- **clinic.prescription** — visit_id, rec_type (e_recipe|prescription|
+  recommendation — recorded only, no external sync), medicament, period, qty,
+  directions. Add/delete from the visit page's დანიშნულება section.
+
 ### MODIFIED (inherited) models — key additions
 **`res.partner`** (~60 patient fields, abridged by group):
 | group | fields |
@@ -170,6 +186,13 @@ admins (activity + bus `clinic_sale_request`); action_confirm auto-invoices reta
 default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesmen;
 `_compute_available_quotation_document_ids` runs sudo (D-14).
 `sale.order.line._action_launch_stock_rule` → no-op for clinic orders (D-2).
+
+### Dentos-parity field additions (v19.0.56–60)
+| model | additions |
+|---|---|
+| res.partner | first_name/last_name (create/write joins into `name`; a typed name wins), address_latin, clinic_signature_sample (binary), clinic_visit_ids (o2m calendar.event, is_clinic domain); vat check: foreign patients may hold an alphanumeric passport no. (digits-only + unique stays for locals) |
+| calendar.event | observer_ids (M2M res.users), referral_user_id, consent_ids/consent_signed (compute), clinic_case_type (planned/urgent), clinic_complaint_ids (M2M) + clinic_complaints_other + clinic_complaints (anamnesis), clinic_obj_* ×7 (bite/mucosa/periodontium/pocket depth/plaque/exam plan/other), clinic_exam_results, clinic_prescription→prescription_ids (o2m), clinic_epicrisis; methods: clinic_visit_page_data (one-round-trip page payload), action_open_visit_page, action_open_consents, clinic_visit_register_payment (cash+terminal must equal the discounted total; reuses _create_invoice_from_procedures; sets paid) |
+| clinic.procedure.history | icd10_id, currency_id, price_unit (defaults from product lst_price), discount_percent, amount_total (stored compute qty·price·(1−disc%)) |
 
 ## Business logic (trigger → condition → action; Standard coverage per row)
 | # | trigger | condition | action | std coverage |
@@ -269,6 +292,10 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | Supply Shop v2 | `static/src/shop/` (rewritten) | banner carousel, category tiles+chips, brand filter, ⭐/🆕/🔥 strips, ♥ wishlist, 🔁 repeat order, similar strip, vendor comparison table with ★ |
 | Shop Banners | `view_clinic_shop_banner_list/form`, menu Configuration→Shop Banners (admin) | image upload |
 | Patients menu | `action_clinic_patients`, `menu_clinic_patients` | Clinic → Patients: kanban/list/form over is_patient (admin+doctor), default_is_patient ctx — reviewer could not find the card via Contacts |
+| Patient quick registration | `view_clinic_patient_quick_form` | Dentos popup: standalone foreign-citizen toggle row, split names, gender radio, birthdate, personal/passport no., primary + extra phones (patient_phone_ids inline), insurance + policy, latin block; opened ONLY from the booking's ➕ widget (a form_view_ref on the field hijacked every open — D-23) |
+| Consent sheets | `view_clinic_consent_form/list` | one form serves both types; personal-data checkboxes + marketing radio; medical signature pad; footer confirm buttons chain the two sheets |
+| Visit working page (OWL) | tag `clinic_visit_page`, `static/src/visit_page/` | Dentos layout: header info cards, ← calendar pill, tabs (Procedures/Billing; materials + EHR placeholders), left medical sections with red/green dots — ჩივილები (case type + catalog chips + other + anamnesis), objective grid ×7, exam results & epicrisis text, prescriptions table, allergies table (writes clinic.patient.allergy on the PATIENT); FDI odontogram → ICD-10 → priced procedure → add; per-row discount %, status, delete; billing: live დავალიანება card, cash/card inputs, გადახდა + ვიზიტის დასრულება |
+| Booking popup (Dentos look) | same visit form inherit | attendees row hidden for clinic; ALL lifecycle chrome (12 buttons + statusbar) hidden while unsaved (`not id or …`); ➕ new-patient widget + slot finder; green save button via .o_clinic_visit_body marker CSS; patient m2o no_create + normal internal link (full card) |
 | Partner Soft-UI (CSS) | `static/src/scss/clinic_partner_soft.scss` | :has()-scoped: mint header card, stat-button cards, group cards (all-invisible groups hidden), pill tabs; zero logic (D-21) |
 | Clinic PO (B4) | `view_purchase_order_form_clinic_b4` | supplier-status field, Received On, 48h 🔄 Return button, Rating page, Returns page |
 | Supplier SO (B4) | `view_sale_order_form_clinic_b4` | 5 sequential status buttons + statusbar (supplier group) |
@@ -321,6 +348,16 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   categories (`data/clinic_shop_seed.xml`, noupdate). v19.0.53 needs nothing special.
 
 ## Drift log
+- 2026-09-17: OWL gotchas that broke the visit page: template expressions have no JS
+  globals (`String()` → ctx.String crash); `t-model` with a computed key generates
+  invalid JS; comments between t-if/t-elif siblings break the chain.
+- 2026-09-17: Odoo 19 relational model takes m2o updates as {id, display_name}
+  OBJECTS — [id, name] tuples are silently dropped (fixed in ➕ widget and slot finder).
+- 2026-09-17: a board-opened dialog can close AFTER navigation destroyed the board;
+  its onClose reload must swallow the protected-ORM rejection (safeLoad).
+- 2026-09-17: visit form's editable procedures table removed — procedures live on the
+  visit page; the form shows a read-only summary only when done/paid. Partner History
+  tab likewise: visits list (per-row 🧾 opens the page) replaced the procedures table.
 - 2026-09-13: the Odoo 19 form compiler DROPS class attributes on `<sheet>` — a view-set
   class never reaches the DOM; scope sheet styling via an invisible marker div + :has() (D-21).
 - 2026-09-13: partner-form 🪪 card-page / dashboard buttons removed (user request); the OWL

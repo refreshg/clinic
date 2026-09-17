@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-13, commit: 91e1c22 -->
+<!-- last-synced: 2026-09-17, commit: 677c4d3 -->
 # Architecture — clinic_patient_card
 
 ## Components
@@ -22,6 +22,7 @@
 | Returns | `models/clinic_purchase_return.py` | 48h return pipeline; approve → hand-built reverse picking (D-18) |
 | Stock dashboard | `static/src/stock_dashboard/` + `purchase.order.clinic_dashboard_data` | 11 monitoring blocks (items 102-114) |
 | Supplier portal | `static/src/supplier_portal/` + `product_template.py` + `sale_order.py` | supplier publishes products (std Inventory base), confirms own SOs |
+| Visit working page | `static/src/visit_page/` (OWL, tag `clinic_visit_page`) | Dentos-style per-visit workspace: medical sections, FDI→ICD-10→procedures, billing; one aggregate RPC (calendar.event.clinic_visit_page_data) + plain ORM writes |
 | Patient dashboards | `static/src/patient_dashboard/`, `static/src/patient_card_page/` | read-only visual pages over res.partner (Health-Care style; Soft-UI handoff) |
 | Security | `security/clinic_groups.xml`, `ir.model.access.csv` | 3 roles, ACLs, record rules (doctor scoping GLOBAL rule, supplier own-records) |
 | Jobs | `data/clinic_cron.xml` | low-stock daily, dispensary reminders daily, booking report weekly |
