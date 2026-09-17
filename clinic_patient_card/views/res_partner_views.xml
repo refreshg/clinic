@@ -299,6 +299,26 @@
 
                         <!-- BLOCK 4 — History -->
                         <page name="block_history" string="History">
+                            <!-- visits, each opening its Dentos-style page -->
+                            <group string="ვიზიტები">
+                                <field name="clinic_visit_ids" colspan="2"
+                                       nolabel="1" readonly="1">
+                                    <list default_order="start desc">
+                                        <field name="start"/>
+                                        <field name="dentist_id"/>
+                                        <field name="appointment_type_id"/>
+                                        <field name="clinic_state" widget="badge"
+                                               decoration-success="clinic_state in ('done','paid')"
+                                               decoration-info="clinic_state in ('confirmed','arrived','in_progress')"
+                                               decoration-warning="clinic_state in ('booked','requested')"
+                                               decoration-danger="clinic_state in ('cancelled','no_show')"/>
+                                        <field name="amount_paid" optional="show"/>
+                                        <button name="action_open_visit_page"
+                                                type="object" string="🧾 გვერდი"
+                                                class="btn-link"/>
+                                    </list>
+                                </field>
+                            </group>
                             <group string="Procedures (planned and performed)"
                                    readonly="not can_edit_medical">
                                 <field name="procedure_history_ids" colspan="2" nolabel="1">

@@ -120,6 +120,10 @@ class ResPartner(models.Model):
         string="Address (Latin)",
         help="Latinized home address, used for foreign patients.",
     )
+    clinic_visit_ids = fields.One2many(
+        "calendar.event", "patient_id", string="Visits",
+        domain=[("is_clinic", "=", True)],
+    )
     clinic_signature_sample = fields.Binary(
         string="Signature Sample", attachment=True,
         help="Kept from the first signed consent sheet (D2).",
