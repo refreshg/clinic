@@ -132,3 +132,9 @@
         &:hover { background: #a53252; color: #fff; }
     }
 }
+
+/* debt card turns red while the typed amount is short */
+.clinic_visit_page .cvp_debt {
+    border-color: #f5c6cb; background: #fff5f5;
+    .cvp_amount { color: #c0392b; }
+}

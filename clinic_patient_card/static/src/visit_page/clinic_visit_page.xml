@@ -202,6 +202,11 @@
                         <input type="number" min="0" class="cvp_payin" t-model="state.payTerminal"
                                t-att-disabled="state.data.visit.state === 'paid'"/>
                     </div>
+                    <div t-if="state.data.visit.state !== 'paid'"
+                         t-att-class="'cvp_card ' + (debtPreview > 0 ? 'cvp_debt' : '')">
+                        <div class="cvp_ctitle">დავალიანება</div>
+                        <div class="cvp_amount" t-esc="debtPreview + ' ₾'"/>
+                    </div>
                 </div>
                 <div class="d-flex gap-2 mt-3 flex-wrap">
                     <button class="btn cvp_paybtn"

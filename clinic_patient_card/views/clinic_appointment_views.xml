@@ -187,15 +187,21 @@
                             <field name="payment_method" invisible="1"/>
                         </group>
                     </group>
-                    <!-- visible from booking on: the reviewer records the
-                         visit purpose/procedure while registering -->
-                    <group string="Procedures">
-                        <field name="procedure_line_ids" nolabel="1" colspan="2">
-                            <list editable="bottom">
+                    <!-- Procedures are worked on the visit PAGE (D3); the
+                         form only shows the outcome once the visit is
+                         closed (reviewer: "დახურულზე ჩანდეს რა შეივსო"). -->
+                    <group string="Procedures"
+                           invisible="clinic_state not in ('done', 'paid')">
+                        <field name="procedure_line_ids" nolabel="1" colspan="2"
+                               readonly="1">
+                            <list>
                                 <field name="status"/>
                                 <field name="procedure_id"/>
+                                <field name="icd10_id"/>
                                 <field name="qty"/>
                                 <field name="tooth"/>
+                                <field name="discount_percent"/>
+                                <field name="amount_total" sum="Total"/>
                                 <field name="note"/>
                             </list>
                         </field>

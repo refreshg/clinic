@@ -388,11 +388,16 @@
         <field name="arch" type="xml">
             <form string="პაციენტის რეგისტრაციის ფორმა">
                 <sheet>
+                    <!-- Dentos: the foreign-citizen slider stands alone on
+                         top, impossible to miss -->
+                    <div class="alert alert-light d-flex align-items-center gap-2 mb-3"
+                         role="none" style="border:1px solid #e5e8ec; border-radius:12px;">
+                        <field name="is_foreign" widget="boolean_toggle" nolabel="1"/>
+                        <b>უცხო ქვეყნის მოქალაქე</b>
+                    </div>
                     <group>
                         <group>
                             <field name="is_patient" invisible="1"/>
-                            <field name="is_foreign" widget="boolean_toggle"
-                                   string="უცხო ქვეყნის მოქალაქე"/>
                             <field name="first_name" required="1"
                                    string="პაციენტის სახელი"/>
                             <field name="last_name" required="1"

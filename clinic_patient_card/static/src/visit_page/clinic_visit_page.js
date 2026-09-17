@@ -153,7 +153,21 @@ export class ClinicVisitPage extends Component {
     }
 
     // ---- billing (D4) ---------------------------------------------------
+    get debtPreview() {
+        // live "remaining" while typing the amounts
+        const paid = (parseFloat(this.state.payCash) || 0)
+            + (parseFloat(this.state.payTerminal) || 0);
+        return Math.round((this.totalAmount - paid) * 100) / 100;
+    }
     async registerPayment() {
+        if (this.debtPreview !== 0) {
+            this.notification.add(
+                this.debtPreview > 0
+                    ? _t("თანხა არასრულია — დავალიანება ") + this.debtPreview + " ₾"
+                    : _t("შეყვანილი თანხა ჯამს აღემატება ") + (-this.debtPreview) + " ₾-ით",
+                { type: "danger" });
+            return;
+        }
         this.state.saving = true;
         try {
             await this.orm.call("calendar.event",
@@ -163,7 +177,9 @@ export class ClinicVisitPage extends Component {
             this.notification.add(_t("გადახდა დაფიქსირდა"), { type: "success" });
             await this.load();
         } catch (e) {
-            // the RPC layer already toasts the UserError
+            this.notification.add(
+                (e.data && e.data.message) || e.message || _t("გადახდა ვერ შესრულდა"),
+                { type: "danger" });
         } finally {
             this.state.saving = false;
         }
