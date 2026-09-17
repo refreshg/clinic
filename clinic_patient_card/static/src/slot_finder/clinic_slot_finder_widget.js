@@ -147,7 +147,8 @@ export class ClinicSlotFinderBtn extends Component {
                     stop: deserializeDateTime(slot.stop),
                 };
                 if (slot.dentist_id) {
-                    vals.dentist_id = [slot.dentist_id, slot.dentist];
+                    // Odoo 19 m2o update shape: {id, display_name} object
+                    vals.dentist_id = { id: slot.dentist_id, display_name: slot.dentist };
                 }
                 if (slot.direction) {
                     vals.direction_id = slot.direction;

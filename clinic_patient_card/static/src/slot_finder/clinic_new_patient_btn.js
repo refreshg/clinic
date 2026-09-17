@@ -34,8 +34,13 @@ export class ClinicNewPatientBtn extends Component {
             onRecordSaved: async (rec) => {
                 const [row] = await this.orm.read(
                     "res.partner", [rec.resId], ["display_name"]);
+                // Odoo 19 relational model: m2o values are {id, display_name}
+                // objects — a [id, name] tuple is silently dropped.
                 await record.update({
-                    patient_id: [rec.resId, row ? row.display_name : ""],
+                    patient_id: {
+                        id: rec.resId,
+                        display_name: row ? row.display_name : "",
+                    },
                 });
             },
         });
