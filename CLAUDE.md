@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-12, commit: 0511206 -->
+<!-- last-synced: 2026-09-13, commit: 91e1c22 -->
 # Clinic — project notes for Claude
 
 ## Platform
@@ -43,8 +43,10 @@
   the SO, which mirror-confirms the PO and notifies the clinic. Clinic visit forms hide
   meeting-only fields (Location/Video Link/attendees) and open the Clinic tab by default.
   A full Soft-UI patient-card page (OWL client action `clinic_patient_card_page`, ported
-  from `docs/design_handoff_patient_card/`) opens via "🪪 პაციენტის ბარათი" on the Patient
-  Card tab, reading a real res.partner (read-only for now). Each doctor sees only their own
+  from `docs/design_handoff_patient_card/`) opens via the 🪪 jump button on the visit form
+  (the partner-form buttons were removed 2026-09-13), reading a real res.partner
+  (read-only for now). The partner form itself and the planning board carry a CSS-only
+  Soft-UI restyle (D-21: marker div + `:has()`); Clinic → Patients lists all patients. Each doctor sees only their own
   appointments on the calendar/board; the admin sees all.
 
 ## Next steps (pick up here)

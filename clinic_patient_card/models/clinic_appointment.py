@@ -44,6 +44,17 @@ class CalendarEvent(models.Model):
     referral_source = fields.Selection(
         related="patient_id.referral_source", readonly=False,
     )
+    # Dentos-style booking extras: staff observers sitting in on the visit,
+    # and — when the referral came from a colleague — the referring employee.
+    observer_ids = fields.Many2many(
+        "res.users", "clinic_visit_observer_rel", "event_id", "user_id",
+        string="Observers",
+        help="Staff members observing this visit (Dentos: დამკვირვებელი).",
+    )
+    referral_user_id = fields.Many2one(
+        "res.users", string="Referred by (employee)",
+        help="Set when a staff member referred the patient.",
+    )
 
     @api.depends("patient_id")
     def _compute_family_member_domain(self):

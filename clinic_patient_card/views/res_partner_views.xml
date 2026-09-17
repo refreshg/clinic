@@ -377,6 +377,71 @@
     </record>
 
     <!-- ============================================================ -->
+    <!-- Patient quick-registration popup (Dentos-style) — opened from
+         the booking form's Patient field via form_view_ref, so a new
+         patient is registered without leaving the booking dialog.     -->
+    <!-- ============================================================ -->
+    <record id="view_clinic_patient_quick_form" model="ir.ui.view">
+        <field name="name">res.partner.form.clinic.quick.registration</field>
+        <field name="model">res.partner</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <form string="პაციენტის რეგისტრაციის ფორმა">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="is_patient" invisible="1"/>
+                            <field name="is_foreign" widget="boolean_toggle"
+                                   string="უცხო ქვეყნის მოქალაქე"/>
+                            <field name="first_name" required="1"
+                                   string="პაციენტის სახელი"/>
+                            <field name="last_name" required="1"
+                                   string="პაციენტის გვარი"/>
+                            <field name="gender" widget="radio"
+                                   options="{'horizontal': true}" string="სქესი"/>
+                            <field name="birthdate" string="დაბადების თარიღი"/>
+                            <field name="vat" string="პირადი ნომერი"
+                                   invisible="is_foreign"/>
+                            <field name="vat" string="პასპორტის ნომერი"
+                                   invisible="not is_foreign"/>
+                        </group>
+                        <group>
+                            <field name="phone" required="1"
+                                   string="ტელეფონის ნომერი (ძირითადი)"/>
+                            <field name="patient_phone_ids"
+                                   string="ნომერი (დამატებითი)">
+                                <list editable="bottom">
+                                    <field name="phone"/>
+                                    <field name="phone_type" optional="hide"/>
+                                </list>
+                            </field>
+                            <field name="email" string="ელექტრონული ფოსტა"/>
+                            <field name="street" string="საცხოვრებელი მისამართი"/>
+                            <field name="company_name"
+                                   string="მიმდინარე სამუშაო ადგილი"/>
+                            <field name="insurance_company_id"
+                                   string="სადაზღვევო კომპანია"/>
+                            <field name="insurance_policy_no"
+                                   string="სადაზღვევო პოლისის ნომერი"/>
+                        </group>
+                    </group>
+                    <group string="უცხო ქვეყნის მოქალაქე" invisible="not is_foreign">
+                        <group>
+                            <field name="nationality_country_id" string="მოქალაქეობა"/>
+                            <field name="name_latin"
+                                   string="სახელი და გვარი (ლათინურად)"/>
+                        </group>
+                        <group>
+                            <field name="address_latin"
+                                   string="მისამართი (ლათინურად)"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
     <!-- Search: filter patients                                       -->
     <!-- ============================================================ -->
     <record id="view_res_partner_filter_patient" model="ir.ui.view">

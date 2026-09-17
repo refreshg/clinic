@@ -68,7 +68,14 @@ class ResPartner(models.Model):
             if not p.is_patient or not p.vat:
                 continue
             vat = p.vat.strip()
-            if not vat.isdigit():
+            # A foreign citizen's document is a passport number — letters
+            # allowed; a Georgian personal number stays digits-only.
+            if p.is_foreign:
+                if not vat.isalnum():
+                    raise ValidationError(_(
+                        "Passport number may contain letters and digits only: %s"
+                    ) % p.vat)
+            elif not vat.isdigit():
                 raise ValidationError(_(
                     "Personal No. may contain digits only: %s"
                 ) % p.vat)
@@ -100,9 +107,18 @@ class ResPartner(models.Model):
     # ==================================================================
     # 1.1 Basic information
     # ==================================================================
+    # Dentos-style registration keeps first/last name apart; `name` is
+    # rebuilt from them in create/write so the rest of Odoo keeps working
+    # on the single field. Existing patients (name only) stay untouched.
+    first_name = fields.Char(string="First Name")
+    last_name = fields.Char(string="Last Name")
     name_latin = fields.Char(
         string="Name (Latin)",
         help="Latinized full name, used for foreign patients.",
+    )
+    address_latin = fields.Char(
+        string="Address (Latin)",
+        help="Latinized home address, used for foreign patients.",
     )
     # Personal number reuses the standard `vat` (Tax ID) field — no custom field.
     birthdate = fields.Date(string="Date of Birth")
@@ -398,9 +414,23 @@ class ResPartner(models.Model):
     # ------------------------------------------------------------------
     # CRUD overrides
     # ------------------------------------------------------------------
+    @staticmethod
+    def _clinic_join_name(vals, current=None):
+        # first/last name → single `name`; a value typed straight into
+        # `name` (no first/last in the payload) always wins.
+        if "first_name" in vals or "last_name" in vals:
+            first = vals.get(
+                "first_name", current.first_name if current else None) or ""
+            last = vals.get(
+                "last_name", current.last_name if current else None) or ""
+            full = f"{first} {last}".strip()
+            if full and "name" not in vals:
+                vals["name"] = full
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
+            self._clinic_join_name(vals)
             if vals.get("is_patient") and vals.get("patient_ref", "New") == "New":
                 vals["patient_ref"] = self.env["ir.sequence"].next_by_code(
                     "clinic.patient.ref"
@@ -408,6 +438,8 @@ class ResPartner(models.Model):
         return super().create(vals_list)
 
     def write(self, vals):
+        if ("first_name" in vals or "last_name" in vals) and len(self) == 1:
+            self._clinic_join_name(vals, current=self)
         # Assign a patient reference the first time a partner is flagged as patient.
         if vals.get("is_patient"):
             for partner in self:
