@@ -21,3 +21,4 @@ from . import clinic_patient_document
 from . import res_partner
 from . import res_users
 from . import clinic_consent
+from . import clinic_icd10

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- D3 — ICD-10 catalog admin (Configuration) -->
+    <record id="view_clinic_icd10_list" model="ir.ui.view">
+        <field name="name">clinic.icd10.list</field>
+        <field name="model">clinic.icd10</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="code"/>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_clinic_icd10" model="ir.actions.act_window">
+        <field name="name">ICD-10 Diagnoses</field>
+        <field name="res_model">clinic.icd10</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <menuitem id="menu_clinic_icd10" name="ICD-10 Diagnoses"
+              parent="menu_clinic_config" action="action_clinic_icd10"
+              sequence="45"
+              groups="clinic_patient_card.group_clinic_admin"/>
+
+</odoo>

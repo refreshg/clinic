@@ -1,0 +1,116 @@
+/* D3 — Dentos-style visit working page (Soft-UI family). */
+.clinic_visit_page {
+    background: #f8f9fa;
+    padding: 14px 18px;
+    height: 100%;
+    max-height: calc(100vh - 46px);
+    overflow-y: auto;
+
+    /* ---- header cards ---- */
+    .cvp_head {
+        display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
+    }
+    .cvp_card {
+        background: #fff; border: 1px solid #eceff3; border-radius: 14px;
+        padding: 10px 14px; box-shadow: 0 2px 8px rgba(16, 24, 40, .07);
+        min-width: 140px; font-size: 13px;
+    }
+    .cvp_patient { cursor: pointer; min-width: 240px;
+        &:hover { box-shadow: 0 6px 16px rgba(16, 24, 40, .13); } }
+    .cvp_pname { font-weight: 800; font-size: 15px; color: #1f2937; }
+    .cvp_meta { color: #8a919c; font-size: 11.5px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .cvp_phone { background: #1f2937; color: #fff; border-radius: 999px; padding: 0 8px; }
+    .cvp_ctitle { color: #8a919c; font-size: 11px; margin-bottom: 2px; }
+    .cvp_warn { border-color: #f5c6cb; background: #fff5f5; }
+    .cvp_doc { margin-left: auto; text-align: right; }
+    .cvp_amount { font-size: 20px; font-weight: 800; color: #714b67; }
+
+    /* ---- tabs ---- */
+    .cvp_tabs {
+        display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
+        button {
+            border: 0; border-radius: 999px; padding: 7px 18px;
+            background: #eef0f3; color: #4b5563; font-weight: 600;
+            &.active { background: #28a745; color: #fff; }
+            &.disabled { opacity: .45; cursor: not-allowed; }
+            &.cvp_visitform { margin-left: auto; background: #fff;
+                border: 1px solid #e5e8ec; }
+        }
+    }
+
+    /* ---- body: side + main ---- */
+    .cvp_body { display: flex; gap: 14px; align-items: flex-start; }
+    .cvp_side {
+        flex: 0 0 250px; background: #fff; border: 1px solid #eceff3;
+        border-radius: 14px; padding: 10px;
+        box-shadow: 0 1px 6px rgba(16, 24, 40, .05);
+    }
+    .cvp_sside_title { font-weight: 800; font-size: 12px; color: #8a919c;
+        text-transform: uppercase; margin: 4px 6px 8px; }
+    .cvp_sec {
+        display: flex; align-items: center; gap: 8px; width: 100%;
+        border: 0; background: transparent; text-align: left;
+        padding: 8px 10px; border-radius: 10px; font-size: 13px;
+        &:hover { background: #f1f3f5; }
+        &.open { background: #eef7f1; font-weight: 700; }
+    }
+    .cvp_dot {
+        width: 10px; height: 10px; border-radius: 50%; background: #e5484d;
+        flex: 0 0 auto;
+        &.ok { background: #27ae60; }
+    }
+
+    .cvp_main {
+        flex: 1 1 auto; background: #fff; border: 1px solid #eceff3;
+        border-radius: 14px; padding: 16px 18px;
+        box-shadow: 0 1px 6px rgba(16, 24, 40, .05); min-width: 0;
+    }
+
+    /* ---- odontogram ---- */
+    .cvp_odo_title { font-weight: 700; margin-bottom: 10px; }
+    .cvp_odo { margin-bottom: 14px; }
+    .cvp_row { display: flex; justify-content: center; gap: 26px; margin-bottom: 6px;
+        &.small .cvp_tooth { transform: scale(.88); } }
+    .cvp_half { display: flex; gap: 3px; }
+    .cvp_tooth {
+        border: 0; background: transparent; display: flex;
+        flex-direction: column; align-items: center; font-size: 11px;
+        color: #6b7280; padding: 2px 3px; border-radius: 8px;
+        .cvp_ticon { font-size: 17px; filter: grayscale(1); }
+        &:hover { background: #f1f3f5; }
+        &.sel { background: #714b67; color: #fff;
+            .cvp_ticon { filter: none; } }
+    }
+
+    /* ---- pick row ---- */
+    .cvp_pick { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+    .cvp_field { flex: 1 1 240px; display: flex; flex-direction: column;
+        label { font-size: 11.5px; color: #8a919c; margin-bottom: 3px; }
+        select { border: 1px solid #e5e8ec; border-radius: 10px; padding: 7px 10px; }
+    }
+    .cvp_toothsel { flex: 0 0 90px; }
+    .cvp_toothbadge { background: #eef0f3; border-radius: 10px;
+        padding: 7px 10px; text-align: center; font-weight: 700; }
+    .cvp_add { border-radius: 10px; }
+
+    /* ---- procedures table ---- */
+    .cvp_table {
+        width: 100%; margin-top: 16px; font-size: 13px;
+        th { color: #8a919c; font-weight: 600; font-size: 11.5px;
+            border-bottom: 1px solid #eceff3; padding: 6px 8px; text-align: left; }
+        td { border-bottom: 1px solid #f4f6f8; padding: 7px 8px; vertical-align: middle; }
+        select, .cvp_disc { border: 1px solid #e5e8ec; border-radius: 8px; padding: 4px 6px; }
+        .cvp_disc { width: 64px; }
+        .cvp_del { border: 0; background: transparent; font-size: 15px;
+            &:hover { transform: scale(1.15); } }
+    }
+
+    /* ---- section editor ---- */
+    .cvp_secedit textarea {
+        width: 100%; border: 1px solid #e5e8ec; border-radius: 12px;
+        padding: 10px 12px; font-size: 13.5px;
+        &:focus { outline: 2px solid rgba(113, 75, 103, .35); }
+    }
+
+    .cvp_bill_cards { display: flex; gap: 12px; flex-wrap: wrap; }
+}

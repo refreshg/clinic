@@ -40,6 +40,33 @@ class ClinicProcedureHistory(models.Model):
     doctor_id = fields.Many2one("res.users", string="Performed By")
     tooth = fields.Char(string="Tooth (FDI)")
     note = fields.Text(string="Notes")
+    # D3 — Dentos chain: tooth → ICD-10 diagnosis → procedure, priced.
+    icd10_id = fields.Many2one("clinic.icd10", string="ICD-10 Diagnosis")
+    currency_id = fields.Many2one(
+        "res.currency",
+        default=lambda self: self.env.company.currency_id.id,
+    )
+    price_unit = fields.Monetary(
+        string="Price", currency_field="currency_id",
+        help="Unit price; defaults to the procedure product's sale price.",
+    )
+    discount_percent = fields.Float(string="Discount (%)")
+    amount_total = fields.Monetary(
+        string="Total", currency_field="currency_id",
+        compute="_compute_amount_total", store=True,
+    )
+
+    @api.depends("qty", "price_unit", "discount_percent")
+    def _compute_amount_total(self):
+        for rec in self:
+            rec.amount_total = (
+                rec.qty * rec.price_unit * (1 - (rec.discount_percent or 0.0) / 100.0)
+            )
+
+    @api.onchange("procedure_id")
+    def _onchange_procedure_price(self):
+        if self.procedure_id and not self.price_unit:
+            self.price_unit = self.procedure_id.lst_price
 
     @api.onchange("procedure_id")
     def _onchange_procedure_id(self):

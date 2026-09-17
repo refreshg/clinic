@@ -22,3 +22,6 @@ Thumbs.db
 ~$*
 *.tmp
 *.bak
+
+# local reference recordings — GitHub rejects >100MB files
+docs/Videos/

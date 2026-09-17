@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- D3 — dental ICD-10 subset (K00–K14), Georgian labels.
+         Admins extend the list under Clinic → Configuration → ICD-10. -->
+    <record id="icd10_k00_3" model="clinic.icd10">
+        <field name="code">K00.3</field>
+        <field name="name">კბილების ლაქები</field>
+    </record>
+    <record id="icd10_k00_4" model="clinic.icd10">
+        <field name="code">K00.4</field>
+        <field name="name">კბილების ჩამოყალიბების დარღვევები</field>
+    </record>
+    <record id="icd10_k00_7" model="clinic.icd10">
+        <field name="code">K00.7</field>
+        <field name="name">კბილების ამოჭრის სინდრომი</field>
+    </record>
+    <record id="icd10_k00_8" model="clinic.icd10">
+        <field name="code">K00.8</field>
+        <field name="name">კბილის განვითარების სხვა დარღვევები</field>
+    </record>
+    <record id="icd10_k00_9" model="clinic.icd10">
+        <field name="code">K00.9</field>
+        <field name="name">კბილის განვითარების დარღვევა, დაუზუსტებელი</field>
+    </record>
+    <record id="icd10_k01_0" model="clinic.icd10">
+        <field name="code">K01.0</field>
+        <field name="name">რეტენირებული კბილები</field>
+    </record>
+    <record id="icd10_k01_1" model="clinic.icd10">
+        <field name="code">K01.1</field>
+        <field name="name">იმპაქტური (ჩაჭედილი) კბილები</field>
+    </record>
+    <record id="icd10_k02_0" model="clinic.icd10">
+        <field name="code">K02.0</field>
+        <field name="name">მინანქრის კარიესი</field>
+    </record>
+    <record id="icd10_k02_1" model="clinic.icd10">
+        <field name="code">K02.1</field>
+        <field name="name">დენტინის კარიესი</field>
+    </record>
+    <record id="icd10_k02_2" model="clinic.icd10">
+        <field name="code">K02.2</field>
+        <field name="name">ცემენტის კარიესი</field>
+    </record>
+    <record id="icd10_k02_9" model="clinic.icd10">
+        <field name="code">K02.9</field>
+        <field name="name">კბილის კარიესი, დაუზუსტებელი</field>
+    </record>
+    <record id="icd10_k03_6" model="clinic.icd10">
+        <field name="code">K03.6</field>
+        <field name="name">კბილების ნადებები (ქვა და რბილი ნადები)</field>
+    </record>
+    <record id="icd10_k04_0" model="clinic.icd10">
+        <field name="code">K04.0</field>
+        <field name="name">პულპიტი</field>
+    </record>
+    <record id="icd10_k04_1" model="clinic.icd10">
+        <field name="code">K04.1</field>
+        <field name="name">პულპის ნეკროზი</field>
+    </record>
+    <record id="icd10_k04_5" model="clinic.icd10">
+        <field name="code">K04.5</field>
+        <field name="name">ქრონიკული აპიკალური პერიოდონტიტი</field>
+    </record>
+    <record id="icd10_k05_0" model="clinic.icd10">
+        <field name="code">K05.0</field>
+        <field name="name">მწვავე გინგივიტი</field>
+    </record>
+    <record id="icd10_k05_1" model="clinic.icd10">
+        <field name="code">K05.1</field>
+        <field name="name">ქრონიკული გინგივიტი</field>
+    </record>
+    <record id="icd10_k05_3" model="clinic.icd10">
+        <field name="code">K05.3</field>
+        <field name="name">ქრონიკული პაროდონტიტი</field>
+    </record>
+    <record id="icd10_k07_3" model="clinic.icd10">
+        <field name="code">K07.3</field>
+        <field name="name">კბილების მდებარეობის ანომალიები</field>
+    </record>
+    <record id="icd10_k08_1" model="clinic.icd10">
+        <field name="code">K08.1</field>
+        <field name="name">კბილების დაკარგვა ავარიის, ექსტრაქციის ან დაავადების გამო</field>
+    </record>
+    <record id="icd10_k08_3" model="clinic.icd10">
+        <field name="code">K08.3</field>
+        <field name="name">კბილის ფესვის ნარჩენი</field>
+    </record>
+    <record id="icd10_k10_2" model="clinic.icd10">
+        <field name="code">K10.2</field>
+        <field name="name">ყბის ანთებითი დაავადებები</field>
+    </record>
+    <record id="icd10_k12_0" model="clinic.icd10">
+        <field name="code">K12.0</field>
+        <field name="name">მორეციდივე პირის ღრუს აფთები</field>
+    </record>
+    <record id="icd10_k14_0" model="clinic.icd10">
+        <field name="code">K14.0</field>
+        <field name="name">გლოსიტი</field>
+    </record>
+</odoo>

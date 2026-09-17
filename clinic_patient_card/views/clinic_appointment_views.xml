@@ -143,6 +143,10 @@
                         <button name="action_open_patient_card" type="object"
                                 string="🪪 პაციენტის ბარათი" class="btn-secondary"
                                 invisible="not patient_id"/>
+                        <!-- D3: the Dentos-style visit working page -->
+                        <button name="action_open_visit_page" type="object"
+                                string="🧾 ვიზიტის გვერდი" class="btn-secondary"
+                                invisible="not patient_id"/>
                         <!-- D2: consent sheets (Dentos "თანხმობის ფურცელი") -->
                         <field name="consent_signed" invisible="1"/>
                         <button name="action_open_consents" type="object"

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="clinic_patient_card.VisitPage">
+    <div class="clinic_visit_page" t-if="state.data">
+        <!-- ===== header info cards ===== -->
+        <div class="cvp_head">
+            <div class="cvp_card cvp_patient" t-on-click="openPatient">
+                <div class="cvp_pname" t-esc="state.data.patient.name"/>
+                <div class="cvp_meta">
+                    <span t-if="state.data.patient.birthdate">📅 <t t-esc="state.data.patient.birthdate"/></span>
+                    <span t-if="state.data.patient.vat">🪪 <t t-esc="state.data.patient.vat"/></span>
+                    <span t-if="state.data.patient.phone" class="cvp_phone">📞 <t t-esc="state.data.patient.phone"/></span>
+                </div>
+            </div>
+            <div class="cvp_card">
+                <div class="cvp_ctitle">დაზღვევა</div>
+                <div t-esc="state.data.patient.insurance || 'არ აქვს'"/>
+            </div>
+            <div class="cvp_card">
+                <div class="cvp_ctitle">ვიზიტის თარიღი</div>
+                <div t-esc="visitRange"/>
+            </div>
+            <div class="cvp_card" t-att-class="state.data.patient.allergies.length ? 'cvp_warn' : ''">
+                <div class="cvp_ctitle">ალერგ. ცნობა</div>
+                <div t-esc="state.data.patient.allergies.length ? state.data.patient.allergies.join(', ') : '—'"/>
+            </div>
+            <div class="cvp_card">
+                <div class="cvp_ctitle">თანხმობა</div>
+                <div t-esc="state.data.visit.consent_signed ? '✓ ხელმოწერილია' : '✗ არაა'"/>
+            </div>
+            <div class="cvp_card cvp_doc">
+                <div class="cvp_ctitle">მკურნალი ექიმი</div>
+                <div t-esc="state.data.visit.dentist"/>
+                <div class="cvp_meta" t-if="state.data.visit.assistant">
+                    რეზიდენტი: <t t-esc="state.data.visit.assistant"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== tabs ===== -->
+        <div class="cvp_tabs">
+            <button t-att-class="state.tab === 'procedures' ? 'active' : ''"
+                    t-on-click="() => state.tab = 'procedures'">პროცედურები</button>
+            <button t-att-class="state.tab === 'billing' ? 'active' : ''"
+                    t-on-click="() => state.tab = 'billing'">ანგარიშსწორება</button>
+            <button class="disabled" title="მალე">გახარჯული მასალები</button>
+            <button class="disabled" title="მალე">EHR სინქრონიზაცია</button>
+            <button class="cvp_visitform" t-on-click="openVisitForm">✎ ვიზიტის ფორმა</button>
+        </div>
+
+        <!-- ===== procedures tab ===== -->
+        <div class="cvp_body" t-if="state.tab === 'procedures'">
+            <!-- left: medical sections -->
+            <div class="cvp_side">
+                <div class="cvp_sside_title">მკურნალობა</div>
+                <button t-att-class="'cvp_sec ' + (state.section === null ? 'open' : '')"
+                        t-on-click="() => state.section = null">
+                    <span t-att-class="'cvp_dot ' + (state.data.procedures.length ? 'ok' : '')"/>
+                    მკურნალობა (პროცედურები)
+                </button>
+                <t t-foreach="sectionsMeta" t-as="sec" t-key="sec.key">
+                    <button t-att-class="'cvp_sec ' + (state.section === sec.key ? 'open' : '')"
+                            t-on-click="() => this.openSection(sec.key)">
+                        <span t-att-class="'cvp_dot ' + (sectionFilled(sec.key) ? 'ok' : '')"/>
+                        <t t-esc="sec.label"/>
+                    </button>
+                </t>
+            </div>
+
+            <!-- center -->
+            <div class="cvp_main">
+                <!-- section editor -->
+                <div t-if="state.section" class="cvp_secedit">
+                    <textarea rows="10" t-model="state.sectionDraft"
+                              placeholder="ჩაწერე ტექსტი…"/>
+                    <button class="btn btn-primary w-100 mt-2"
+                            t-on-click="saveSection">შენახვა</button>
+                </div>
+
+                <!-- odontogram + add row -->
+                <div t-else="">
+                    <div class="cvp_odo_title">აირჩიეთ კბილი დიაგნოზის დასამატებლად</div>
+                    <div class="cvp_odo">
+                        <t t-foreach="fdiRows" t-as="row" t-key="row_index">
+                            <div t-att-class="'cvp_row ' + row.cls">
+                                <div class="cvp_half">
+                                    <t t-foreach="row.left" t-as="n" t-key="n">
+                                        <button t-att-class="'cvp_tooth ' + (state.tooth === String(n) ? 'sel' : '')"
+                                                t-on-click="() => this.pickTooth(n)">
+                                            <span class="cvp_ticon">🦷</span>
+                                            <span t-esc="n"/>
+                                        </button>
+                                    </t>
+                                </div>
+                                <div class="cvp_half">
+                                    <t t-foreach="row.right" t-as="n" t-key="n">
+                                        <button t-att-class="'cvp_tooth ' + (state.tooth === String(n) ? 'sel' : '')"
+                                                t-on-click="() => this.pickTooth(n)">
+                                            <span class="cvp_ticon">🦷</span>
+                                            <span t-esc="n"/>
+                                        </button>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+
+                    <div class="cvp_pick">
+                        <div class="cvp_field">
+                            <label>ICD-10 დიაგნოზი</label>
+                            <select t-model.number="state.icd10Id">
+                                <option value="">აირჩიეთ ICD-10 დიაგნოზი</option>
+                                <t t-foreach="state.data.icd10" t-as="d" t-key="d.id">
+                                    <option t-att-value="d.id"><t t-esc="d.code"/> - <t t-esc="d.name"/></option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="cvp_field">
+                            <label>პროცედურა</label>
+                            <select t-model.number="state.productId">
+                                <option value="">აირჩიეთ პროცედურა</option>
+                                <t t-foreach="state.data.products" t-as="p" t-key="p.id">
+                                    <option t-att-value="p.id"><t t-esc="p.name"/> — <t t-esc="p.lst_price"/>₾</option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="cvp_field cvp_toothsel">
+                            <label>კბილი</label>
+                            <span class="cvp_toothbadge" t-esc="state.tooth || '—'"/>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary w-100 cvp_add"
+                            t-att-disabled="state.saving"
+                            t-on-click="addProcedure">🦷 დამატება</button>
+
+                    <!-- procedures table -->
+                    <table class="cvp_table" t-if="state.data.procedures.length">
+                        <thead><tr>
+                            <th>კბილი #</th><th>პროცედურა და დიაგნოზი</th>
+                            <th>ფასი</th><th>ფასდაკ. %</th><th>ჯამი</th>
+                            <th>სტატუსი</th><th/>
+                        </tr></thead>
+                        <tbody>
+                            <t t-foreach="state.data.procedures" t-as="pr" t-key="pr.id">
+                                <tr>
+                                    <td t-esc="pr.tooth || '—'"/>
+                                    <td>
+                                        <div t-esc="pr.procedure_id ? pr.procedure_id[1] : pr.name"/>
+                                        <small class="text-muted" t-if="pr.icd10_id" t-esc="pr.icd10_id[1]"/>
+                                    </td>
+                                    <td t-esc="pr.price_unit"/>
+                                    <td>
+                                        <input type="number" min="0" max="100" class="cvp_disc"
+                                               t-att-value="pr.discount_percent"
+                                               t-on-change="(ev) => this.setProcDiscount(pr, ev.target.value)"/>
+                                    </td>
+                                    <td t-esc="pr.amount_total"/>
+                                    <td>
+                                        <select t-att-value="pr.status"
+                                                t-on-change="(ev) => this.setProcStatus(pr, ev.target.value)">
+                                            <t t-foreach="procStatuses" t-as="st" t-key="st[0]">
+                                                <option t-att-value="st[0]"
+                                                        t-att-selected="pr.status === st[0] ? 'selected' : undefined">
+                                                    <t t-esc="st[1]"/>
+                                                </option>
+                                            </t>
+                                        </select>
+                                    </td>
+                                    <td><button class="cvp_del" t-on-click="() => this.removeProc(pr)">🗑</button></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                        <tfoot><tr>
+                            <td colspan="4" class="text-end fw-bold">ჯამური ფასი:</td>
+                            <td class="fw-bold" t-esc="totalAmount"/>
+                            <td colspan="2"/>
+                        </tr></tfoot>
+                    </table>
+                    <div t-else="" class="text-muted mt-3">ჩანაწერი არ მოიძებნა</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== billing tab (totals now; payment actions land in D4) ===== -->
+        <div class="cvp_body cvp_billing" t-if="state.tab === 'billing'">
+            <div class="cvp_main">
+                <h5>პროცედურების ანგარიშსწორება</h5>
+                <div class="cvp_bill_cards">
+                    <div class="cvp_card"><div class="cvp_ctitle">გადასახდელი თანხა</div>
+                        <div class="cvp_amount" t-esc="totalAmount + ' ₾'"/></div>
+                    <div class="cvp_card"><div class="cvp_ctitle">გადახდილი თანხა</div>
+                        <div class="cvp_amount" t-esc="(state.data.visit.amount_paid || 0) + ' ₾'"/></div>
+                </div>
+                <p class="text-muted mt-3">გადახდის ღილაკები დაემატება შემდეგ ეტაპზე (D4).</p>
+            </div>
+        </div>
+    </div>
+</t>
+
+</templates>

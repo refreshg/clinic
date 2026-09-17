@@ -62,6 +62,16 @@ class CalendarEvent(models.Model):
     consent_signed = fields.Boolean(
         string="Consents Signed", compute="_compute_consent_signed",
     )
+    # D3 — medical sections of the visit page (Dentos left-hand menu).
+    clinic_case_type = fields.Selection(
+        [("planned", "Planned"), ("urgent", "Urgent")],
+        string="Case Type", default="planned",
+    )
+    clinic_complaints = fields.Text(string="Complaints / Anamnesis")
+    clinic_objective = fields.Text(string="Objective Examination")
+    clinic_exam_results = fields.Text(string="Examination Results")
+    clinic_prescription = fields.Text(string="Prescription / Recommendations")
+    clinic_epicrisis = fields.Text(string="Visit Epicrisis")
 
     @api.depends("consent_ids.state")
     def _compute_consent_signed(self):
@@ -69,6 +79,69 @@ class CalendarEvent(models.Model):
             signed = ev.consent_ids.filtered(lambda c: c.state == "signed")
             ev.consent_signed = bool(signed) and len(signed) == len(
                 ev.consent_ids) and len(ev.consent_ids) >= 2
+
+    def action_open_visit_page(self):
+        """Open the Dentos-style visit working page (OWL, D3)."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.client",
+            "tag": "clinic_visit_page",
+            "name": self.patient_id.name or self.name,
+            "params": {"visit_id": self.id},
+        }
+
+    @api.model
+    def clinic_visit_page_data(self, visit_id):
+        """One-round-trip payload for the visit page."""
+        ev = self.browse(visit_id)
+        ev.ensure_one()
+        p = ev.patient_id
+        procs = ev.env["clinic.procedure.history"].search_read(
+            [("appointment_id", "=", ev.id)],
+            ["tooth", "icd10_id", "procedure_id", "name", "qty", "status",
+             "price_unit", "discount_percent", "amount_total"],
+            order="id",
+        )
+        icd = ev.env["clinic.icd10"].search_read([], ["code", "name"])
+        products = ev.env["product.product"].search_read(
+            [("is_clinic_procedure", "=", True)],
+            ["name", "lst_price"], order="name",
+        )
+        sections = {
+            f: ev[f] or ""
+            for f in ("clinic_complaints", "clinic_objective",
+                      "clinic_exam_results", "clinic_prescription",
+                      "clinic_epicrisis")
+        }
+        return {
+            "visit": {
+                "id": ev.id,
+                "start": ev.start and fields.Datetime.to_string(ev.start),
+                "stop": ev.stop and fields.Datetime.to_string(ev.stop),
+                "state": ev.clinic_state,
+                "case_type": ev.clinic_case_type,
+                "dentist": ev.dentist_id.name or "",
+                "assistant": ev.assistant_id.name or "",
+                "observers": ev.observer_ids.mapped("name"),
+                "consent_signed": ev.consent_signed,
+                "amount_paid": ev.amount_paid,
+                "comment": ev.diagnosis or "",
+            },
+            "patient": {
+                "id": p.id,
+                "name": p.name or "",
+                "vat": p.vat or "",
+                "phone": p.phone or "",
+                "birthdate": p.birthdate and fields.Date.to_string(p.birthdate) or "",
+                "insurance": p.insurance_company_id.name or "",
+                "allergies": p.allergy_ids.mapped("display_name"),
+                "balance": 0.0,
+            },
+            "sections": sections,
+            "procedures": procs,
+            "icd10": icd,
+            "products": products,
+        }
 
     def action_open_consents(self):
         """თანხმობის ფურცელი — make sure both sheets exist, then walk
