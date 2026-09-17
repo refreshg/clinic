@@ -120,6 +120,10 @@ class ResPartner(models.Model):
         string="Address (Latin)",
         help="Latinized home address, used for foreign patients.",
     )
+    clinic_signature_sample = fields.Binary(
+        string="Signature Sample", attachment=True,
+        help="Kept from the first signed consent sheet (D2).",
+    )
     # Personal number reuses the standard `vat` (Tax ID) field — no custom field.
     birthdate = fields.Date(string="Date of Birth")
     age = fields.Integer(string="Age", compute="_compute_age", store=False)

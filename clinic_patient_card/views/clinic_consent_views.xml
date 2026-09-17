@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- D2 — Consent sheet form (one form serves both types; blocks
+         toggle on consent_type, mirroring the two Dentos popups)      -->
+    <!-- ============================================================ -->
+    <record id="view_clinic_consent_form" model="ir.ui.view">
+        <field name="name">clinic.consent.form</field>
+        <field name="model">clinic.consent</field>
+        <field name="arch" type="xml">
+            <form string="თანხმობა">
+                <sheet>
+                    <field name="consent_type" invisible="1"/>
+                    <field name="state" invisible="1"/>
+                    <div class="text-center mb-3">
+                        <h4 invisible="consent_type != 'personal_data'">
+                            პერს. ინფორმაციის დამუშავების წესებისა და
+                            პირობების გაცნობა
+                        </h4>
+                        <h4 invisible="consent_type != 'medical'">
+                            პაციენტის წერილობითი ინფორმირებული თანხმობა
+                            სამედიცინო მომსახურების გაწევაზე
+                        </h4>
+                    </div>
+                    <field name="body" readonly="1" nolabel="1" class="text-muted"/>
+
+                    <!-- personal-data sheet -->
+                    <group invisible="consent_type != 'personal_data'">
+                        <field name="agree_data" readonly="state == 'signed'"
+                               string="პაციენტი გაეცნო და ეთანხმება პერს. მონაცემთა დამუშავების წესებსა და პირობებს"/>
+                        <field name="agree_marketing_terms" readonly="state == 'signed'"
+                               string="პაციენტი გაეცნო მარკეტინგული SMS შეტყობინების წესებსა და პირობებს"/>
+                        <field name="marketing_sms" widget="radio"
+                               readonly="state == 'signed'"
+                               options="{'horizontal': true}"
+                               string="სურს პაციენტს მიიღოს მარკეტინგული SMS?"/>
+                    </group>
+
+                    <!-- medical sheet: on-screen signature -->
+                    <group invisible="consent_type != 'medical'">
+                        <field name="signature" widget="signature"
+                               readonly="state == 'signed'"
+                               string="ხელმოწერის პადი"/>
+                    </group>
+
+                    <div invisible="state != 'signed'"
+                         class="alert alert-success" role="status">
+                        ხელმოწერილია — <field name="signed_date" readonly="1"
+                                              class="oe_inline"/>
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_confirm" type="object"
+                            string="ხელმოწერის დადასტურება" class="btn-success"
+                            invisible="state == 'signed' or consent_type != 'medical'"/>
+                    <button name="action_confirm" type="object"
+                            string="დადასტურება და გაგრძელება" class="btn-success"
+                            invisible="state == 'signed' or consent_type != 'personal_data'"/>
+                    <button string="დახურვა" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_clinic_consent_list" model="ir.ui.view">
+        <field name="name">clinic.consent.list</field>
+        <field name="model">clinic.consent</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="patient_id"/>
+                <field name="consent_type"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'signed'"
+                       decoration-warning="state == 'draft'"/>
+                <field name="signed_date"/>
+                <field name="signed_uid"/>
+            </list>
+        </field>
+    </record>
+
+</odoo>

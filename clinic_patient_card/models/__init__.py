@@ -20,3 +20,4 @@ from . import clinic_patient_tooth
 from . import clinic_patient_document
 from . import res_partner
 from . import res_users
+from . import clinic_consent

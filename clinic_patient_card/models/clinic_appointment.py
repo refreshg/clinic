@@ -55,6 +55,46 @@ class CalendarEvent(models.Model):
         "res.users", string="Referred by (employee)",
         help="Set when a staff member referred the patient.",
     )
+    # D2 — consent sheets (personal data + informed medical, signed on screen)
+    consent_ids = fields.One2many(
+        "clinic.consent", "visit_id", string="Consents",
+    )
+    consent_signed = fields.Boolean(
+        string="Consents Signed", compute="_compute_consent_signed",
+    )
+
+    @api.depends("consent_ids.state")
+    def _compute_consent_signed(self):
+        for ev in self:
+            signed = ev.consent_ids.filtered(lambda c: c.state == "signed")
+            ev.consent_signed = bool(signed) and len(signed) == len(
+                ev.consent_ids) and len(ev.consent_ids) >= 2
+
+    def action_open_consents(self):
+        """თანხმობის ფურცელი — make sure both sheets exist, then walk
+        through them starting with the personal-data one (Dentos order);
+        already-signed sheets open read-only for review."""
+        self.ensure_one()
+        Consent = self.env["clinic.consent"]
+        for ctype in ("personal_data", "medical"):
+            if not self.consent_ids.filtered(
+                    lambda c, t=ctype: c.consent_type == t):
+                Consent.create({
+                    "visit_id": self.id,
+                    "consent_type": ctype,
+                    "body": Consent._default_body(ctype),
+                })
+        first = self.consent_ids.sorted(
+            key=lambda c: (c.state == "signed", c.consent_type != "personal_data")
+        )[:1]
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("თანხმობის ფურცელი"),
+            "res_model": "clinic.consent",
+            "res_id": first.id,
+            "view_mode": "form",
+            "target": "new",
+        }
 
     @api.depends("patient_id")
     def _compute_family_member_domain(self):
