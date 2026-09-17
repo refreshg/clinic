@@ -122,6 +122,11 @@ export class ClinicPlanning extends Component {
         return weeks;
     }
 
+    safeLoad() {
+        // a dialog can close BECAUSE navigation destroyed this board —
+        // reloading then throws "Component is destroyed" (protected ORM)
+        this.load().catch(() => {});
+    }
     async load() {
         const d = new Date(this.state.date + "T00:00:00");
         const prev = new Date(d); prev.setDate(prev.getDate() - 1);
@@ -404,7 +409,7 @@ export class ClinicPlanning extends Component {
             views: [[false, "form"]],
             target: "new",
             context: ctx,
-        }, { onClose: () => this.load() });
+        }, { onClose: () => this.safeLoad() });
     }
 
     get nowTop() {
@@ -459,7 +464,7 @@ export class ClinicPlanning extends Component {
             res_id: ev.id,
             views: [[false, "form"]],
             target: "new",
-        }, { onClose: () => this.load() });
+        }, { onClose: () => this.safeLoad() });
     }
     newAppointment() {
         this.action.doAction({
@@ -598,7 +603,7 @@ export class ClinicPlanning extends Component {
                 default_start: start,
                 default_stop: stop,
             },
-        }, { onClose: () => this.load() });
+        }, { onClose: () => this.safeLoad() });
     }
 
     // Transient click feedback inside a column: a ripple at the pointer plus a
