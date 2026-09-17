@@ -16,43 +16,47 @@
             <xpath expr="//header/button[@name='action_open_composer']" position="attributes">
                 <attribute name="invisible">is_clinic or not user_can_edit</attribute>
             </xpath>
+            <!-- Dentos booking popup: the attendees row is meeting noise -->
+            <xpath expr="//field[@name='partner_ids'][@widget='many2manyattendee']" position="attributes">
+                <attribute name="invisible">is_clinic</attribute>
+            </xpath>
 
             <xpath expr="//header" position="inside">
                 <button name="action_confirm" type="object" string="Confirm"
                         groups="clinic_patient_card.group_clinic_admin" class="btn-primary"
-                        invisible="not is_clinic or clinic_state not in ('requested','booked')"/>
+                        invisible="not id or not is_clinic or clinic_state not in ('requested','booked')"/>
                 <button name="action_arrive" type="object" string="Arrived"
                         groups="clinic_patient_card.group_clinic_admin" class="btn-primary"
-                        invisible="not is_clinic or clinic_state not in ('booked','confirmed')"/>
+                        invisible="not id or not is_clinic or clinic_state not in ('booked','confirmed')"/>
                 <button name="action_start" type="object" string="Start"
                         groups="clinic_patient_card.group_clinic_doctor" class="btn-primary"
-                        invisible="not is_clinic or clinic_state != 'arrived'"/>
+                        invisible="not id or not is_clinic or clinic_state != 'arrived'"/>
                 <button name="action_done" type="object" string="Done"
                         groups="clinic_patient_card.group_clinic_doctor" class="btn-primary"
-                        invisible="not is_clinic or clinic_state != 'in_progress'"/>
+                        invisible="not id or not is_clinic or clinic_state != 'in_progress'"/>
                 <button name="action_pay" type="object" string="Register Payment"
                         groups="clinic_patient_card.group_clinic_admin" class="btn-primary"
-                        invisible="not is_clinic or clinic_state != 'done'"/>
+                        invisible="not id or not is_clinic or clinic_state != 'done'"/>
                 <button name="action_cancel" type="object" string="Cancel"
                         groups="clinic_patient_card.group_clinic_admin"
-                        invisible="not is_clinic or clinic_state in ('paid','cancelled','no_show')"/>
+                        invisible="not id or not is_clinic or clinic_state in ('paid','cancelled','no_show')"/>
                 <button name="action_no_show" type="object" string="No-Show"
                         groups="clinic_patient_card.group_clinic_admin"
-                        invisible="not is_clinic or clinic_state not in ('booked','confirmed','arrived')"/>
+                        invisible="not id or not is_clinic or clinic_state not in ('booked','confirmed','arrived')"/>
                 <button name="action_next_visit" type="object" string="Next Visit"
                         groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"
-                        invisible="not is_clinic or clinic_state not in ('done','paid')"/>
+                        invisible="not id or not is_clinic or clinic_state not in ('done','paid')"/>
                 <button name="action_dispensary_next" type="object" string="Dispensary +6m"
                         groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"
-                        invisible="not is_clinic or clinic_state not in ('done','paid')"/>
+                        invisible="not id or not is_clinic or clinic_state not in ('done','paid')"/>
                 <button name="action_book" type="object" string="Confirm to Calendar"
                         class="btn-primary"
                         groups="clinic_patient_card.group_clinic_admin"
-                        invisible="not is_clinic or clinic_state != 'requested'"/>
+                        invisible="not id or not is_clinic or clinic_state != 'requested'"/>
                 <button name="action_to_reserve" type="object" string="To Reserve"
                         groups="clinic_patient_card.group_clinic_admin"
-                        invisible="not is_clinic or clinic_state not in ('booked','confirmed')"/>
-                <field name="clinic_state" widget="statusbar" invisible="not is_clinic"
+                        invisible="not id or not is_clinic or clinic_state not in ('booked','confirmed')"/>
+                <field name="clinic_state" widget="statusbar" invisible="not id or not is_clinic"
                        statusbar_visible="booked,confirmed,arrived,in_progress,done,paid"/>
             </xpath>
 
@@ -131,7 +135,7 @@
             </xpath>
 
             <xpath expr="//notebook" position="before">
-                <div name="clinic_body" invisible="not is_clinic">
+                <div name="clinic_body" class="o_clinic_visit_body" invisible="not is_clinic">
                     <!-- Quick jumps to the patient (reviewer: proper buttons
                          instead of the tiny m2o arrow) -->
                     <div class="d-flex gap-2 mb-2">

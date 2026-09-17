@@ -648,3 +648,16 @@
     /* dispensary keeps its dashed outline over the colour */
     .cp_dispensary { outline-color: #ffe08a !important; }
 }
+
+
+/* Dentos booking popup: the dialog's save button reads as the big green
+   "ვიზიტის დანიშვნა" action; discard stays quiet next to it. */
+.o_dialog:has(.o_clinic_visit_body) .modal-footer {
+    .o_form_button_save {
+        background: #28a745 !important; border-color: #28a745 !important;
+        color: #fff !important; font-weight: 700;
+        border-radius: 10px; padding: 8px 34px;
+        &:hover { background: #218838 !important; }
+    }
+    .o_form_button_cancel { border-radius: 10px; }
+}
