@@ -52,3 +52,7 @@ access_clinic_consent_admin,clinic.consent.admin,model_clinic_consent,clinic_pat
 access_clinic_consent_doctor,clinic.consent.doctor,model_clinic_consent,clinic_patient_card.group_clinic_doctor,1,1,1,0
 access_clinic_icd10_admin,clinic.icd10.admin,model_clinic_icd10,clinic_patient_card.group_clinic_admin,1,1,1,1
 access_clinic_icd10_doctor,clinic.icd10.doctor,model_clinic_icd10,clinic_patient_card.group_clinic_doctor,1,0,0,0
+access_clinic_complaint_admin,clinic.complaint.admin,model_clinic_complaint,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_complaint_doctor,clinic.complaint.doctor,model_clinic_complaint,clinic_patient_card.group_clinic_doctor,1,0,0,0
+access_clinic_prescription_admin,clinic.prescription.admin,model_clinic_prescription,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_prescription_doctor,clinic.prescription.doctor,model_clinic_prescription,clinic_patient_card.group_clinic_doctor,1,1,1,1

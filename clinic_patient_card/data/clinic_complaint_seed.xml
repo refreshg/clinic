@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="complaint_plaque" model="clinic.complaint">
+        <field name="name">ქვისა და რბილი ნადების არსებობა</field>
+    </record>
+    <record id="complaint_toothache" model="clinic.complaint">
+        <field name="name">კბილის ტკივილი</field>
+    </record>
+    <record id="complaint_sensitivity" model="clinic.complaint">
+        <field name="name">კბილების მომატებული მგრძნობელობა</field>
+    </record>
+    <record id="complaint_bleeding_gums" model="clinic.complaint">
+        <field name="name">ღრძილების სისხლდენა</field>
+    </record>
+    <record id="complaint_swelling" model="clinic.complaint">
+        <field name="name">შეშუპება</field>
+    </record>
+    <record id="complaint_bad_breath" model="clinic.complaint">
+        <field name="name">პირის ღრუს უსიამოვნო სუნი</field>
+    </record>
+    <record id="complaint_broken_tooth" model="clinic.complaint">
+        <field name="name">კბილის მოტეხილობა / ბზარი</field>
+    </record>
+    <record id="complaint_aesthetic" model="clinic.complaint">
+        <field name="name">ესთეტიკური უკმაყოფილება</field>
+    </record>
+    <record id="complaint_checkup" model="clinic.complaint">
+        <field name="name">პროფილაქტიკური შემოწმება</field>
+    </record>
+</odoo>

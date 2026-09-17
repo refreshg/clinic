@@ -22,12 +22,30 @@ const FDI_ROWS = [
     { cls: "down", left: [48, 47, 46, 45, 44, 43, 42, 41], right: [31, 32, 33, 34, 35, 36, 37, 38] },
 ];
 
+// kind: text → plain textarea; the rest render their own Dentos form
 const SECTIONS = [
-    { key: "clinic_complaints", label: _t("ჩივილები / ანამნეზი") },
-    { key: "clinic_objective", label: _t("ობიექტური გამოკვლევები") },
-    { key: "clinic_exam_results", label: _t("გამოკვლევის შედეგები") },
-    { key: "clinic_prescription", label: _t("დანიშნულება / რეკომენდაციები") },
-    { key: "clinic_epicrisis", label: _t("ვიზიტის ეპიკრიზი") },
+    { key: "complaints", label: _t("ჩივილები"), kind: "complaints" },
+    { key: "objective", label: _t("ობიექტური გამოკვლევები"), kind: "objective" },
+    { key: "clinic_exam_results", label: _t("გამოკვლევის შედეგები"), kind: "text" },
+    { key: "prescription", label: _t("დანიშნულება / რეკომ."), kind: "prescription" },
+    { key: "allergy", label: _t("ალერგიულობა"), kind: "allergy" },
+    { key: "clinic_epicrisis", label: _t("ვიზიტის ეპიკრიზი"), kind: "text" },
+];
+
+const OBJ_FIELDS = [
+    ["clinic_obj_bite", _t("თანკბილვა")],
+    ["clinic_obj_mucosa", _t("პირის ღრუს ლორწოვანი გარსის მდგომარეობა")],
+    ["clinic_obj_periodontium", _t("პაროდონტის მდგომარეობა")],
+    ["clinic_obj_pocket_depth", _t("პაროდონტული ჯიბის სიღრმე")],
+    ["clinic_obj_plaque", _t("ნადები")],
+    ["clinic_obj_exam_plan", _t("გამოკვლევის გეგმა")],
+    ["clinic_obj_other", _t("სხვა")],
+];
+
+const REC_TYPES = [
+    ["e_recipe", _t("ელ.რეცეპტი")],
+    ["prescription", _t("დანიშნულება")],
+    ["recommendation", _t("რეკომენდაცია")],
 ];
 
 const PROC_STATUSES = [
@@ -49,6 +67,8 @@ export class ClinicVisitPage extends Component {
         this.fdiRows = FDI_ROWS;
         this.sectionsMeta = SECTIONS;
         this.procStatuses = PROC_STATUSES;
+        this.objFields = OBJ_FIELDS;
+        this.recTypes = REC_TYPES;
         this.visitId =
             this.props.action?.params?.visit_id ||
             this.props.action?.context?.active_id;
@@ -63,6 +83,10 @@ export class ClinicVisitPage extends Component {
             saving: false,
             payCash: 0,
             payTerminal: 0,
+            compDraft: {},
+            objDraft: {},
+            rxDraft: {},
+            algDraft: {},
         });
         onWillStart(() => this.load());
     }
@@ -83,12 +107,46 @@ export class ClinicVisitPage extends Component {
     }
 
     // ---- sections -------------------------------------------------------
+    sectionMeta(key) {
+        return SECTIONS.find((s) => s.key === key);
+    }
     sectionFilled(key) {
-        return !!(this.state.data.sections[key] || "").trim();
+        const d = this.state.data;
+        switch (key) {
+            case "complaints":
+                return !!(d.complaints.ids.length || d.complaints.other
+                    || (d.complaints.anamnesis || "").trim());
+            case "objective":
+                return Object.values(d.objective).some((v) => (v || "").trim());
+            case "prescription":
+                return !!d.prescriptions.length;
+            case "allergy":
+                return !!d.allergies.length;
+            default:
+                return !!(d.sections[key] || "").trim();
+        }
     }
     openSection(key) {
         this.state.section = key;
-        this.state.sectionDraft = this.state.data.sections[key] || "";
+        const d = this.state.data;
+        const meta = this.sectionMeta(key);
+        if (meta.kind === "text") {
+            this.state.sectionDraft = d.sections[key] || "";
+        } else if (meta.kind === "complaints") {
+            this.state.compDraft = {
+                case_type: d.complaints.case_type || "planned",
+                other: d.complaints.other,
+                anamnesis: d.complaints.anamnesis,
+                pick: false,
+            };
+        } else if (meta.kind === "objective") {
+            this.state.objDraft = { ...d.objective };
+        } else if (meta.kind === "prescription") {
+            this.state.rxDraft = { rec_type: "prescription", medicament: "",
+                period: "", qty: 1, directions: "" };
+        } else if (meta.kind === "allergy") {
+            this.state.algDraft = { name: "", reaction: "", note: "" };
+        }
     }
     async saveSection() {
         const key = this.state.section;
@@ -96,6 +154,92 @@ export class ClinicVisitPage extends Component {
             { [key]: this.state.sectionDraft });
         this.state.data.sections[key] = this.state.sectionDraft;
         this.notification.add(_t("შენახულია"), { type: "success" });
+    }
+
+    // ---- complaints (catalog tags + other + anamnesis) ------------------
+    complaintName(id) {
+        const c = this.state.data.complaint_catalog.find((x) => x.id === id);
+        return c ? c.name : id;
+    }
+    async addComplaint() {
+        const id = this.state.compDraft.pick;
+        if (!id || this.state.data.complaints.ids.includes(id)) { return; }
+        const ids = [...this.state.data.complaints.ids, id];
+        await this.orm.write("calendar.event", [this.visitId],
+            { clinic_complaint_ids: [[6, 0, ids]] });
+        this.state.data.complaints.ids = ids;
+        this.state.compDraft.pick = false;
+    }
+    async removeComplaint(id) {
+        const ids = this.state.data.complaints.ids.filter((x) => x !== id);
+        await this.orm.write("calendar.event", [this.visitId],
+            { clinic_complaint_ids: [[6, 0, ids]] });
+        this.state.data.complaints.ids = ids;
+    }
+    async saveComplaints() {
+        const d = this.state.compDraft;
+        await this.orm.write("calendar.event", [this.visitId], {
+            clinic_case_type: d.case_type,
+            clinic_complaints_other: d.other,
+            clinic_complaints: d.anamnesis,
+        });
+        Object.assign(this.state.data.complaints, {
+            case_type: d.case_type, other: d.other, anamnesis: d.anamnesis });
+        this.notification.add(_t("შენახულია"), { type: "success" });
+    }
+
+    // ---- objective exam --------------------------------------------------
+    async saveObjective() {
+        await this.orm.write("calendar.event", [this.visitId],
+            { ...this.state.objDraft });
+        Object.assign(this.state.data.objective, this.state.objDraft);
+        this.notification.add(_t("შენახულია"), { type: "success" });
+    }
+
+    // ---- prescriptions table --------------------------------------------
+    recTypeLabel(t) {
+        const r = REC_TYPES.find((x) => x[0] === t);
+        return r ? r[1] : t;
+    }
+    async addPrescription() {
+        const d = this.state.rxDraft;
+        if (!d.medicament.trim()) {
+            this.notification.add(_t("ჩაწერე მედიკამენტი"), { type: "warning" });
+            return;
+        }
+        await this.orm.create("clinic.prescription", [{
+            visit_id: this.visitId, rec_type: d.rec_type,
+            medicament: d.medicament, period: d.period,
+            qty: parseFloat(d.qty) || 1, directions: d.directions,
+        }]);
+        await this.load();
+        this.openSection("prescription");
+    }
+    async removePrescription(row) {
+        await this.orm.unlink("clinic.prescription", [row.id]);
+        await this.load();
+        this.openSection("prescription");
+    }
+
+    // ---- allergies table (lives on the PATIENT) --------------------------
+    async addAllergy() {
+        const d = this.state.algDraft;
+        if (!d.name.trim()) {
+            this.notification.add(_t("ჩაწერე მედიკამენტი/ნივთიერება"),
+                { type: "warning" });
+            return;
+        }
+        await this.orm.create("clinic.patient.allergy", [{
+            partner_id: this.state.data.patient.id,
+            name: d.name, reaction: d.reaction, note: d.note,
+        }]);
+        await this.load();
+        this.openSection("allergy");
+    }
+    async removeAllergy(row) {
+        await this.orm.unlink("clinic.patient.allergy", [row.id]);
+        await this.load();
+        this.openSection("allergy");
     }
 
     // ---- odontogram / add procedure ------------------------------------

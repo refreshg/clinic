@@ -70,15 +70,157 @@
 
             <!-- center -->
             <div class="cvp_main">
-                <!-- section editor -->
-                <div t-if="state.section" class="cvp_secedit">
+                <!-- section editor: plain text -->
+                <div t-if="state.section and sectionMeta(state.section).kind === 'text'"
+                     class="cvp_secedit">
                     <textarea rows="10" t-model="state.sectionDraft"
                               placeholder="ჩაწერე ტექსტი…"/>
                     <button class="btn btn-primary w-100 mt-2"
                             t-on-click="saveSection">შენახვა</button>
                 </div>
 
-                <!-- odontogram + add row -->
+                <div t-elif="state.section === 'complaints'" class="cvp_secedit">
+                    <div class="cvp_field mb-2">
+                        <label>შემთხვევის ტიპი</label>
+                        <select t-model="state.compDraft.case_type">
+                            <option value="planned">გეგმიური</option>
+                            <option value="urgent">გადაუდებელი</option>
+                        </select>
+                    </div>
+                    <div class="cvp_field mb-2">
+                        <label>ჩივილები</label>
+                        <div class="d-flex gap-2">
+                            <select class="flex-grow-1" t-model.number="state.compDraft.pick">
+                                <option value="">აირჩიეთ ჩივილები</option>
+                                <t t-foreach="state.data.complaint_catalog" t-as="c" t-key="c.id">
+                                    <option t-att-value="c.id" t-esc="c.name"/>
+                                </t>
+                            </select>
+                            <button class="btn btn-primary" t-on-click="addComplaint">＋</button>
+                        </div>
+                        <div class="cvp_chips mt-2" t-if="state.data.complaints.ids.length">
+                            <t t-foreach="state.data.complaints.ids" t-as="cid" t-key="cid">
+                                <span class="cvp_chip">
+                                    <t t-esc="complaintName(cid)"/>
+                                    <button t-on-click="() => this.removeComplaint(cid)">✕</button>
+                                </span>
+                            </t>
+                        </div>
+                    </div>
+                    <div class="cvp_field mb-2">
+                        <label>სხვა</label>
+                        <input type="text" t-model="state.compDraft.other"/>
+                    </div>
+                    <div class="cvp_field mb-2">
+                        <label>ანამნეზი</label>
+                        <textarea rows="5" t-model="state.compDraft.anamnesis"/>
+                    </div>
+                    <button class="btn btn-primary w-100"
+                            t-on-click="saveComplaints">შენახვა</button>
+                </div>
+
+                <div t-elif="state.section === 'objective'" class="cvp_secedit">
+                    <div class="cvp_objgrid">
+                        <t t-foreach="objFields" t-as="f" t-key="f[0]">
+                            <div class="cvp_field mb-2">
+                                <label t-esc="f[1]"/>
+                                <input type="text" t-model="state.objDraft[f[0]]"/>
+                            </div>
+                        </t>
+                    </div>
+                    <button class="btn btn-primary w-100"
+                            t-on-click="saveObjective">შენახვა</button>
+                </div>
+
+                <div t-elif="state.section === 'prescription'" class="cvp_secedit">
+                    <div class="cvp_pick">
+                        <div class="cvp_field">
+                            <label>ტიპი</label>
+                            <select t-model="state.rxDraft.rec_type">
+                                <t t-foreach="recTypes" t-as="rt" t-key="rt[0]">
+                                    <option t-att-value="rt[0]" t-esc="rt[1]"/>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="cvp_field">
+                            <label>მედიკამენტი</label>
+                            <input type="text" t-model="state.rxDraft.medicament"/>
+                        </div>
+                        <div class="cvp_field">
+                            <label>მიღების პერიოდი</label>
+                            <input type="text" t-model="state.rxDraft.period"
+                                   placeholder="მაგ. 7 დღე, დღეში 2-ჯერ"/>
+                        </div>
+                        <div class="cvp_field cvp_toothsel">
+                            <label>რაოდენობა</label>
+                            <input type="number" min="0" t-model="state.rxDraft.qty"/>
+                        </div>
+                    </div>
+                    <div class="cvp_field mb-2">
+                        <label>მიღების წესი</label>
+                        <textarea rows="3" t-model="state.rxDraft.directions"/>
+                    </div>
+                    <button class="btn btn-primary w-100"
+                            t-on-click="addPrescription">＋ დამატება</button>
+                    <table class="cvp_table" t-if="state.data.prescriptions.length">
+                        <thead><tr>
+                            <th>ტიპი</th><th>მედიკამენტი</th><th>პერიოდი</th>
+                            <th>რაოდ.</th><th>მიღების წესი</th><th/>
+                        </tr></thead>
+                        <tbody>
+                            <t t-foreach="state.data.prescriptions" t-as="rx" t-key="rx.id">
+                                <tr>
+                                    <td t-esc="recTypeLabel(rx.rec_type)"/>
+                                    <td t-esc="rx.medicament"/>
+                                    <td t-esc="rx.period"/>
+                                    <td t-esc="rx.qty"/>
+                                    <td t-esc="rx.directions"/>
+                                    <td><button class="cvp_del"
+                                                t-on-click="() => this.removePrescription(rx)">🗑</button></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <div t-else="" class="text-muted mt-3">ჩანაწერი არ მოიძებნა</div>
+                </div>
+
+                <div t-elif="state.section === 'allergy'" class="cvp_secedit">
+                    <div class="cvp_pick">
+                        <div class="cvp_field">
+                            <label>მედიკამენტი / ნივთიერება</label>
+                            <input type="text" t-model="state.algDraft.name"/>
+                        </div>
+                        <div class="cvp_field">
+                            <label>კომპონენტი / რეაქცია</label>
+                            <input type="text" t-model="state.algDraft.reaction"/>
+                        </div>
+                        <div class="cvp_field">
+                            <label>ექიმის მიერ დაზუსტება</label>
+                            <input type="text" t-model="state.algDraft.note"/>
+                        </div>
+                    </div>
+                    <button class="btn w-100 cvp_finishbtn"
+                            t-on-click="addAllergy">დაამატეთ</button>
+                    <table class="cvp_table" t-if="state.data.allergies.length">
+                        <thead><tr>
+                            <th>მედიკამენტი ან სხვა</th><th>კომპონენტი</th>
+                            <th>დაზუსტება</th><th/>
+                        </tr></thead>
+                        <tbody>
+                            <t t-foreach="state.data.allergies" t-as="al" t-key="al.id">
+                                <tr>
+                                    <td t-esc="al.name"/>
+                                    <td t-esc="al.reaction"/>
+                                    <td t-esc="al.note"/>
+                                    <td><button class="cvp_del"
+                                                t-on-click="() => this.removeAllergy(al)">🗑</button></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <div t-else="" class="text-muted mt-3">ჩანაწერი არ მოიძებნა</div>
+                </div>
+
                 <div t-else="">
                     <div class="cvp_odo_title">აირჩიეთ კბილი დიაგნოზის დასამატებლად</div>
                     <div class="cvp_odo">

@@ -138,3 +138,25 @@
     border-color: #f5c6cb; background: #fff5f5;
     .cvp_amount { color: #c0392b; }
 }
+
+/* Dentos section forms: complaint chips, objective grid, generic inputs */
+.clinic_visit_page {
+    .cvp_field input[type="text"], .cvp_field input[type="number"],
+    .cvp_field textarea {
+        border: 1px solid #e5e8ec; border-radius: 10px; padding: 7px 10px;
+        width: 100%;
+        &:focus { outline: 2px solid rgba(113, 75, 103, .35); }
+    }
+    .cvp_chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cvp_chip {
+        background: #eef7f1; border: 1px solid #cfe8da; border-radius: 999px;
+        padding: 3px 6px 3px 12px; font-size: 12.5px; display: inline-flex;
+        align-items: center; gap: 6px;
+        button { border: 0; background: transparent; color: #c0392b;
+            font-weight: 700; }
+    }
+    .cvp_objgrid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px;
+        .cvp_field:first-child, .cvp_field:nth-child(7) { grid-column: 1 / -1; }
+    }
+}

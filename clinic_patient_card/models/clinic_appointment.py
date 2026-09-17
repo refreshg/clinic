@@ -69,6 +69,22 @@ class CalendarEvent(models.Model):
         string="Case Type", default="planned",
     )
     clinic_complaints = fields.Text(string="Complaints / Anamnesis")
+    # Dentos parity: complaints picked from a catalog + free "other";
+    # the objective exam is a structured set of fields.
+    clinic_complaint_ids = fields.Many2many(
+        "clinic.complaint", string="Complaints (catalog)",
+    )
+    clinic_complaints_other = fields.Char(string="Complaints (other)")
+    clinic_obj_bite = fields.Char(string="Bite (თანკბილვა)")
+    clinic_obj_mucosa = fields.Char(string="Oral Mucosa Condition")
+    clinic_obj_periodontium = fields.Char(string="Periodontium Condition")
+    clinic_obj_pocket_depth = fields.Char(string="Periodontal Pocket Depth")
+    clinic_obj_plaque = fields.Char(string="Plaque (ნადები)")
+    clinic_obj_exam_plan = fields.Char(string="Examination Plan")
+    clinic_obj_other = fields.Char(string="Objective (other)")
+    prescription_ids = fields.One2many(
+        "clinic.prescription", "visit_id", string="Prescriptions",
+    )
     clinic_objective = fields.Text(string="Objective Examination")
     clinic_exam_results = fields.Text(string="Examination Results")
     clinic_prescription = fields.Text(string="Prescription / Recommendations")
@@ -145,7 +161,32 @@ class CalendarEvent(models.Model):
                       "clinic_exam_results", "clinic_prescription",
                       "clinic_epicrisis")
         }
+        prescriptions = ev.env["clinic.prescription"].search_read(
+            [("visit_id", "=", ev.id)],
+            ["rec_type", "medicament", "period", "qty", "directions"],
+            order="id",
+        )
+        allergies = p.allergy_ids.read(["name", "reaction", "note"]) if p else []
+        complaint_catalog = ev.env["clinic.complaint"].search_read(
+            [], ["name"], order="name")
+        objective = {
+            f: ev[f] or ""
+            for f in ("clinic_obj_bite", "clinic_obj_mucosa",
+                      "clinic_obj_periodontium", "clinic_obj_pocket_depth",
+                      "clinic_obj_plaque", "clinic_obj_exam_plan",
+                      "clinic_obj_other")
+        }
         return {
+            "complaints": {
+                "case_type": ev.clinic_case_type,
+                "ids": ev.clinic_complaint_ids.ids,
+                "other": ev.clinic_complaints_other or "",
+                "anamnesis": ev.clinic_complaints or "",
+            },
+            "complaint_catalog": complaint_catalog,
+            "objective": objective,
+            "prescriptions": prescriptions,
+            "allergies": allergies,
             "visit": {
                 "id": ev.id,
                 "start": ev.start and fields.Datetime.to_string(ev.start),

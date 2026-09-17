@@ -22,3 +22,4 @@ from . import res_partner
 from . import res_users
 from . import clinic_consent
 from . import clinic_icd10
+from . import clinic_visit_medical
