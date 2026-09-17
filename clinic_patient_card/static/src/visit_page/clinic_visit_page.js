@@ -99,6 +99,9 @@ export class ClinicVisitPage extends Component {
     }
 
     // ---- odontogram / add procedure ------------------------------------
+    isSel(n) {
+        return this.state.tooth === String(n);
+    }
     pickTooth(n) {
         this.state.tooth = this.state.tooth === String(n) ? "" : String(n);
     }

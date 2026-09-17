@@ -86,7 +86,7 @@
                             <div t-att-class="'cvp_row ' + row.cls">
                                 <div class="cvp_half">
                                     <t t-foreach="row.left" t-as="n" t-key="n">
-                                        <button t-att-class="'cvp_tooth ' + (state.tooth === String(n) ? 'sel' : '')"
+                                        <button t-att-class="'cvp_tooth ' + (isSel(n) ? 'sel' : '')"
                                                 t-on-click="() => this.pickTooth(n)">
                                             <span class="cvp_ticon">🦷</span>
                                             <span t-esc="n"/>
@@ -95,7 +95,7 @@
                                 </div>
                                 <div class="cvp_half">
                                     <t t-foreach="row.right" t-as="n" t-key="n">
-                                        <button t-att-class="'cvp_tooth ' + (state.tooth === String(n) ? 'sel' : '')"
+                                        <button t-att-class="'cvp_tooth ' + (isSel(n) ? 'sel' : '')"
                                                 t-on-click="() => this.pickTooth(n)">
                                             <span class="cvp_ticon">🦷</span>
                                             <span t-esc="n"/>
