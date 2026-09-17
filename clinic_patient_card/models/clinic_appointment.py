@@ -5,6 +5,7 @@ import pytz
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_compare
 
 
 class CalendarEvent(models.Model):
@@ -79,6 +80,37 @@ class CalendarEvent(models.Model):
             signed = ev.consent_ids.filtered(lambda c: c.state == "signed")
             ev.consent_signed = bool(signed) and len(signed) == len(
                 ev.consent_ids) and len(ev.consent_ids) >= 2
+
+    def clinic_visit_register_payment(self, cash=0.0, terminal=0.0):
+        """D4 — payment straight from the visit page's billing tab.
+
+        Mirrors clinic.payment.wizard.action_confirm: cash + terminal must
+        cover the discounted procedures total; the invoice is created the
+        same way and the visit lands in `paid`."""
+        self.ensure_one()
+        cash = cash or 0.0
+        terminal = terminal or 0.0
+        total = sum(self.procedure_line_ids.mapped("amount_total"))
+        rounding = self.currency_id.rounding or 0.01
+        if cash < 0 or terminal < 0:
+            raise UserError(_("Cash and terminal amounts cannot be negative."))
+        if float_compare(cash + terminal, total,
+                         precision_rounding=rounding) != 0:
+            raise UserError(_(
+                "Cash (%(cash).2f) + terminal (%(term).2f) must equal the "
+                "total (%(total).2f).", cash=cash, term=terminal, total=total,
+            ))
+        method = ("mixed" if cash and terminal
+                  else "card" if terminal else "cash")
+        self.payment_method = method
+        self._create_invoice_from_procedures()
+        self.write({
+            "clinic_state": "paid",
+            "amount_paid": total,
+            "amount_cash": cash if method == "mixed" else 0.0,
+            "amount_terminal": terminal if method == "mixed" else 0.0,
+        })
+        return True
 
     def action_open_visit_page(self):
         """Open the Dentos-style visit working page (OWL, D3)."""

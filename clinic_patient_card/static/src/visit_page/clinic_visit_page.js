@@ -61,6 +61,8 @@ export class ClinicVisitPage extends Component {
             icd10Id: false,
             productId: false,
             saving: false,
+            payCash: 0,
+            payTerminal: 0,
         });
         onWillStart(() => this.load());
     }
@@ -145,6 +147,28 @@ export class ClinicVisitPage extends Component {
     get totalAmount() {
         return this.state.data.procedures.reduce(
             (s, p) => s + (p.amount_total || 0), 0);
+    }
+
+    // ---- billing (D4) ---------------------------------------------------
+    async registerPayment() {
+        this.state.saving = true;
+        try {
+            await this.orm.call("calendar.event",
+                "clinic_visit_register_payment", [this.visitId],
+                { cash: parseFloat(this.state.payCash) || 0,
+                  terminal: parseFloat(this.state.payTerminal) || 0 });
+            this.notification.add(_t("გადახდა დაფიქსირდა"), { type: "success" });
+            await this.load();
+        } catch (e) {
+            // the RPC layer already toasts the UserError
+        } finally {
+            this.state.saving = false;
+        }
+    }
+    async finishVisit() {
+        await this.orm.call("calendar.event", "action_done", [[this.visitId]]);
+        this.notification.add(_t("ვიზიტი დასრულდა"), { type: "success" });
+        await this.load();
     }
 
     // ---- navigation -----------------------------------------------------

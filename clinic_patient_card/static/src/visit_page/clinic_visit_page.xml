@@ -182,17 +182,38 @@
             </div>
         </div>
 
-        <!-- ===== billing tab (totals now; payment actions land in D4) ===== -->
+        <!-- ===== billing tab (D4) ===== -->
         <div class="cvp_body cvp_billing" t-if="state.tab === 'billing'">
             <div class="cvp_main">
                 <h5>პროცედურების ანგარიშსწორება</h5>
+                <div class="text-danger small mb-2">ფინანსური ინფორმაცია — ანგარიშსწორების შემდეგ რედაქტირება აღარ შეიძლება!</div>
                 <div class="cvp_bill_cards">
                     <div class="cvp_card"><div class="cvp_ctitle">გადასახდელი თანხა</div>
                         <div class="cvp_amount" t-esc="totalAmount + ' ₾'"/></div>
                     <div class="cvp_card"><div class="cvp_ctitle">გადახდილი თანხა</div>
                         <div class="cvp_amount" t-esc="(state.data.visit.amount_paid || 0) + ' ₾'"/></div>
+                    <div class="cvp_card">
+                        <div class="cvp_ctitle">ხელზე (₾)</div>
+                        <input type="number" min="0" class="cvp_payin" t-model="state.payCash"
+                               t-att-disabled="state.data.visit.state === 'paid'"/>
+                    </div>
+                    <div class="cvp_card">
+                        <div class="cvp_ctitle">ბარათით (₾)</div>
+                        <input type="number" min="0" class="cvp_payin" t-model="state.payTerminal"
+                               t-att-disabled="state.data.visit.state === 'paid'"/>
+                    </div>
                 </div>
-                <p class="text-muted mt-3">გადახდის ღილაკები დაემატება შემდეგ ეტაპზე (D4).</p>
+                <div class="d-flex gap-2 mt-3 flex-wrap">
+                    <button class="btn cvp_paybtn"
+                            t-if="state.data.visit.state !== 'paid'"
+                            t-att-disabled="state.saving or !totalAmount"
+                            t-on-click="registerPayment">💳 გადახდა</button>
+                    <button class="btn cvp_finishbtn"
+                            t-if="!['done', 'paid'].includes(state.data.visit.state)"
+                            t-on-click="finishVisit">✔ ვიზიტის დასრულება</button>
+                    <span class="badge text-bg-success align-self-center"
+                          t-if="state.data.visit.state === 'paid'">გადახდილია</span>
+                </div>
             </div>
         </div>
     </div>

@@ -603,3 +603,48 @@
     .cp_ev_meta + .cp_ev_meta::before { content: ' · '; }
     .cp_status { font-size: 8.5px; }
 }
+
+/* ============================================================
+   D4 — Dentos full-colour status cards: the WHOLE card takes the
+   state colour (blue = booked/confirmed, green = arrived/active,
+   dark = done/paid, red = cancelled/no-show), white text.
+   Geometry untouched.
+   ============================================================ */
+.clinic_planning {
+    .cp_event {
+        /* base: Dentos "waiting" blue */
+        background: #4650c9 !important;
+        border-color: #3c45b1 !important;
+        border-left-width: 1px !important;
+
+        .cp_ev_time, .cp_ev_meta, .cp_ev_note { color: rgba(255, 255, 255, .85); }
+        .cp_ev_patmain { color: #fff; }
+        .cp_status { display: none; }   /* Dentos cards carry text only */
+
+        &:has(.cp_st_requested) { background: #c58f00 !important; border-color: #a87a00 !important; }
+        &:has(.cp_st_arrived),
+        &:has(.cp_st_in_progress) { background: #2e9e44 !important; border-color: #268a3a !important; }
+        &:has(.cp_st_done),
+        &:has(.cp_st_paid) { background: #3d4548 !important; border-color: #333a3d !important; }
+        &:has(.cp_st_cancelled),
+        &:has(.cp_st_no_show) { background: #c0392b !important; border-color: #a53125 !important; }
+        &:has(.cp_st_resch) { background: #b9770a !important; border-color: #9c6408 !important; }
+
+        /* hover controls: open-page arrow + consent badge */
+        .cp_openpage {
+            position: absolute; top: 3px; right: 3px; z-index: 6;
+            border: 0; border-radius: 8px; padding: 0 7px;
+            background: rgba(255, 255, 255, .92); color: #4650c9;
+            font-size: 12px; font-weight: 800; line-height: 20px;
+            display: none;
+            &:hover { background: #fff; transform: scale(1.08); }
+        }
+        &:hover .cp_openpage { display: block; }
+        .cp_consent {
+            position: absolute; bottom: 2px; right: 4px; font-size: 10px;
+            filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .4));
+        }
+    }
+    /* dispensary keeps its dashed outline over the colour */
+    .cp_dispensary { outline-color: #ffe08a !important; }
+}

@@ -50,6 +50,7 @@ export class ClinicPlanning extends Component {
             hover: null,          // {d, top} — 10-min cell under the pointer
             drag: null,           // {d, s, e} — drag-selected slot range
             patientVats: {},      // partner_id -> personal no. (card line)
+            patientPhones: {},    // partner_id -> phone (hover tooltip)
         });
         onWillStart(() => this.load());
     }
@@ -134,7 +135,7 @@ export class ClinicPlanning extends Component {
                  ["start", ">=", from], ["start", "<=", to]],
                 ["name", "start", "stop", "dentist_id", "room_id", "appointment_type_id",
                  "patient_id", "clinic_state", "was_rescheduled", "duration_edited",
-                 "is_dispensary", "diagnosis"]),
+                 "is_dispensary", "diagnosis", "consent_signed"]),
             this.orm.searchRead("clinic.appointment.type", [], ["name", "color"]),
             this.orm.searchRead("clinic.room", [], ["name"]),
             this.orm.call("calendar.event", "fields_get", [["clinic_state"], ["selection"]]),
@@ -197,8 +198,9 @@ export class ClinicPlanning extends Component {
         let patientVats = {};
         if (patientIds.length) {
             try {
-                const partners = await this.orm.read("res.partner", patientIds, ["vat"]);
+                const partners = await this.orm.read("res.partner", patientIds, ["vat", "phone"]);
                 patientVats = Object.fromEntries(partners.map((p) => [p.id, p.vat || ""]));
+                this.state.patientPhones = Object.fromEntries(partners.map((p) => [p.id, p.phone || ""]));
             } catch {
                 // no partner access — cards just skip the personal no.
             }
@@ -287,6 +289,25 @@ export class ClinicPlanning extends Component {
         if (ms <= 15 * 60 * 1000) { return "cp_small"; }
         if (ms <= 35 * 60 * 1000) { return "cp_mid"; }
         return "";
+    }
+    patientPhone(ev) {
+        return (ev.patient_id && this.state.patientPhones[ev.patient_id[0]]) || "";
+    }
+    cardTooltip(ev) {
+        // Dentos hover: time / p.n. patient / procedure + phone
+        const t = this.evTime(ev);
+        const bits = [t, [this.patientVat(ev), this.patientName(ev)].filter(Boolean).join(" "),
+                      this.procedureName(ev)].filter(Boolean).join(" / ");
+        const ph = this.patientPhone(ev);
+        return ph ? bits + "\n📞 " + ph : bits;
+    }
+    openVisitPage(ev) {
+        this.action.doAction({
+            type: "ir.actions.client",
+            tag: "clinic_visit_page",
+            name: this.patientName(ev) || ev.name,
+            params: { visit_id: ev.id },
+        });
     }
     stateClass(ev) {
         // Batch #2: every status gets its own colour.

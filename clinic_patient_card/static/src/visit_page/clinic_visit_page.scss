@@ -114,3 +114,21 @@
 
     .cvp_bill_cards { display: flex; gap: 12px; flex-wrap: wrap; }
 }
+
+/* D4 — billing controls */
+.clinic_visit_page {
+    .cvp_payin {
+        border: 1px solid #e5e8ec; border-radius: 8px; padding: 5px 8px;
+        width: 110px; font-weight: 700; font-size: 15px;
+    }
+    .cvp_paybtn {
+        background: #f0a24a; color: #fff; border-radius: 10px;
+        font-weight: 700; padding: 8px 26px;
+        &:hover { background: #d98b34; color: #fff; }
+    }
+    .cvp_finishbtn {
+        background: #c23f63; color: #fff; border-radius: 10px;
+        font-weight: 700; padding: 8px 26px;
+        &:hover { background: #a53252; color: #fff; }
+    }
+}
