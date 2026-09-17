@@ -124,7 +124,9 @@
                         <t t-foreach="objFields" t-as="f" t-key="f[0]">
                             <div class="cvp_field mb-2">
                                 <label t-esc="f[1]"/>
-                                <input type="text" t-model="state.objDraft[f[0]]"/>
+                                <input type="text"
+                                       t-att-value="state.objDraft[f[0]]"
+                                       t-on-input="(ev) => state.objDraft[f[0]] = ev.target.value"/>
                             </div>
                         </t>
                     </div>
