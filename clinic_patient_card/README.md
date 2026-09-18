@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-17, commit: 677c4d3 -->
+<!-- last-synced: 2026-09-18, commit: c27dde0 -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -60,6 +60,12 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
   (daily, T-14d), weekly booking report to administrators.
 - Patients also live under **Clinic → Patients** (kanban/list/form over is_patient) —
   same Soft-UI form as in Contacts.
+- **Real users (2026-09-18)**: 4 administrators (გ. ბიჭაშვილი, თ. გეგია, ს. ტეფნაძე,
+  ნ. გოლაშვილი), 2 doctors (ა. მეტრეველი — ორთოდონტია, ნ. სეფიაშვილი — თერაპია) and
+  ნ. გოლაშვილის supplier account (own warehouse auto-created). The three demo doctors
+  are archived (history kept); base admin (uid 2) is out of the doctor group, so the
+  board columns are exactly the real doctors. Passwords are handed over privately —
+  never stored in the repo.
 - New contacts created from the Contacts app default to patients
   (`default_is_patient` context on `contacts.action_contacts`).
 

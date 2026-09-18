@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-17, commit: 677c4d3 -->
+<!-- last-synced: 2026-09-18, commit: c27dde0 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -59,6 +59,6 @@ Verification for every step = live RPC + browser (no automated tests — D-11).
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-09-17: Dentos-parity batch D1–D4 (v19.0.56–60.4, D-22/D-23) — booking popup + ➕ quick registration (split names, foreign passport), consent sheets with on-screen signature, OWL visit working page (sections with Dentos forms, FDI→ICD-10→priced procedures, billing with live debt), full-colour board cards + tooltip + ➜, patient History visits list. All user-tested through a live fix round.
-Next: user continues browser testing (skipped video 12-53-30 still pending); then M2 ka.po regen.
-Watch out: OWL templates — no JS globals, no dynamic t-model, no comments inside t-if/t-elif chains; m2o record.update takes {id, display_name}; board dialog onClose must safeLoad.
+Last session 2026-09-18: switched to REAL users — 4 admins, 2 doctors (directions set), Natia's separate supplier account with auto-created warehouse; demo doctors archived, uid 2 removed from the doctor group (board = 2 real columns). Data-only change, no code.
+Next: staff logs in and changes passwords; user continues browser testing (video 12-53-30 pending); then M2 ka.po regen.
+Watch out: an admin must NOT carry group_clinic_doctor (becomes a board column); a supplier role must live on a SEPARATE account (its write-scoping rules would lock an admin out of product edits).
