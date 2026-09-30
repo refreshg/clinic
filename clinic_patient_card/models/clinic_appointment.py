@@ -782,6 +782,8 @@ class CalendarEvent(models.Model):
             "res_id": self.patient_id.id,
             "views": [[False, "form"]],
             "target": "current",
+            # lets the patient form offer "← back to the booking"
+            "context": {"clinic_return_visit_id": self.id},
         }
 
     def action_open_patient_card(self):

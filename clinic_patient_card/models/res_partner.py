@@ -16,6 +16,8 @@ MEDICAL_TRACKED_FIELDS = {
     "chronic_diseases",
     "current_medications",
     "is_pregnant",
+    "allergy_answer",
+    "pregnancy_answer",
     "has_bleeding_disorder",
     "has_cardio_risk",
     "medical_risk_notes",
@@ -98,9 +100,10 @@ class ResPartner(models.Model):
         # namesakes apart while searching.
         super()._compute_display_name()
         for p in self:
-            # base prefixes the workplace ("Company, Person"); a patient is
-            # found by their own name, the workplace stays a field on the card
-            if p.is_patient and p.parent_id:
+            # base prefixes the workplace ("Company, Person" — from parent_id
+            # OR the free-text company_name); a patient is found by their own
+            # name, the workplace stays a field on the card
+            if p.is_patient:
                 p.display_name = p.name or ""
         if self.env.context.get("clinic_show_ids"):
             for p in self:
@@ -129,6 +132,34 @@ class ResPartner(models.Model):
         "calendar.event", "patient_id", string="Visits",
         domain=[("is_clinic", "=", True)],
     )
+    # Patient status for the Patients list side panel / filters (2026-10-01):
+    # by COMPLETED (done/paid) clinic visits — 1 = primary, 2+ = unique
+    # (user's naming); a patient with no completed visit has no status.
+    clinic_done_visits = fields.Integer(
+        string="Completed Visits", compute="_compute_clinic_patient_status",
+        store=True,
+    )
+    clinic_patient_status = fields.Selection(
+        [("primary", "პირველადი"), ("unique", "უნიკალური")],
+        string="Patient Status", compute="_compute_clinic_patient_status",
+        store=True,
+    )
+
+    @api.depends("is_patient", "clinic_visit_ids.clinic_state")
+    def _compute_clinic_patient_status(self):
+        for p in self:
+            done = len(p.clinic_visit_ids.filtered(
+                lambda v: v.clinic_state in ("done", "paid")))
+            p.clinic_done_visits = done
+            if not p.is_patient:
+                p.clinic_patient_status = False
+            elif done == 1:
+                p.clinic_patient_status = "primary"
+            elif done >= 2:
+                p.clinic_patient_status = "unique"
+            else:
+                p.clinic_patient_status = False
+
     clinic_signature_sample = fields.Binary(
         string="Signature Sample", attachment=True,
         help="Kept from the first signed consent sheet (D2).",
@@ -206,6 +237,14 @@ class ResPartner(models.Model):
     chronic_diseases = fields.Text(string="Chronic Diseases")
     current_medications = fields.Text(string="Current Medications")
     is_pregnant = fields.Boolean(string="Pregnant")
+    # Explicit yes/no answers: an empty allergy list / unticked box cannot be
+    # told apart from "never asked", so the card REQUIRES an answer (2026-09-30).
+    allergy_answer = fields.Selection(
+        [("yes", "კი"), ("no", "არა")], string="Allergies",
+    )
+    pregnancy_answer = fields.Selection(
+        [("yes", "კი"), ("no", "არა")], string="Pregnancy",
+    )
     smoker = fields.Boolean(string="Smoker")
     alcohol = fields.Boolean(string="Alcohol")
     family_history = fields.Text(string="Family History")
@@ -444,13 +483,20 @@ class ResPartner(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             self._clinic_join_name(vals)
+            self._clinic_sync_pregnancy(vals)
             if vals.get("is_patient") and vals.get("patient_ref", "New") == "New":
                 vals["patient_ref"] = self.env["ir.sequence"].next_by_code(
                     "clinic.patient.ref"
                 ) or "New"
         return super().create(vals_list)
 
+    @api.model
+    def _clinic_sync_pregnancy(self, vals):
+        if vals.get("pregnancy_answer"):
+            vals["is_pregnant"] = vals["pregnancy_answer"] == "yes"
+
     def write(self, vals):
+        self._clinic_sync_pregnancy(vals)
         if ("first_name" in vals or "last_name" in vals) and len(self) == 1:
             self._clinic_join_name(vals, current=self)
         # Assign a patient reference the first time a partner is flagged as patient.
@@ -471,6 +517,29 @@ class ResPartner(models.Model):
     #   Placeholder buttons — they intentionally do nothing yet, for the
     #   features whose functionality is not built (booking, Form-100, EHR…).
     # ------------------------------------------------------------------
+    def action_back_to_visit(self):
+        """Return from the patient form (opened off a booking) to that
+        booking: the planning board re-opens the visit dialog. The button
+        saves the form first, so nothing typed is lost."""
+        visit_id = self.env.context.get("clinic_return_visit_id")
+        if not visit_id:
+            return {"type": "ir.actions.act_window_close"}
+        if self.env.context.get("clinic_return_page"):
+            # opened from the visit working page -> back to that page
+            return {
+                "type": "ir.actions.client",
+                "tag": "clinic_visit_page",
+                "name": self.env["calendar.event"].browse(visit_id).patient_id.name
+                or _("Visit"),
+                "params": {"visit_id": visit_id},
+            }
+        return {
+            "type": "ir.actions.client",
+            "tag": "clinic_planning",
+            "name": _("Planning"),
+            "context": {"open_visit_id": visit_id},
+        }
+
     def action_clinic_todo(self):
         self.ensure_one()
         return {

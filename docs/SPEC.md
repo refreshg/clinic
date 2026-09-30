@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-30, commit: 506b4f4 -->
+<!-- last-synced: 2026-10-01, commit: d4ec77a -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -198,11 +198,22 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | model | additions |
 |---|---|
 | res.partner | `_compute_display_name`: a patient with a parent (workplace) shows their OWN name — base's "Company, Person" prefix dropped (the `clinic_show_ids` ` · vat · phone` suffix is kept); `company_type` switch `invisible="is_patient"` on the form |
-| res.partner (quick form) | foreign-citizen block (nationality, name/address latin) sits directly under the required names/phones; new "ჯანმრთელობა" group: `is_pregnant` (female only) + inline `allergy_ids` list; `insurance_company_id` carries a VIEW context (`default_is_insurance_company`, `default_is_patient:False`, `default_company_type:company`) on all 3 placements |
+| res.partner (quick form) | `view_clinic_patient_quick_form` is now MINIMAL (user, 2026-10-01): foreign-citizen toggle, `first_name`✱, `last_name`✱, `phone`✱, `insurance_company_id` (view ctx creates an insurer) — everything else (birth date, personal no., referral source, gender, foreign data, health) is filled on the card at arrival; the view was full-featured earlier the same day and shrunk on request |
 | calendar.event | `family_link_id` domain = any patient except the booked one (was: only linked family); m2o carries `form_view_ref` = quick form + `default_is_patient`; `patient_id`: `no_quick_create`, ctx `default_is_patient`; done/paid hides new-patient/slot buttons, appointment_type, family link, referral, dentist, assistant, room |
 | clinic.patient.allergy | ACL row: `group_clinic_admin` rwcu (was doctor-only writes) |
 | data | `data/clinic_insurers_seed.xml` — 7 Georgian insurers (`is_insurance_company`, noupdate), list from memory, clinic to confirm |
 | static | `gender_widget/` (clinic_gender_icons, avatar cards), `live_search/clinic_live_search.js`, `img/tooth-sparkle.svg` (planning open-page button) |
+
+### 2026-10-01 additions (uncommitted on top of d4ec77a)
+| model | additions |
+|---|---|
+| res.partner | `allergy_answer` / `pregnancy_answer` Selection yes/no (tracked in MEDICAL_TRACKED_FIELDS; `pregnancy_answer` also writes `is_pregnant`, create+write `_clinic_sync_pregnancy`); `clinic_done_visits` (Integer) + `clinic_patient_status` (Selection primary/unique) — stored computes over `clinic_visit_ids.clinic_state` (done/paid: 1 → primary, 2+ → unique, 0 → none); `_compute_display_name` now strips the workplace prefix for EVERY patient (company_name text as well as parent_id); `action_back_to_visit` |
+| res.partner (card) | required for patients: `first_name`, `last_name`, `vat`, `birthdate`, header `phone`, `referral_source`, `allergy_answer`, `pregnancy_answer` (hidden for men; required when gender != male); `allergy_ids` moved from the doctor-only Medical group to the header (shown when `allergy_answer=yes`, required then, editable by admin+doctor); `name_latin`/`nationality_country_id` only when `is_foreign`; stat-button box, company switch and `is_patient` hidden for patients; Create Invoice / Payment buttons admin-group only; "← back" bars driven by ctx `clinic_return_visit_id` (+ `clinic_return_page`) |
+| res.partner (address) | separate inherit `view_partner_form_patient_address` (priority 20): street = residence, street2 = legal, city = std `city_id` dropdown (Create allowed, default country GE), state hidden, ZIP+country only for foreign patients |
+| data | `data/clinic_cities_seed.xml` — 17 Georgian `res.city` rows (noupdate, list from memory) |
+| controllers | `controllers/patient_export.py` — `/clinic/patients/export?status=primary|unique` (auth user, admin or doctor group) streams an .xlsx built with xlsxwriter |
+| static | planning board re-opens a visit when its client-action ctx carries `open_visit_id`; visit page `openPatient` passes the return ctx; gender cards shrunk to 70px |
+| manifest | v19.0.61.0.0; depends += `base_address_extended` |
 
 ## Business logic (trigger → condition → action; Standard coverage per row)
 | # | trigger | condition | action | std coverage |
@@ -247,10 +258,17 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | B38 | planning board drag | visit is started/done/paid/cancelled | drag blocked, cursor shows grab vs default (506b4f4) | custom (board is OWL) |
 | B39 | visit page opens | user in `group_clinic_admin` (payload `is_admin`) | admin: no Procedures tab, opens on Billing (itemised procedure table); doctor: no Billing tab (506b4f4) | custom OWL |
 | B40 | typing in the Patients search bar (action ctx `clinic_live_search`) | query non-empty, after 200 ms | patients matching name/phone/email/vat (max 8) REPLACE the generic "Search X for" entries; click opens the card; no match → generic entries stay (D-25) | custom SearchBar patch — std needs Enter |
+| B41 | visit state changes / patient flagged | any | `clinic_patient_status` recomputed: 1 completed visit → primary, 2+ → unique, none → empty (user's naming, 2026-10-01) | custom stored compute |
+| B42 | Clinic menu „📥 პირველადი / უნიკალური პაციენტები (Excel)" | admin or doctor | GET `/clinic/patients/export` builds the .xlsx from the DB and downloads it (no JS) | custom route (std Export needs a manual selection) — D-27 |
+| B43 | „პაციენტის ანკეტა" on the booking / visit page | ctx `clinic_return_visit_id` | patient form shows „← back"; button saves, then re-opens the booking dialog (planning ctx `open_visit_id`) or the visit page | custom (D-24 follow-up) |
+| B44 | patient card save | `is_patient` | first/last name, personal no., birth date, phone, referral source, allergy answer (+ list when yes), pregnancy answer (non-men) must be filled — enforced by view `required=`, not by constraints, so non-UI writes are unaffected (D-26) | custom |
 
 ## Standard-first check
 | requirement | standard feature checked | covers? | if no → custom + ref |
 |---|---|---|---|
+| Excel of patients by status | list → Actions → Export | partial (manual selection each time) | menu items + export route (D-27) |
+| city picker | `res.city` + `city_id` (base_address_extended) | yes | reused; only a seed + view tweaks (D-28) |
+| patient status (primary/unique) | none | no | stored compute on res.partner (D-27) |
 | family link between patients | res.partner parent_id/child_ids | no (company/address hierarchy) | `family_member_ids` M2m + B36 hook (D-24) |
 | search-as-you-type | web SearchBar | no (needs Enter; per-field entries) | SearchBar patch, opt-in by action ctx (D-25) |
 | gender picker | radio/selection widget | partial | avatar-card widget (design handoff, 506b4f4) |
@@ -309,6 +327,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | Global Save/Discard | `static/src/clinic_form_buttons.xml` (t-inherit web.FormStatusIndicator) | labelled შენახვა/გაუქმება buttons on every form, visible only while dirty/new (D-17) |
 | Supply Shop v2 | `static/src/shop/` (rewritten) | banner carousel, category tiles+chips, brand filter, ⭐/🆕/🔥 strips, ♥ wishlist, 🔁 repeat order, similar strip, vendor comparison table with ★ |
 | Shop Banners | `view_clinic_shop_banner_list/form`, menu Configuration→Shop Banners (admin) | image upload |
+| Patients search | `view_clinic_patient_search` (action `search_view_id`) | status side panel + filters primary/unique, name/phone/email/vat search; Excel menu items under Clinic (B42) |
 | Patients menu | `action_clinic_patients`, `menu_clinic_patients` | Clinic → Patients: kanban/list/form over is_patient (admin+doctor), default_is_patient ctx — reviewer could not find the card via Contacts |
 | Patient quick registration | `view_clinic_patient_quick_form` | Dentos popup: standalone foreign-citizen toggle row, split names, gender avatar cards (506b4f4), birthdate, personal/passport no., primary + extra phones (patient_phone_ids inline), insurance + policy, latin block; opened ONLY from the booking's ➕ widget (a form_view_ref on the field hijacked every open — D-23) |
 | Consent sheets | `view_clinic_consent_form/list` | one form serves both types; personal-data checkboxes + marketing radio; medical signature pad; footer confirm buttons chain the two sheets |
@@ -335,6 +354,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   (r/w/c), sale.order.line (rwcu), read-only sale.order.template(+line), quotation.document,
   and READ-ONLY stock.move / stock.move.line / stock.picking / stock.quant /
   account.move / account.move.line (sale_stock + invoicing computes fire on SO save).
+- `/clinic/patients/export`: HTTP route, `auth='user'`, 404 unless the user is in the admin or doctor group.
 - `clinic.patient.allergy`: user read; doctor rwcu; admin rwcu (added 2026-09-30 so the
   registration form can save allergies).
 - Supplier product/template rules are WRITE-scoped only since v19.0.53.22 (D-20): reading
@@ -368,6 +388,10 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   categories (`data/clinic_shop_seed.xml`, noupdate). v19.0.53 needs nothing special.
 
 ## Drift log
+- 2026-10-01: the quick-registration form went full → minimal → full → minimal within two days; the FINAL state is minimal (name, phone, insurance, foreign toggle). The "required" list the user gave (names, personal no., birth date, phone, referral source) applies to the patient CARD, not to the popup.
+- 2026-10-01: address fields of the partner form cannot be patched from the main patient-card view: `city_id` is added by base_address_extended's own inherit (priority 16, loaded after ours) — the patch lives in a separate view with priority 20.
+- 2026-10-01: the workplace shown in names comes from the free-text `company_name` as well as `parent_id`; the display-name fix must not key on `parent_id` only.
+- 2026-10-01: patient statuses count completed visits only — 57 of 80 patients (no visit, booked, arrived…) have no status, so the two Excel lists never add up to all patients.
 - 2026-09-30: a Many2one's `context=` declared on the PYTHON field is NOT sent by the web
   client — only the view's `context` attr is. The first "Create insurer" fix (Python
   context) was a no-op until the context moved into the views.

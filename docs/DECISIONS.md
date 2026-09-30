@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-30, commit: 506b4f4 -->
+<!-- last-synced: 2026-10-01, commit: d4ec77a -->
 # Decisions (ADR) — clinic_patient_card
 
 Format: Context → Decision → Rejected → Consequences. New custom code requires a D-entry
@@ -227,3 +227,38 @@ variant (live-filtering the kanban via a SearchModel patch) was dropped as the w
 reading of the request. · Consequences: Enter now opens the first patient instead of
 filtering; the patch relies on SearchBar internals (`items`, `state.query`) — re-check on
 Odoo upgrades. Rationale is the user's request; no standard alternative covers it.
+
+### D-26: Quick form minimal; "required" lives on the patient card; explicit yes/no for allergy and pregnancy
+Date 2026-10-01 (uncommitted) · Context: first-visit booking needs speed; the clinic's
+mandatory set is name, surname, personal no., birth date, mobile, referral source, and
+allergy + pregnancy answers — to be filled on the card at arrival. An empty allergy list or
+an unticked box cannot be told apart from "never asked". · Decision: the booking popup
+keeps only first/last name, mobile, insurance (+ foreign toggle); the card makes the six
+fields plus two new yes/no selections (`allergy_answer`, `pregnancy_answer`, pregnancy
+hidden for men) required for patients through view `required=` expressions, NOT model
+constraints; `is_pregnant` stays in step with the answer; the allergy list (required when
+the answer is yes) moved out of the doctor-only group so the administrator can fill it.
+Names became two required fields on the card (`first_name`/`last_name`), and 29 existing
+patients had them back-filled from `name` (first word / rest). · Consequences: existing
+patients with empty fields are forced to complete them on the next card save; 9 one-word
+names still lack a surname; UI-only enforcement means RPC/imports bypass it.
+
+### D-27: Patient status by completed visits + Excel via menu items
+Date 2026-10-01 (uncommitted) · Context: user wanted ready-made patient lists (template
+filters) whose click downloads an Excel, with their own terms: primary = came once,
+unique = came several times. · Decision: stored computes `clinic_done_visits` /
+`clinic_patient_status` (done/paid visits; 1 → primary, 2+ → unique, 0 → none), a
+dedicated Patients search view (status side panel + filters), and two Clinic menu items
+(`ir.actions.act_url`) hitting `/clinic/patients/export` which builds the .xlsx with
+xlsxwriter. Download-on-filter-click was NOT built — it would save a file on every click;
+menu items were chosen instead. · Consequences: 57 of 80 patients have no status; the
+standard list Export remains for any other selection.
+
+### D-28: Patient address via standard res.city (new dependency base_address_extended)
+Date 2026-10-01 (uncommitted) · Context: user asked for residence / legal address, a city
+dropdown with Create, ZIP + country only for non-residents. · Decision: depend on the
+standard `base_address_extended` (already installed) and reuse `city_id`/`res.city`;
+seed 17 Georgian cities; place the view tweaks in a separate priority-20 inherit because
+`city_id` is added after our main inherit. "Non-resident" is implemented as the existing
+`is_foreign` flag — to be confirmed. · Consequences: the city domain is cleared
+(`[]`) for all partners on this form; ZIP/country/state fields stay in the model.

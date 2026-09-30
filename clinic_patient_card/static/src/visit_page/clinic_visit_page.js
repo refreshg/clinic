@@ -352,6 +352,8 @@ export class ClinicVisitPage extends Component {
             res_model: "res.partner",
             res_id: this.state.data.patient.id,
             views: [[false, "form"]],
+            // lets the patient form offer "← back to the visit page"
+            context: { clinic_return_visit_id: this.visitId, clinic_return_page: true },
         });
     }
     openVisitForm() {

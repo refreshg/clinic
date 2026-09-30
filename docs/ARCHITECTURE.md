@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-30, commit: 506b4f4 -->
+<!-- last-synced: 2026-10-01, commit: d4ec77a -->
 # Architecture — clinic_patient_card
 
 ## Components
@@ -18,6 +18,7 @@
 | Patients live search | `static/src/live_search/` | opt-in SearchBar patch: matching patients in the dropdown while typing, click opens the card (D-25) |
 | Gender cards | `static/src/gender_widget/` | avatar-card picker widget for `gender` (form + quick registration) |
 | Family link hook | `models/clinic_appointment.py` `_clinic_remember_family_link` | two-way family_member_ids + patient flag on visit save (D-24) |
+| Patient export | `controllers/patient_export.py` + Clinic menu items | GET `/clinic/patients/export?status=primary|unique` → .xlsx (xlsxwriter) built from `clinic_patient_status` (D-27) |
 | Live alerts | `static/src/clinic_arrived_service.js` | bus subscriber + WebAudio chimes for 6 channels |
 | Supply Shop v2.1 | `static/src/shop/` + `models/purchase_order.py` + `models/clinic_shop.py` | clinic buys: banner slots+links, category sections (any-depth subcats), strips, wishlist, ⇄ compare tray, repeat order, localStorage cart persistence → cart → 1 RFQ/vendor + mirror SO |
 | Supplier warehouse | `models/clinic_supplier_stock.py` + `wizard/clinic_supplier_move.py` | per-supplier location pair + shelves; count/Apply, Move wizard, ship-at-In-Transit, scoped My Warehouse/Locations/Transfers menus (D-19) |

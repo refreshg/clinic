@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onWillStart, onWillUnmount } from "@odoo/owl";
+import { Component, useState, onMounted, onWillStart, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { deserializeDateTime, serializeDateTime } from "@web/core/l10n/dates";
@@ -58,6 +58,13 @@ export class ClinicPlanning extends Component {
         this._onEvDragUp = this._onEvDragUp.bind(this);
         onWillStart(() => this.load());
         onWillUnmount(() => this._cleanupEvDrag());
+        // coming back from the patient form: re-open the booking we left
+        onMounted(() => {
+            const visitId = this.props.action?.context?.open_visit_id;
+            if (visitId) {
+                this.openEvent({ id: visitId });
+            }
+        });
     }
 
     // ---- date helpers (local, no UTC drift) ----

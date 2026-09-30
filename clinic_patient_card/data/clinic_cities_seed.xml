@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Georgian cities for the patient address picker (standard res.city).
+     noupdate: cities added/edited in the UI are kept. -->
+<odoo noupdate="1">
+    <record id="city_tbilisi" model="res.city">
+        <field name="name">თბილისი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_batumi" model="res.city">
+        <field name="name">ბათუმი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_kutaisi" model="res.city">
+        <field name="name">ქუთაისი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_rustavi" model="res.city">
+        <field name="name">რუსთავი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_gori" model="res.city">
+        <field name="name">გორი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_zugdidi" model="res.city">
+        <field name="name">ზუგდიდი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_poti" model="res.city">
+        <field name="name">ფოთი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_telavi" model="res.city">
+        <field name="name">თელავი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_akhaltsikhe" model="res.city">
+        <field name="name">ახალციხე</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_ozurgeti" model="res.city">
+        <field name="name">ოზურგეთი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_kobuleti" model="res.city">
+        <field name="name">ქობულეთი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_mtskheta" model="res.city">
+        <field name="name">მცხეთა</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_samtredia" model="res.city">
+        <field name="name">სამტრედია</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_senaki" model="res.city">
+        <field name="name">სენაკი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_zestaponi" model="res.city">
+        <field name="name">ზესტაფონი</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_khashuri" model="res.city">
+        <field name="name">ხაშური</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+    <record id="city_marneuli" model="res.city">
+        <field name="name">მარნეული</field>
+        <field name="country_id" ref="base.ge"/>
+    </record>
+</odoo>

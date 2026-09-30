@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="clinic_patient_card.GenderIcons">
-        <div class="o_clinic_gender_icons d-flex gap-3">
+        <div class="o_clinic_gender_icons d-flex flex-wrap gap-2">
             <t t-foreach="options" t-as="opt" t-key="opt[0]">
                 <div t-att-class="'o_gender_card o_gender_' + opt[0] + (currentValue === opt[0] ? ' active' : '')"
                      t-att-title="opt[1]"

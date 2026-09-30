@@ -8,11 +8,12 @@
     "author": "refreshg",
     "website": "https://github.com/refreshg/clinic",
     "category": "Healthcare",
-    "version": "19.0.60.4.0",
+    "version": "19.0.61.0.0",
     "license": "LGPL-3",
     "depends": [
         "base",
         "contacts",
+        "base_address_extended",  # res.city + partner.city_id (patient address picker)
         "product",
         "account",
         "mail",
@@ -34,6 +35,7 @@
         "data/clinic_icd10_seed.xml",
         "data/clinic_complaint_seed.xml",
         "data/clinic_insurers_seed.xml",
+        "data/clinic_cities_seed.xml",
         "wizard/clinic_payment_wizard_views.xml",
         "wizard/clinic_cancel_wizard_views.xml",
         "wizard/clinic_slot_finder_views.xml",

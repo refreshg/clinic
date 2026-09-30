@@ -18,6 +18,20 @@
                  static/src/scss/clinic_partner_soft.scss -->
             <!-- the form compiler drops class attrs on <sheet>, so the hook
                  is an invisible marker div matched with :has() -->
+            <!-- opened from a booking: one click (saves first) back to it -->
+            <xpath expr="//sheet" position="before">
+                <div class="px-3 pt-2"
+                     invisible="not context.get('clinic_return_visit_id')">
+                    <button name="action_back_to_visit" type="object"
+                            string="← ჯავშანზე დაბრუნება"
+                            class="btn-primary"
+                            invisible="context.get('clinic_return_page')"/>
+                    <button name="action_back_to_visit" type="object"
+                            string="← ვიზიტის გვერდზე დაბრუნება"
+                            class="btn-primary"
+                            invisible="not context.get('clinic_return_page')"/>
+                </div>
+            </xpath>
             <xpath expr="//sheet" position="inside">
                 <div class="o_clinic_soft"/>
             </xpath>
@@ -86,6 +100,17 @@
                 </page>
             </xpath>
 
+            <!-- the header phone is mandatory for a patient -->
+            <xpath expr="(//field[@name='phone'])[1]" position="attributes">
+                <attribute name="required">is_patient</attribute>
+            </xpath>
+
+            <!-- stat buttons (invoiced, meetings, purchases, lots/serials…) are
+                 noise on a patient card -->
+            <xpath expr="//div[@name='button_box']" position="attributes">
+                <attribute name="invisible">is_patient</attribute>
+            </xpath>
+
             <!-- A patient is always a person: no Individual/Company switch
                  (insurers / suppliers keep it). -->
             <xpath expr="//field[@name='company_type']" position="attributes">
@@ -98,17 +123,24 @@
             <xpath expr="//notebook" position="before">
                 <group>
                     <group>
-                        <field name="vat" string="Personal No." placeholder="digits only"/>
-                        <field name="birthdate" placeholder="dd/mm/yyyy — can be typed"/>
+                        <field name="first_name" string="სახელი"
+                               required="is_patient" invisible="not is_patient"/>
+                        <field name="last_name" string="გვარი"
+                               required="is_patient" invisible="not is_patient"/>
+                        <field name="vat" string="Personal No." placeholder="digits only"
+                               required="is_patient"/>
+                        <field name="birthdate" placeholder="dd/mm/yyyy — can be typed"
+                               required="is_patient"/>
                         <field name="age"/>
                         <field name="gender" widget="clinic_gender_icons"/>
                         <field name="parent_id" string="სამუშაო ადგილი"
                                invisible="not is_patient"/>
                     </group>
                     <group>
-                        <!-- reviewer batch #2: the patient toggle is back — it
-                             drives the visibility of every patient field -->
-                        <field name="is_patient"/>
+                        <!-- drives the visibility of every patient field; never shown
+                             (2026-09-30, user: neither doctor nor admin sees it) —
+                             new patients get it from the action/popup default -->
+                        <field name="is_patient" invisible="1"/>
                         <field name="guardian_id" invisible="not is_minor"
                                required="is_minor"
                                context="{'clinic_show_ids': 1}"/>
@@ -116,9 +148,31 @@
                         <field name="insurance_company_id" invisible="not is_patient"
                                domain="[('is_insurance_company', '=', True)]"
                                context="{'default_is_insurance_company': True, 'default_is_patient': False, 'default_company_type': 'company'}"/>
-                        <field name="referral_source" invisible="not is_patient"/>
+                        <field name="referral_source" invisible="not is_patient"
+                               required="is_patient"/>
+                        <field name="allergy_answer" string="ალერგია"
+                               invisible="not is_patient" required="is_patient"/>
+                        <field name="pregnancy_answer" string="ორსულობა"
+                               invisible="not is_patient or gender == 'male'"
+                               required="is_patient and gender != 'male'"/>
                         <field name="can_edit_medical" invisible="1"/>
                     </group>
+                </group>
+                <!-- allergy list: editable by admin AND doctor (it is required
+                     when the answer is "yes") -->
+                <group invisible="not is_patient or allergy_answer != 'yes'">
+                    <field name="allergy_ids" string="ალერგიები" colspan="2"
+                           required="allergy_answer == 'yes'">
+                        <list editable="bottom">
+                            <field name="allergy_type"/>
+                            <field name="name"/>
+                            <field name="reaction"/>
+                            <field name="severity"/>
+                            <field name="test_done"/>
+                            <field name="test_result"/>
+                            <field name="note" optional="hide"/>
+                        </list>
+                    </field>
                 </group>
             </xpath>
 
@@ -145,13 +199,15 @@
                         <button name="action_clinic_todo" type="object"
                                 string="Open Oral Chart" class="btn-secondary"/>
                         <button name="action_clinic_todo" type="object"
-                                string="Create Invoice" class="btn-secondary"/>
+                                string="Create Invoice" class="btn-secondary"
+                                groups="clinic_patient_card.group_clinic_admin"/>
                         <button name="action_clinic_todo" type="object"
                                 string="Generate Form-100" class="btn-secondary"/>
                         <button name="action_clinic_todo" type="object"
                                 string="Sync EHR" class="btn-secondary"/>
                         <button name="action_clinic_todo" type="object"
-                                string="Make Payment / To Debt" class="btn-secondary"/>
+                                string="Make Payment / To Debt" class="btn-secondary"
+                                groups="clinic_patient_card.group_clinic_admin"/>
                     </div>
 
                     <!-- ===== 4 blocks ===== -->
@@ -161,8 +217,8 @@
                         <page name="block_basic" string="Basic">
                             <group string="Basic Information">
                                 <group>
-                                    <field name="name_latin"/>
-                                    <field name="nationality_country_id"/>
+                                    <field name="name_latin" invisible="not is_foreign"/>
+                                    <field name="nationality_country_id" invisible="not is_foreign"/>
                                     <field name="registration_date"/>
                                     <field name="referral_source"/>
                                     <field name="referral_source_other"
@@ -207,23 +263,11 @@
                         <!-- BLOCK 2 — Medical (editable by doctors only) -->
                         <page name="block_medical" string="Medical">
                             <group string="Medical History" readonly="not can_edit_medical">
-                                <field name="allergy_ids" colspan="2" nolabel="1">
-                                    <list editable="bottom">
-                                        <field name="allergy_type"/>
-                                        <field name="name"/>
-                                        <field name="reaction"/>
-                                        <field name="severity"/>
-                                        <field name="test_done"/>
-                                        <field name="test_result"/>
-                                        <field name="note" optional="hide"/>
-                                    </list>
-                                </field>
                                 <field name="anamnesis_general" colspan="2"/>
                                 <group>
                                     <field name="chronic_diseases"/>
                                     <field name="current_medications"/>
                                     <field name="family_history"/>
-                                    <field name="is_pregnant" invisible="gender != 'female'"/>
                                 </group>
                                 <group>
                                     <field name="smoker"/>
@@ -377,6 +421,52 @@
         </field>
     </record>
 
+    <!-- Address block of the partner form. Separate view with a later
+         priority: the city_id field is added by base_address_extended's own
+         inherit (priority 16, loaded after ours), so it must be patched after. -->
+    <record id="view_partner_form_patient_address" model="ir.ui.view">
+        <field name="name">res.partner.form.patient.address</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <!-- Address block: street = residence, street 2 = legal address,
+                 city picked from the (standard res.city) list with Create;
+                 state hidden; ZIP + country only for non-residents. -->
+            <xpath expr="//div[hasclass('o_address_format')]/field[@name='street']"
+                   position="attributes">
+                <attribute name="placeholder">საცხოვრებელი მისამართი</attribute>
+            </xpath>
+            <xpath expr="//div[hasclass('o_address_format')]/field[@name='street2']"
+                   position="attributes">
+                <attribute name="placeholder">იურიდიული მისამართი</attribute>
+            </xpath>
+            <xpath expr="//div[hasclass('o_address_format')]/field[@name='city_id']"
+                   position="attributes">
+                <attribute name="placeholder">ქალაქი</attribute>
+                <attribute name="invisible">not is_patient and not country_enforce_cities</attribute>
+                <attribute name="domain">[]</attribute>
+                <attribute name="context">{'default_country_id': %(base.ge)d}</attribute>
+            </xpath>
+            <xpath expr="//div[hasclass('o_address_format')]/field[@name='city']"
+                   position="attributes">
+                <attribute name="invisible">is_patient or (country_enforce_cities and (city_id or city in ('', False)))</attribute>
+            </xpath>
+            <xpath expr="//div[hasclass('o_address_format')]/field[@name='state_id']"
+                   position="attributes">
+                <attribute name="invisible">is_patient</attribute>
+            </xpath>
+            <xpath expr="//div[hasclass('o_address_format')]/field[@name='zip']"
+                   position="attributes">
+                <attribute name="invisible">is_patient and not is_foreign</attribute>
+            </xpath>
+            <xpath expr="//div[hasclass('o_address_format')]//field[@name='country_id']"
+                   position="attributes">
+                <attribute name="invisible">is_patient and not is_foreign</attribute>
+            </xpath>
+        </field>
+    </record>
+
     <!-- New contacts made from the Contacts app are patients by default
          (reviewer: drop the "Is a Patient" checkbox). Vendors, insurance
          companies and user partners are created through their own flows,
@@ -397,83 +487,31 @@
         <field name="arch" type="xml">
             <form string="პაციენტის რეგისტრაციის ფორმა">
                 <sheet>
-                    <!-- Dentos: the foreign-citizen slider stands alone on
-                         top, impossible to miss -->
+                    <!-- First-visit registration from the booking: only first
+                         name, last name, mobile (+ insurance). The rest —
+                         personal no., birth date, referral source (required),
+                         gender, foreign data, health — is filled on the
+                         patient card when the patient arrives. -->
                     <div class="alert alert-light d-flex align-items-center gap-2 mb-3"
                          role="none" style="border:1px solid #e5e8ec; border-radius:12px;">
                         <field name="is_foreign" widget="boolean_toggle" nolabel="1"/>
                         <b>უცხო ქვეყნის მოქალაქე</b>
                     </div>
-                    <!-- Gender picker — full width, above the two-column grid -->
                     <field name="is_patient" invisible="1"/>
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <label for="gender" string="სქესი"/>
-                        <field name="gender" widget="clinic_gender_icons" nolabel="1"/>
-                    </div>
                     <group>
                         <group>
                             <field name="first_name" required="1"
                                    string="სახელი"/>
                             <field name="last_name" required="1"
                                    string="გვარი"/>
-                            <field name="birthdate" string="დაბ. თარიღი"/>
-                            <field name="vat" string="პირადი №"
-                                   invisible="is_foreign"/>
-                            <field name="vat" string="პასპორტის №"
-                                   invisible="not is_foreign"/>
                         </group>
                         <group>
                             <field name="phone" required="1"
-                                   string="ტელეფონი (ძირითადი)"/>
-                            <field name="patient_phone_ids"
-                                   string="ტელეფონი (დამატებითი)"
-                                   style="max-height: 80px; overflow-y: auto;">
-                                <list editable="bottom">
-                                    <field name="phone"/>
-                                    <field name="phone_type" optional="hide"/>
-                                </list>
-                            </field>
-                        </group>
-                    </group>
-                    <group string="უცხო ქვეყნის მოქალაქე" invisible="not is_foreign">
-                        <group>
-                            <field name="nationality_country_id" string="მოქალაქეობა"/>
-                            <field name="name_latin"
-                                   string="სახელი და გვარი (ლათინურად)"/>
-                        </group>
-                        <group>
-                            <field name="address_latin"
-                                   string="მისამართი (ლათინურად)"/>
-                        </group>
-                    </group>
-                    <group>
-                        <group>
-                            <field name="email" string="ელ. ფოსტა"/>
-                            <field name="street" string="მისამართი"/>
-                            <field name="company_name"
-                                   string="სამუშაო ადგილი"/>
-                        </group>
-                        <group>
+                                   string="მობილური"/>
                             <field name="insurance_company_id"
                                    string="დაზღვევა"
                                    context="{'default_is_insurance_company': True, 'default_is_patient': False, 'default_company_type': 'company'}"/>
-                            <field name="insurance_policy_no"
-                                   string="პოლისის №"/>
                         </group>
-                    </group>
-                    <group string="ჯანმრთელობა">
-                        <group>
-                            <field name="is_pregnant" string="ორსულობა"
-                                   invisible="gender != 'female'"/>
-                        </group>
-                        <field name="allergy_ids" string="ალერგიულობა" colspan="2">
-                            <list editable="bottom">
-                                <field name="allergy_type" string="ტიპი"/>
-                                <field name="name" string="ალერგენი"/>
-                                <field name="reaction" string="რეაქცია"/>
-                                <field name="severity" string="სიმძიმე"/>
-                            </list>
-                        </field>
                     </group>
                 </sheet>
             </form>
