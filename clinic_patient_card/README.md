@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-18, commit: c27dde0 -->
+<!-- last-synced: 2026-09-30, commit: 506b4f4 -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -83,6 +83,10 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
 - `i18n/ka.po` is stale for the 28.08.26 batch strings (PLAN M2).
 - No automated tests by decision D-11 — verify live (RPC + browser).
 - Form-100 / EHR sync not implemented (templates/target unknown).
+- Insurer list (`data/clinic_insurers_seed.xml`) is unconfirmed — written from memory.
+- Booking form: the Family Member Link uses `form_view_ref` (D-24); its internal link may
+  show the short registration form for an existing member. Patients search: Enter opens the
+  first suggested patient (D-25). Both unverified in the browser at time of writing.
 
 ## Docs
 Full documentation in `../docs/`: PRD (requirements, ka), SPEC (technical), PLAN

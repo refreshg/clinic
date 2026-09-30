@@ -159,7 +159,9 @@
                                              t-on-click.stop="() => this.openEvent(ev)"
                                              t-on-mousedown.stop="(mev) => this.onEventDown(ev, mev)">
                                             <button class="cp_openpage" title="ვიზიტის გვერდი"
-                                                    t-on-click.stop="() => this.openVisitPage(ev)">➜</button>
+                                                    t-on-click.stop="() => this.openVisitPage(ev)"><img
+                                                    src="/clinic_patient_card/static/src/img/tooth-sparkle.svg"
+                                                    alt="ვიზიტის გვერდი"/></button>
                                             <span t-if="ev.consent_signed" class="cp_consent"
                                                   title="თანხმობები ხელმოწერილია">📄</span>
                                             <span t-attf-class="cp_status {{ stateClass(ev) }}" t-esc="stateLabel(ev)"/>

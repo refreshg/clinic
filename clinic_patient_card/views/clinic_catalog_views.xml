@@ -137,7 +137,7 @@
         <field name="res_model">res.partner</field>
         <field name="view_mode">kanban,list,form</field>
         <field name="domain">[('is_patient', '=', True)]</field>
-        <field name="context">{'default_is_patient': True}</field>
+        <field name="context">{'default_is_patient': True, 'clinic_live_search': True}</field>
     </record>
 
     <!-- ===================== Menus ===================== -->

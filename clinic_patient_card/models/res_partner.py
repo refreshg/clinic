@@ -97,6 +97,11 @@ class ResPartner(models.Model):
         # personal no. and phone next to the name, so reception can tell
         # namesakes apart while searching.
         super()._compute_display_name()
+        for p in self:
+            # base prefixes the workplace ("Company, Person"); a patient is
+            # found by their own name, the workplace stays a field on the card
+            if p.is_patient and p.parent_id:
+                p.display_name = p.name or ""
         if self.env.context.get("clinic_show_ids"):
             for p in self:
                 if p.is_patient:

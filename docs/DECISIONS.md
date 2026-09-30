@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-17, commit: 677c4d3 -->
+<!-- last-synced: 2026-09-30, commit: 506b4f4 -->
 # Decisions (ADR) — clinic_patient_card
 
 Format: Context → Decision → Rejected → Consequences. New custom code requires a D-entry
@@ -198,4 +198,32 @@ link (full card) with no_create; a view widget (clinic_new_patient_btn) stacks
 FormViewDialog with the quick form and writes the m2o back as an object; the slot
 finder's dentist update was migrated to the object shape too. · Consequences: the
 widget pattern (slot finder, new patient) is the way to put custom dialogs on a form
-without hijacking navigation.
+without hijacking navigation. **Partly superseded by D-24** (2026-09-30).
+
+### D-24: Patient / family m2o creation UX on the booking form (reverses part of D-23)
+Date 2026-09-30 (uncommitted) · Context: user requests — `no_create` on Patient hid the
+way to register someone missing from the list; the Family Member Link dropdown only
+offered already-linked members and its "Create and edit" opened the bare contact form
+(company/person switch, Contacts/Sales tabs); a parent picked there stayed a plain
+contact (not in the client base) and never reached the patient's card. · Decision:
+(1) `patient_id`: `no_quick_create` (name-only patients are useless), Create-and-edit
+restored; the ➕ widget stays for the quick form. (2) `family_link_id`: any patient is
+selectable; its Create-and-edit uses `form_view_ref` = quick registration form; saving
+the visit runs B36 (two-way `family_member_ids`, link flagged `is_patient`).
+(3) the Individual/Company switch is hidden for patients. · Consequences: D-23's "never
+form_view_ref on the field" is knowingly broken for `family_link_id` — its internal link
+may open the short form for an existing member; a `clinic_new_family_btn` widget was
+built and dropped on user request. Pending clinic answers: company patients, guardian
+for minors (PRD §9).
+
+### D-25: Patients search bar = suggestions, not filtering-on-Enter
+Date 2026-09-30 (uncommitted) · Context: user wanted matching clients in the search
+dropdown while typing (name, surname, phone, e-mail). Standard Odoo lists only
+"Search X for: …" entries and filters after Enter. · Decision: a patch of web's
+`SearchBar` (computeState/selectItem) in `static/src/live_search/`, opt-in through the
+action context `clinic_live_search`; matching patients (max 8, 200 ms debounce) replace
+the generic entries, click opens the card; no match → standard entries. An earlier
+variant (live-filtering the kanban via a SearchModel patch) was dropped as the wrong
+reading of the request. · Consequences: Enter now opens the first patient instead of
+filtering; the patch relies on SearchBar internals (`items`, `state.query`) — re-check on
+Odoo upgrades. Rationale is the user's request; no standard alternative covers it.

@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-18, commit: c27dde0 -->
+<!-- last-synced: 2026-09-30, commit: 506b4f4 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -60,5 +60,6 @@ Verification for every step = live RPC + browser (no automated tests — D-11).
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
 Last session 2026-09-18: switched to REAL users — 4 admins, 2 doctors (directions set), Natia's separate supplier account with auto-created warehouse; demo doctors archived, uid 2 removed from the doctor group (board = 2 real columns). Data-only change, no code.
+Session 2026-09-30: reviewer follow-ups (items 5, 6, 14, 15, 18, 19, 21) live on the server — gender cards, role tabs, arrive guard, drag-lock (committed 506b4f4); payment-dialog cleanup, insurers seed + allergies/pregnancy on the quick form, family-link rework, patient-name display, live patient search, tooth icon (UNCOMMITTED — one commit planned at day end). Open clinic questions: PRD §9.
 Next: staff logs in and changes passwords; user continues browser testing (video 12-53-30 pending); then M2 ka.po regen.
 Watch out: an admin must NOT carry group_clinic_doctor (becomes a board column); a supplier role must live on a SEPARATE account (its write-scoping rules would lock an admin out of product edits).

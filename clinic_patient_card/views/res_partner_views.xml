@@ -86,6 +86,12 @@
                 </page>
             </xpath>
 
+            <!-- A patient is always a person: no Individual/Company switch
+                 (insurers / suppliers keep it). -->
+            <xpath expr="//field[@name='company_type']" position="attributes">
+                <attribute name="invisible">is_patient</attribute>
+            </xpath>
+
             <!-- Header block: Personal No. (vat), birthdate, age, gender +
                  key patient fields the reviewer wants on the FIRST page:
                  workplace, insurance company, referral source. -->
@@ -108,7 +114,8 @@
                                context="{'clinic_show_ids': 1}"/>
                         <field name="patient_ref" invisible="not is_patient"/>
                         <field name="insurance_company_id" invisible="not is_patient"
-                               domain="[('is_insurance_company', '=', True)]"/>
+                               domain="[('is_insurance_company', '=', True)]"
+                               context="{'default_is_insurance_company': True, 'default_is_patient': False, 'default_company_type': 'company'}"/>
                         <field name="referral_source" invisible="not is_patient"/>
                         <field name="can_edit_medical" invisible="1"/>
                     </group>
@@ -278,7 +285,8 @@
                                     <field name="loyalty_status"/>
                                 </group>
                                 <group string="Insurance">
-                                    <field name="insurance_company_id"/>
+                                    <field name="insurance_company_id"
+                                           context="{'default_is_insurance_company': True, 'default_is_patient': False, 'default_company_type': 'company'}"/>
                                     <field name="insurance_policy_no"/>
                                     <field name="insurance_valid_until"/>
                                     <field name="insurance_notes"/>
@@ -427,20 +435,6 @@
                             </field>
                         </group>
                     </group>
-                    <group>
-                        <group>
-                            <field name="email" string="ელ. ფოსტა"/>
-                            <field name="street" string="მისამართი"/>
-                            <field name="company_name"
-                                   string="სამუშაო ადგილი"/>
-                        </group>
-                        <group>
-                            <field name="insurance_company_id"
-                                   string="დაზღვევა"/>
-                            <field name="insurance_policy_no"
-                                   string="პოლისის №"/>
-                        </group>
-                    </group>
                     <group string="უცხო ქვეყნის მოქალაქე" invisible="not is_foreign">
                         <group>
                             <field name="nationality_country_id" string="მოქალაქეობა"/>
@@ -451,6 +445,35 @@
                             <field name="address_latin"
                                    string="მისამართი (ლათინურად)"/>
                         </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="email" string="ელ. ფოსტა"/>
+                            <field name="street" string="მისამართი"/>
+                            <field name="company_name"
+                                   string="სამუშაო ადგილი"/>
+                        </group>
+                        <group>
+                            <field name="insurance_company_id"
+                                   string="დაზღვევა"
+                                   context="{'default_is_insurance_company': True, 'default_is_patient': False, 'default_company_type': 'company'}"/>
+                            <field name="insurance_policy_no"
+                                   string="პოლისის №"/>
+                        </group>
+                    </group>
+                    <group string="ჯანმრთელობა">
+                        <group>
+                            <field name="is_pregnant" string="ორსულობა"
+                                   invisible="gender != 'female'"/>
+                        </group>
+                        <field name="allergy_ids" string="ალერგიულობა" colspan="2">
+                            <list editable="bottom">
+                                <field name="allergy_type" string="ტიპი"/>
+                                <field name="name" string="ალერგენი"/>
+                                <field name="reaction" string="რეაქცია"/>
+                                <field name="severity" string="სიმძიმე"/>
+                            </list>
+                        </field>
                     </group>
                 </sheet>
             </form>

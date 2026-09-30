@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-17, commit: 677c4d3 -->
+<!-- last-synced: 2026-09-30, commit: 506b4f4 -->
 # Clinic — project notes for Claude
 
 ## Platform
@@ -41,6 +41,7 @@
   siblings; `record.update` m2o values are `{id, display_name}` OBJECTS (tuples
   silently dropped); custom form dialogs go through a view WIDGET + FormViewDialog,
   never `form_view_ref` on the field context (it hijacks the internal link) — D-23.
+- A Many2one's `context=` on the PYTHON field is ignored by the web client — put it in the view.
 - Form compiler drops class attrs on `<sheet>` — scope CSS via an invisible marker
   div + `:has()` (D-21). Odoo 19 renames: ir.actions.server `group_ids`; readonly
   list fields need `force_save="1"`; domain always-false trick `(1,'=',0)` rejected —
@@ -64,6 +65,7 @@
 - Package: `tar --force-local -czf module.tgz -C <repo> --exclude='__pycache__' --exclude='patient-card-ui' clinic_patient_card`
 - Ship: `scp module.tgz fmg@192.168.0.235:/tmp/clinic_module.tgz`, extract to `/opt/odoo19/addons/`
 - Upgrade: `docker exec odoo19-odoo-1 odoo -d odoo -u clinic_patient_card --stop-after-init --no-http --db_password=<local memory>`
+- Windows: no sshpass, `pscp` times out — ship via `cat m.tgz | plink -batch -pw <pw> host "cat > /tmp/clinic_module.tgz"`.
 - Restart: `cd /opt/odoo19 && docker compose restart odoo` · Logs: `docker logs -f odoo19-odoo-1`
 - Smoke tests: JSON-RPC via scratchpad node script → `http://192.168.0.235:9494/jsonrpc`
   (host `tfs.fmgsoft.ge:9494` works without VPN; SSH needs VPN).

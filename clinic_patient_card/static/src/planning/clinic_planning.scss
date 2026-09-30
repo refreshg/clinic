@@ -659,6 +659,7 @@
             background: rgba(255, 255, 255, .92); color: #4650c9;
             font-size: 12px; font-weight: 800; line-height: 20px;
             display: none;
+            img { width: 22px; height: 22px; display: block; pointer-events: none; }
             &:hover { background: #fff; transform: scale(1.08); }
         }
         &:hover .cp_openpage { display: block; }

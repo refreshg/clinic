@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Insurance companies operating in Georgia — pre-loaded so the registration
+     form has them to pick. noupdate: edits/additions in the UI are kept. -->
+<odoo noupdate="1">
+    <record id="insurer_aldagi" model="res.partner">
+        <field name="name">ალდაგი</field>
+        <field name="company_type">company</field>
+        <field name="is_company" eval="True"/>
+        <field name="is_insurance_company" eval="True"/>
+        <field name="is_patient" eval="False"/>
+    </record>
+    <record id="insurer_gpi" model="res.partner">
+        <field name="name">ჯი პი აი ჰოლდინგი (GPI Holding)</field>
+        <field name="company_type">company</field>
+        <field name="is_company" eval="True"/>
+        <field name="is_insurance_company" eval="True"/>
+        <field name="is_patient" eval="False"/>
+    </record>
+    <record id="insurer_ardi" model="res.partner">
+        <field name="name">არდი დაზღვევა</field>
+        <field name="company_type">company</field>
+        <field name="is_company" eval="True"/>
+        <field name="is_insurance_company" eval="True"/>
+        <field name="is_patient" eval="False"/>
+    </record>
+    <record id="insurer_imedi_l" model="res.partner">
+        <field name="name">იმედი L</field>
+        <field name="company_type">company</field>
+        <field name="is_company" eval="True"/>
+        <field name="is_insurance_company" eval="True"/>
+        <field name="is_patient" eval="False"/>
+    </record>
+    <record id="insurer_tbc" model="res.partner">
+        <field name="name">თიბისი დაზღვევა</field>
+        <field name="company_type">company</field>
+        <field name="is_company" eval="True"/>
+        <field name="is_insurance_company" eval="True"/>
+        <field name="is_patient" eval="False"/>
+    </record>
+    <record id="insurer_irao" model="res.partner">
+        <field name="name">ირაო</field>
+        <field name="company_type">company</field>
+        <field name="is_company" eval="True"/>
+        <field name="is_insurance_company" eval="True"/>
+        <field name="is_patient" eval="False"/>
+    </record>
+    <record id="insurer_psp" model="res.partner">
+        <field name="name">პსპ დაზღვევა</field>
+        <field name="company_type">company</field>
+        <field name="is_company" eval="True"/>
+        <field name="is_insurance_company" eval="True"/>
+        <field name="is_patient" eval="False"/>
+    </record>
+</odoo>

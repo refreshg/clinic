@@ -33,10 +33,12 @@ class CalendarEvent(models.Model):
         "clinic.direction", string="Direction", index=True,
     )
     # Link to the family member the visit relates to (e.g. parent booking for
-    # a child) — choices come from the patient's linked family profiles.
+    # a child). Any existing clinic patient can be picked (their record is
+    # the data); the pick is remembered on the patient's family list, and
+    # "Create" makes a new patient.
     family_link_id = fields.Many2one(
         "res.partner", string="Family Member Link",
-        domain="[('id', 'in', family_member_domain_ids)]",
+        domain="[('is_patient', '=', True), ('id', '!=', patient_id)]",
     )
     family_member_domain_ids = fields.Many2many(
         "res.partner", compute="_compute_family_member_domain",
@@ -539,7 +541,23 @@ class CalendarEvent(models.Model):
                     fields.Datetime.to_datetime(vals["start"]),
                     vals.get("stop") and fields.Datetime.to_datetime(vals["stop"]),
                 )
-        return super().create(vals_list)
+        events = super().create(vals_list)
+        events._clinic_remember_family_link()
+        return events
+
+    def _clinic_remember_family_link(self):
+        """Keep the chosen family member on BOTH patients' family lists."""
+        for ev in self:
+            link, patient = ev.family_link_id, ev.patient_id
+            if not (link and patient) or link == patient:
+                continue
+            # a family member picked on a visit is a clinic client too
+            if not link.is_patient:
+                link.sudo().is_patient = True
+            if link not in patient.family_member_ids:
+                patient.sudo().family_member_ids = [(4, link.id)]
+            if patient not in link.family_member_ids:
+                link.sudo().family_member_ids = [(4, patient.id)]
 
     # States in which a start/duration change counts as a visible correction.
     _CLINIC_TRACK_STATES = ("booked", "confirmed", "arrived", "in_progress")
@@ -578,6 +596,8 @@ class CalendarEvent(models.Model):
                 ):
                     dured_ids.append(ev.id)
         res = super().write(vals)
+        if "family_link_id" in vals:
+            self._clinic_remember_family_link()
         if resched_ids or dured_ids:
             flagger = self.with_context(clinic_flagging=True)
             if resched_ids:

@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-17, commit: 677c4d3 -->
+<!-- last-synced: 2026-09-30, commit: 506b4f4 -->
 # Architecture — clinic_patient_card
 
 ## Components
@@ -15,6 +15,9 @@
 | Global form buttons | `static/src/clinic_form_buttons.xml` | web.FormStatusIndicator extension: labelled Save/Discard, dirty-gated (D-17) |
 | Doctor retail requests | `models/sale_order.py` (is_clinic_retail) | doctor drafts a sale → admin approve (auto-invoice) / reject with visible comment |
 | Planning board | `static/src/planning/` (OWL, tag `clinic_planning`) | 10-min day grid per dentist, drag-to-size booking, popup visit form, off-hours hatch, Reserve panel, history/cancelled buttons |
+| Patients live search | `static/src/live_search/` | opt-in SearchBar patch: matching patients in the dropdown while typing, click opens the card (D-25) |
+| Gender cards | `static/src/gender_widget/` | avatar-card picker widget for `gender` (form + quick registration) |
+| Family link hook | `models/clinic_appointment.py` `_clinic_remember_family_link` | two-way family_member_ids + patient flag on visit save (D-24) |
 | Live alerts | `static/src/clinic_arrived_service.js` | bus subscriber + WebAudio chimes for 6 channels |
 | Supply Shop v2.1 | `static/src/shop/` + `models/purchase_order.py` + `models/clinic_shop.py` | clinic buys: banner slots+links, category sections (any-depth subcats), strips, wishlist, ⇄ compare tray, repeat order, localStorage cart persistence → cart → 1 RFQ/vendor + mirror SO |
 | Supplier warehouse | `models/clinic_supplier_stock.py` + `wizard/clinic_supplier_move.py` | per-supplier location pair + shelves; count/Apply, Move wizard, ship-at-In-Transit, scoped My Warehouse/Locations/Transfers menus (D-19) |

@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-09-17, commit: 677c4d3 -->
+<!-- last-synced: 2026-09-30, commit: 506b4f4 -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -194,6 +194,16 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | calendar.event | observer_ids (M2M res.users), referral_user_id, consent_ids/consent_signed (compute), clinic_case_type (planned/urgent), clinic_complaint_ids (M2M) + clinic_complaints_other + clinic_complaints (anamnesis), clinic_obj_* ×7 (bite/mucosa/periodontium/pocket depth/plaque/exam plan/other), clinic_exam_results, clinic_prescription→prescription_ids (o2m), clinic_epicrisis; methods: clinic_visit_page_data (one-round-trip page payload), action_open_visit_page, action_open_consents, clinic_visit_register_payment (cash+terminal must equal the discounted total; reuses _create_invoice_from_procedures; sets paid) |
 | clinic.procedure.history | icd10_id, currency_id, price_unit (defaults from product lst_price), discount_percent, amount_total (stored compute qty·price·(1−disc%)) |
 
+### 2026-09-30 additions (morning commit 506b4f4 + uncommitted afternoon work)
+| model | additions |
+|---|---|
+| res.partner | `_compute_display_name`: a patient with a parent (workplace) shows their OWN name — base's "Company, Person" prefix dropped (the `clinic_show_ids` ` · vat · phone` suffix is kept); `company_type` switch `invisible="is_patient"` on the form |
+| res.partner (quick form) | foreign-citizen block (nationality, name/address latin) sits directly under the required names/phones; new "ჯანმრთელობა" group: `is_pregnant` (female only) + inline `allergy_ids` list; `insurance_company_id` carries a VIEW context (`default_is_insurance_company`, `default_is_patient:False`, `default_company_type:company`) on all 3 placements |
+| calendar.event | `family_link_id` domain = any patient except the booked one (was: only linked family); m2o carries `form_view_ref` = quick form + `default_is_patient`; `patient_id`: `no_quick_create`, ctx `default_is_patient`; done/paid hides new-patient/slot buttons, appointment_type, family link, referral, dentist, assistant, room |
+| clinic.patient.allergy | ACL row: `group_clinic_admin` rwcu (was doctor-only writes) |
+| data | `data/clinic_insurers_seed.xml` — 7 Georgian insurers (`is_insurance_company`, noupdate), list from memory, clinic to confirm |
+| static | `gender_widget/` (clinic_gender_icons, avatar cards), `live_search/clinic_live_search.js`, `img/tooth-sparkle.svg` (planning open-page button) |
+
 ## Business logic (trigger → condition → action; Standard coverage per row)
 | # | trigger | condition | action | std coverage |
 |---|---|---|---|---|
@@ -232,10 +242,18 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | B33 | supplier warehouse chain | D-19 | count (std quant Apply) → In Transit ships to the transit shelf → clinic receipt drains transit (property_stock_supplier) → returns land back in their warehouse; shop/pre-order qty = SUPPLIER's own stock | std locations/quants/pickings + thin glue (D-19) |
 | B34 | received order without a rating | admin | it queues in Stock → შესაფასებელი (inline ★ columns); a rated row leaves the tray | custom list over std POs |
 | B35 | shop compare tray | user picks ⇄ (max 4) | side-by-side table (price/vendor+★/delay/brand/category/stock) with per-column add-to-cart; cart+compare persist per-user in localStorage | custom UI |
+| B36 | create/write on calendar.event | `family_link_id` in vals | `_clinic_remember_family_link`: link → patient.family_member_ids AND patient → link.family_member_ids (sudo); a non-patient link is flagged `is_patient` (2026-09-30, D-24) | custom (std partner has no family link) |
+| B37 | „მოსული" (`action_arrive`) on a clinic visit | — | `_check_patient_data_complete`: birth date + personal no. required (506b4f4) | custom guard |
+| B38 | planning board drag | visit is started/done/paid/cancelled | drag blocked, cursor shows grab vs default (506b4f4) | custom (board is OWL) |
+| B39 | visit page opens | user in `group_clinic_admin` (payload `is_admin`) | admin: no Procedures tab, opens on Billing (itemised procedure table); doctor: no Billing tab (506b4f4) | custom OWL |
+| B40 | typing in the Patients search bar (action ctx `clinic_live_search`) | query non-empty, after 200 ms | patients matching name/phone/email/vat (max 8) REPLACE the generic "Search X for" entries; click opens the card; no match → generic entries stay (D-25) | custom SearchBar patch — std needs Enter |
 
 ## Standard-first check
 | requirement | standard feature checked | covers? | if no → custom + ref |
 |---|---|---|---|
+| family link between patients | res.partner parent_id/child_ids | no (company/address hierarchy) | `family_member_ids` M2m + B36 hook (D-24) |
+| search-as-you-type | web SearchBar | no (needs Enter; per-field entries) | SearchBar patch, opt-in by action ctx (D-25) |
+| gender picker | radio/selection widget | partial | avatar-card widget (design handoff, 506b4f4) |
 | appointments | Enterprise `appointment`/`planning` | no (Community) | calendar.event + clinic_state (D-8) |
 | procedures/price | product.product service | yes | flag is_clinic_procedure only (D-9) |
 | insurance companies | res.partner | yes | flag is_insurance_company (D-9) |
@@ -292,7 +310,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | Supply Shop v2 | `static/src/shop/` (rewritten) | banner carousel, category tiles+chips, brand filter, ⭐/🆕/🔥 strips, ♥ wishlist, 🔁 repeat order, similar strip, vendor comparison table with ★ |
 | Shop Banners | `view_clinic_shop_banner_list/form`, menu Configuration→Shop Banners (admin) | image upload |
 | Patients menu | `action_clinic_patients`, `menu_clinic_patients` | Clinic → Patients: kanban/list/form over is_patient (admin+doctor), default_is_patient ctx — reviewer could not find the card via Contacts |
-| Patient quick registration | `view_clinic_patient_quick_form` | Dentos popup: standalone foreign-citizen toggle row, split names, gender radio, birthdate, personal/passport no., primary + extra phones (patient_phone_ids inline), insurance + policy, latin block; opened ONLY from the booking's ➕ widget (a form_view_ref on the field hijacked every open — D-23) |
+| Patient quick registration | `view_clinic_patient_quick_form` | Dentos popup: standalone foreign-citizen toggle row, split names, gender avatar cards (506b4f4), birthdate, personal/passport no., primary + extra phones (patient_phone_ids inline), insurance + policy, latin block; opened ONLY from the booking's ➕ widget (a form_view_ref on the field hijacked every open — D-23) |
 | Consent sheets | `view_clinic_consent_form/list` | one form serves both types; personal-data checkboxes + marketing radio; medical signature pad; footer confirm buttons chain the two sheets |
 | Visit working page (OWL) | tag `clinic_visit_page`, `static/src/visit_page/` | Dentos layout: header info cards, ← calendar pill, tabs (Procedures/Billing; materials + EHR placeholders), left medical sections with red/green dots — ჩივილები (case type + catalog chips + other + anamnesis), objective grid ×7, exam results & epicrisis text, prescriptions table, allergies table (writes clinic.patient.allergy on the PATIENT); FDI odontogram → ICD-10 → priced procedure → add; per-row discount %, status, delete; billing: live დავალიანება card, cash/card inputs, გადახდა + ვიზიტის დასრულება |
 | Booking popup (Dentos look) | same visit form inherit | attendees row hidden for clinic; ALL lifecycle chrome (12 buttons + statusbar) hidden while unsaved (`not id or …`); ➕ new-patient widget + slot finder; green save button via .o_clinic_visit_body marker CSS; patient m2o no_create + normal internal link (full card) |
@@ -317,6 +335,8 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   (r/w/c), sale.order.line (rwcu), read-only sale.order.template(+line), quotation.document,
   and READ-ONLY stock.move / stock.move.line / stock.picking / stock.quant /
   account.move / account.move.line (sale_stock + invoicing computes fire on SO save).
+- `clinic.patient.allergy`: user read; doctor rwcu; admin rwcu (added 2026-09-30 so the
+  registration form can save allergies).
 - Supplier product/template rules are WRITE-scoped only since v19.0.53.22 (D-20): reading
   any product never crashes their pages; My Inventory is a separately scoped action.
   Supplier location rule: edit own subtree only. Server actions behind supplier menus
@@ -348,6 +368,18 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   categories (`data/clinic_shop_seed.xml`, noupdate). v19.0.53 needs nothing special.
 
 ## Drift log
+- 2026-09-30: a Many2one's `context=` declared on the PYTHON field is NOT sent by the web
+  client — only the view's `context` attr is. The first "Create insurer" fix (Python
+  context) was a no-op until the context moved into the views.
+- 2026-09-30: D-23 partly superseded (D-24, user request): booking `patient_id` is no longer
+  `no_create` (Create-and-edit is back, quick Create off); `family_link_id` again uses
+  `form_view_ref` (registration form) — side effect: its internal link may open the short
+  form for an existing member (not verified in the browser).
+- 2026-09-30: patient display names no longer carry the workplace prefix; the suffix
+  ` · vat · phone` appears only in clinic pickers.
+- 2026-09-30: the "individual/company" switch is hidden on patient forms (it stays for
+  insurers/vendors); whether a patient may be a company is an open clinic question (PRD §9).
+- 2026-09-30: this SPEC's title still says whole-module v19.0.55.1.0 — the real version is far ahead.
 - 2026-09-17: OWL gotchas that broke the visit page: template expressions have no JS
   globals (`String()` → ctx.String crash); `t-model` with a computed key generates
   invalid JS; comments between t-if/t-elif siblings break the chain.
