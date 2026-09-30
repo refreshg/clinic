@@ -95,7 +95,7 @@
                         <field name="vat" string="Personal No." placeholder="digits only"/>
                         <field name="birthdate" placeholder="dd/mm/yyyy — can be typed"/>
                         <field name="age"/>
-                        <field name="gender"/>
+                        <field name="gender" widget="clinic_gender_icons"/>
                         <field name="parent_id" string="სამუშაო ადგილი"
                                invisible="not is_patient"/>
                     </group>
@@ -396,39 +396,49 @@
                         <field name="is_foreign" widget="boolean_toggle" nolabel="1"/>
                         <b>უცხო ქვეყნის მოქალაქე</b>
                     </div>
+                    <!-- Gender picker — full width, above the two-column grid -->
+                    <field name="is_patient" invisible="1"/>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <label for="gender" string="სქესი"/>
+                        <field name="gender" widget="clinic_gender_icons" nolabel="1"/>
+                    </div>
                     <group>
                         <group>
-                            <field name="is_patient" invisible="1"/>
                             <field name="first_name" required="1"
-                                   string="პაციენტის სახელი"/>
+                                   string="სახელი"/>
                             <field name="last_name" required="1"
-                                   string="პაციენტის გვარი"/>
-                            <field name="gender" widget="radio"
-                                   options="{'horizontal': true}" string="სქესი"/>
-                            <field name="birthdate" string="დაბადების თარიღი"/>
-                            <field name="vat" string="პირადი ნომერი"
+                                   string="გვარი"/>
+                            <field name="birthdate" string="დაბ. თარიღი"/>
+                            <field name="vat" string="პირადი №"
                                    invisible="is_foreign"/>
-                            <field name="vat" string="პასპორტის ნომერი"
+                            <field name="vat" string="პასპორტის №"
                                    invisible="not is_foreign"/>
                         </group>
                         <group>
                             <field name="phone" required="1"
-                                   string="ტელეფონის ნომერი (ძირითადი)"/>
+                                   string="ტელეფონი (ძირითადი)"/>
                             <field name="patient_phone_ids"
-                                   string="ნომერი (დამატებითი)">
+                                   string="ტელეფონი (დამატებითი)"
+                                   style="max-height: 80px; overflow-y: auto;">
                                 <list editable="bottom">
                                     <field name="phone"/>
                                     <field name="phone_type" optional="hide"/>
                                 </list>
                             </field>
-                            <field name="email" string="ელექტრონული ფოსტა"/>
-                            <field name="street" string="საცხოვრებელი მისამართი"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="email" string="ელ. ფოსტა"/>
+                            <field name="street" string="მისამართი"/>
                             <field name="company_name"
-                                   string="მიმდინარე სამუშაო ადგილი"/>
+                                   string="სამუშაო ადგილი"/>
+                        </group>
+                        <group>
                             <field name="insurance_company_id"
-                                   string="სადაზღვევო კომპანია"/>
+                                   string="დაზღვევა"/>
                             <field name="insurance_policy_no"
-                                   string="სადაზღვევო პოლისის ნომერი"/>
+                                   string="პოლისის №"/>
                         </group>
                     </group>
                     <group string="უცხო ქვეყნის მოქალაქე" invisible="not is_foreign">

@@ -1,0 +1,74 @@
+.o_clinic_gender_icons {
+    .o_gender_card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 130px;
+        padding: 14px 12px 10px;
+        border: 2px solid #e5e8ec;
+        border-radius: 14px;
+        background: #fff;
+        cursor: pointer;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        user-select: none;
+
+        &:hover:not(.active) {
+            border-color: #c5c9ce;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+
+        // checkmark badge — hidden by default
+        .o_gender_check {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        &.active .o_gender_check {
+            display: flex;
+        }
+
+        .o_gender_img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 8px;
+            pointer-events: none;
+        }
+
+        .o_gender_label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        // Male — purple theme
+        &.o_gender_male.active {
+            border-color: #7b6fd6;
+            box-shadow: 0 0 0 1px #7b6fd6;
+            .o_gender_check { background: #7b6fd6; }
+        }
+
+        // Female — pink theme
+        &.o_gender_female.active {
+            border-color: #f07aaa;
+            box-shadow: 0 0 0 1px #f07aaa;
+            .o_gender_check { background: #f07aaa; }
+        }
+
+        // Other — gray theme
+        &.o_gender_other.active {
+            border-color: #8a8a8a;
+            box-shadow: 0 0 0 1px #8a8a8a;
+            .o_gender_check { background: #8a8a8a; }
+        }
+    }
+}

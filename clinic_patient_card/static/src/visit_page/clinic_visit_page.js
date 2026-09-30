@@ -94,6 +94,10 @@ export class ClinicVisitPage extends Component {
     async load() {
         this.state.data = await this.orm.call(
             "calendar.event", "clinic_visit_page_data", [this.visitId]);
+        // Admin defaults to billing tab (procedures tab hidden for admin).
+        if (this.state.data && this.state.data.is_admin && this.state.tab === "procedures") {
+            this.state.tab = "billing";
+        }
     }
 
     // ---- header helpers -------------------------------------------------

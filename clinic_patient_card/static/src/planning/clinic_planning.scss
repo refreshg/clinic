@@ -275,6 +275,28 @@
                 }
             }
 
+            /* event-drag ghost (reschedule preview) */
+            .cp_evdrag_ghost {
+                position: absolute;
+                left: 2px;
+                right: 2px;
+                box-sizing: border-box;
+                pointer-events: none;
+                z-index: 5;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                .cp_drag_lbl {
+                    font-size: 10px;
+                    font-weight: 700;
+                    color: #333;
+                    background: rgba(255, 255, 255, 0.9);
+                    border-radius: 6px;
+                    padding: 1px 6px;
+                    white-space: nowrap;
+                }
+            }
+
             /* dispensary control visits stand out (reviewer: distinct colour) */
             .cp_event.cp_dispensary {
                 outline: 2px dashed #b9770a;

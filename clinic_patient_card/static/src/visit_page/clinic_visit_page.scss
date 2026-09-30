@@ -33,7 +33,9 @@
             background: #eef0f3; color: #4b5563; font-weight: 600;
             &.active { background: #28a745; color: #fff; }
             &.disabled { opacity: .45; cursor: not-allowed; }
-            &.cvp_visitform { margin-left: auto; background: #fff;
+            &.cvp_visitform { background: #fff;
+                border: 1px solid #e5e8ec; }
+            &.cvp_patientbtn { background: #fff;
                 border: 1px solid #e5e8ec; }
         }
     }
@@ -113,6 +115,19 @@
     }
 
     .cvp_bill_cards { display: flex; gap: 12px; flex-wrap: wrap; }
+}
+
+/* D4 — billing procedure breakdown table */
+.clinic_visit_page .cvp_bill_table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 4px;
+    font-size: 13px;
+    th { background: #f4f3fa; padding: 8px 10px; font-weight: 600;
+         border-bottom: 2px solid #e0dff0; white-space: nowrap; }
+    td { padding: 6px 10px; border-bottom: 1px solid #eee; }
+    tfoot td { border-top: 2px solid #c5c3e0; border-bottom: none;
+               padding-top: 8px; font-size: 15px; }
 }
 
 /* D4 — billing controls */

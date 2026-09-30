@@ -142,6 +142,11 @@
                                          class="cp_drag" t-att-style="dragStyle(d)">
                                         <span class="cp_drag_lbl" t-esc="dragLabel(d)"/>
                                     </div>
+                                    <!-- event drag ghost (reschedule preview) -->
+                                    <div t-if="state.evDrag and state.evDrag.dentistId === d.id"
+                                         class="cp_evdrag_ghost" t-att-style="evDragGhostStyle(d)">
+                                        <span class="cp_drag_lbl" t-esc="evDragGhostLabel(d)"/>
+                                    </div>
                                     <!-- closed (non-working) time is greyed out -->
                                     <t t-foreach="offZones" t-as="z" t-key="z_index">
                                         <div class="cp_offzone"
@@ -151,7 +156,8 @@
                                         <div t-attf-class="cp_event {{ ev.is_dispensary ? 'cp_dispensary' : '' }} {{ sizeClass(ev) }}"
                                              t-att-style="eventStyle(ev)"
                                              t-att-title="cardTooltip(ev)"
-                                             t-on-click.stop="() => this.openEvent(ev)">
+                                             t-on-click.stop="() => this.openEvent(ev)"
+                                             t-on-mousedown.stop="(mev) => this.onEventDown(ev, mev)">
                                             <button class="cp_openpage" title="ვიზიტის გვერდი"
                                                     t-on-click.stop="() => this.openVisitPage(ev)">➜</button>
                                             <span t-if="ev.consent_signed" class="cp_consent"

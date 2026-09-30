@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onWillStart } from "@odoo/owl";
+import { Component, useState, onWillStart, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { deserializeDateTime, serializeDateTime } from "@web/core/l10n/dates";
@@ -51,8 +51,13 @@ export class ClinicPlanning extends Component {
             drag: null,           // {d, s, e} — drag-selected slot range
             patientVats: {},      // partner_id -> personal no. (card line)
             patientPhones: {},    // partner_id -> phone (hover tooltip)
+            evDrag: null,         // {ev, dentistId, slot} — event being dragged
         });
+        // Bound handlers for document-level event-drag listeners.
+        this._onEvDragMove = this._onEvDragMove.bind(this);
+        this._onEvDragUp = this._onEvDragUp.bind(this);
         onWillStart(() => this.load());
+        onWillUnmount(() => this._cleanupEvDrag());
     }
 
     // ---- date helpers (local, no UTC drift) ----
@@ -252,7 +257,8 @@ export class ClinicPlanning extends Component {
         const top = Math.max(0, (s - this.state.startHour) * HOUR_PX);
         const height = Math.max(30, (e - s) * HOUR_PX - 3);
         const hex = this._colorHex(ev);
-        return `top:${top}px;height:${height}px;background:${hex}1f;border-left:3px solid ${hex};`;
+        const cursor = this.isEventLocked(ev) ? "default" : "grab";
+        return `top:${top}px;height:${height}px;background:${hex}1f;border-left:3px solid ${hex};cursor:${cursor};`;
     }
     evTime(ev) {
         return `${deserializeDateTime(ev.start).toFormat("HH:mm")} – ${deserializeDateTime(ev.stop).toFormat("HH:mm")}`;
@@ -550,6 +556,108 @@ export class ClinicPlanning extends Component {
         }
         this._openNewVisit(dentist, startHour, endHour);
     }
+    // ---- event drag-and-drop (reschedule by dragging a card) ----
+    onEventDown(ev, mouseEv) {
+        if (mouseEv.button !== 0) return;
+        // Ignore if the ➜ visit-page button was clicked.
+        if (mouseEv.target.closest(".cp_openpage")) return;
+        // Block drag for visits already started or finished.
+        const locked = ["in_progress", "done", "paid", "no_show", "cancelled"];
+        if (locked.includes(ev.clinic_state)) return;
+        mouseEv.preventDefault();
+        mouseEv.stopPropagation();
+        const durationH = this._hourOf(ev.stop) - this._hourOf(ev.start);
+        const durationSlots = Math.round(durationH * 6);
+        this._evDragData = { ev, durationSlots, startY: mouseEv.clientY, moved: false };
+        document.addEventListener("mousemove", this._onEvDragMove);
+        document.addEventListener("mouseup", this._onEvDragUp);
+    }
+    _onEvDragMove(mouseEv) {
+        const dd = this._evDragData;
+        if (!dd) return;
+        // Only start visual drag after 5px movement (prevent accidental drags).
+        if (!dd.moved && Math.abs(mouseEv.clientY - dd.startY) < 5) return;
+        dd.moved = true;
+        // Find which column element the pointer is over.
+        const el = document.elementFromPoint(mouseEv.clientX, mouseEv.clientY);
+        const colEl = el && el.closest(".cp_col");
+        if (!colEl) {
+            this.state.evDrag = null;
+            return;
+        }
+        // Identify the dentist by column index.
+        const cols = [...colEl.parentElement.querySelectorAll(".cp_col")];
+        const colIdx = cols.indexOf(colEl);
+        const dentist = this.shownDentists[colIdx];
+        if (!dentist) { this.state.evDrag = null; return; }
+        const rect = colEl.getBoundingClientRect();
+        const slot = this._slotFromY(mouseEv.clientY - rect.top);
+        this.state.evDrag = {
+            ev: dd.ev,
+            dentistId: dentist.id,
+            slot,
+            durationSlots: dd.durationSlots,
+        };
+    }
+    _onEvDragUp() {
+        const dd = this._evDragData;
+        this._cleanupEvDrag();
+        if (!dd || !dd.moved) return;
+        const edrag = this.state.evDrag;
+        this.state.evDrag = null;
+        if (!edrag) return;
+        this._dropEvent(edrag);
+    }
+    _cleanupEvDrag() {
+        this._evDragData = null;
+        document.removeEventListener("mousemove", this._onEvDragMove);
+        document.removeEventListener("mouseup", this._onEvDragUp);
+    }
+    async _dropEvent(edrag) {
+        const { ev, dentistId, slot, durationSlots } = edrag;
+        const startHour = this._slotHour(slot);
+        const endHour = this._slotHour(slot + durationSlots);
+        const [y, mo, d] = this.state.date.split("-").map(Number);
+        const day = DateTime.local(y, mo, d);
+        const toUTC = (hour) => {
+            const dt = day.plus({ minutes: Math.round(hour * 60) });
+            return dt.isValid ? serializeDateTime(dt) : false;
+        };
+        const start = toUTC(startHour);
+        const stop = toUTC(endHour);
+        if (!start || !stop) return;
+        const vals = { start, stop };
+        if (ev.dentist_id[0] !== dentistId) {
+            vals.dentist_id = dentistId;
+            vals.user_id = dentistId;
+        }
+        try {
+            await this.orm.write("calendar.event", [ev.id], vals);
+            await this.load();
+        } catch (e) {
+            this.notification.add(e.data?.message || e.message || "Error", { type: "danger" });
+        }
+    }
+    evDragGhostStyle(dentist) {
+        const ed = this.state.evDrag;
+        if (!ed || ed.dentistId !== dentist.id) return "";
+        const top = ed.slot * (HOUR_PX / 6);
+        const height = ed.durationSlots * (HOUR_PX / 6);
+        const hex = this._colorHex(ed.ev);
+        return `top:${top}px;height:${height}px;background:${hex}40;border:2px dashed ${hex};border-radius:6px;`;
+    }
+    isEventLocked(ev) {
+        const locked = ["in_progress", "done", "paid", "no_show", "cancelled"];
+        return locked.includes(ev.clinic_state);
+    }
+    evDragGhostLabel(dentist) {
+        const ed = this.state.evDrag;
+        if (!ed || ed.dentistId !== dentist.id) return "";
+        const s = this._slotHour(ed.slot);
+        const e = this._slotHour(ed.slot + ed.durationSlots);
+        return `${this._fmtHour(s)} – ${this._fmtHour(e)}`;
+    }
+
     dragStyle(dentist) {
         const drag = this.state.drag;
         if (!drag || drag.d !== dentist.id) {

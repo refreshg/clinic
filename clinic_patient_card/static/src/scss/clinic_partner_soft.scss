@@ -167,3 +167,20 @@ div.o_clinic_soft { display: none !important; }
     }
     /* chatter side stays as-is */
 }
+
+/* ============================================================
+   Dialog footer: rename "გაუქმება" (Discard) → "დახურვა" (Close)
+   Targets the secondary/cancel button in modal dialogs.
+   ============================================================ */
+.modal .modal-footer .btn-secondary:not(.btn-primary),
+.o_dialog .modal-footer .btn-secondary:not(.btn-primary) {
+    font-size: 0 !important;
+    line-height: 1;
+
+    > * { font-size: 14px; }
+
+    &::after {
+        content: "დახურვა";
+        font-size: 14px;
+    }
+}

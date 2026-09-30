@@ -41,17 +41,20 @@
         <!-- ===== tabs ===== -->
         <div class="cvp_tabs">
             <button class="cvp_back" t-on-click="backToCalendar">← კალენდარი</button>
+            <button class="cvp_visitform" t-on-click="openVisitForm">✎ ვიზიტის ფორმა</button>
+            <button class="cvp_patientbtn" t-on-click="openPatient">🧑 პაციენტის ანკეტა</button>
             <button t-att-class="state.tab === 'procedures' ? 'active' : ''"
-                    t-on-click="() => state.tab = 'procedures'">პროცედურები</button>
+                    t-on-click="() => state.tab = 'procedures'"
+                    t-if="!state.data.is_admin">პროცედურები</button>
             <button t-att-class="state.tab === 'billing' ? 'active' : ''"
-                    t-on-click="() => state.tab = 'billing'">ანგარიშსწორება</button>
+                    t-on-click="() => state.tab = 'billing'"
+                    t-if="state.data.is_admin">ანგარიშსწორება</button>
             <button class="disabled" title="მალე">გახარჯული მასალები</button>
             <button class="disabled" title="მალე">EHR სინქრონიზაცია</button>
-            <button class="cvp_visitform" t-on-click="openVisitForm">✎ ვიზიტის ფორმა</button>
         </div>
 
         <!-- ===== procedures tab ===== -->
-        <div class="cvp_body" t-if="state.tab === 'procedures'">
+        <div class="cvp_body" t-if="state.tab === 'procedures' and !state.data.is_admin">
             <!-- left: medical sections -->
             <div class="cvp_side">
                 <div class="cvp_sside_title">მკურნალობა</div>
@@ -328,14 +331,50 @@
         </div>
 
         <!-- ===== billing tab (D4) ===== -->
-        <div class="cvp_body cvp_billing" t-if="state.tab === 'billing'">
+        <div class="cvp_body cvp_billing" t-if="state.tab === 'billing' and state.data.is_admin">
             <div class="cvp_main">
                 <h5>პროცედურების ანგარიშსწორება</h5>
                 <div class="text-danger small mb-2">ფინანსური ინფორმაცია — ანგარიშსწორების შემდეგ რედაქტირება აღარ შეიძლება!</div>
-                <div class="cvp_bill_cards">
-                    <div class="cvp_card"><div class="cvp_ctitle">გადასახდელი თანხა</div>
-                        <div class="cvp_amount" t-esc="totalAmount + ' ₾'"/></div>
-                    <div class="cvp_card"><div class="cvp_ctitle">გადახდილი თანხა</div>
+
+                <!-- Procedure breakdown table -->
+                <table class="cvp_bill_table" t-if="state.data.procedures.length">
+                    <thead>
+                        <tr>
+                            <th>კბილი</th>
+                            <th>პროცედურა</th>
+                            <th class="text-center">რაოდ.</th>
+                            <th class="text-end">ფასი</th>
+                            <th class="text-end">ფასდაკ. %</th>
+                            <th class="text-end">ჯამი</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="state.data.procedures" t-as="proc" t-key="proc.id">
+                            <tr>
+                                <td t-esc="proc.tooth || '—'"/>
+                                <td t-esc="proc.procedure_id ? proc.procedure_id[1] : (proc.name || '—')"/>
+                                <td class="text-center" t-esc="proc.qty || 1"/>
+                                <td class="text-end" t-esc="(proc.price_unit || 0).toFixed(2)"/>
+                                <td class="text-end" t-esc="proc.discount_percent ? proc.discount_percent + '%' : '—'"/>
+                                <td class="text-end fw-bold" t-esc="(proc.amount_total || 0).toFixed(2)"/>
+                            </tr>
+                        </t>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="5" class="text-end fw-bold">სულ:</td>
+                            <td class="text-end fw-bold" t-esc="totalAmount.toFixed(2) + ' ₾'"/>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div t-if="!state.data.procedures.length" class="text-muted mb-3">
+                    პროცედურები ჯერ არ არის დამატებული
+                </div>
+
+                <div class="cvp_bill_cards mt-3">
+                    <div class="cvp_card"><div class="cvp_ctitle">გადასახდელი</div>
+                        <div class="cvp_amount" t-esc="totalAmount.toFixed(2) + ' ₾'"/></div>
+                    <div class="cvp_card"><div class="cvp_ctitle">გადახდილი</div>
                         <div class="cvp_amount" t-esc="(state.data.visit.amount_paid || 0) + ' ₾'"/></div>
                     <div class="cvp_card">
                         <div class="cvp_ctitle">ხელზე (₾)</div>

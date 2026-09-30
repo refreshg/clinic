@@ -578,7 +578,7 @@ msgstr "ოჯახური ანამნეზი"
 #. module: clinic_patient_card
 #: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__gender__female
 msgid "Female"
-msgstr "მდედრობითი"
+msgstr "ქალი"
 
 #. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_document__attachment
@@ -887,7 +887,7 @@ msgstr "გადახდა / დავალიანებაში"
 #. module: clinic_patient_card
 #: model:ir.model.fields.selection,name:clinic_patient_card.selection__res_partner__gender__male
 msgid "Male"
-msgstr "მამრობითი"
+msgstr "კაცი"
 
 #. module: clinic_patient_card
 #. odoo-javascript

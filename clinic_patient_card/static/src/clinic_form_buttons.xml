@@ -16,7 +16,7 @@
             <attribute name="class">o_form_button_cancel btn btn-secondary btn-sm px-2 py-1 text-nowrap</attribute>
         </xpath>
         <xpath expr="//button[hasclass('o_form_button_cancel')]/i" position="after">
-            <span class="ms-1">გაუქმება</span>
+            <span class="ms-1">დახურვა</span>
         </xpath>
     </t>
 </templates>

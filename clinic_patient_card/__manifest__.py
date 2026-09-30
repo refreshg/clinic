@@ -50,6 +50,7 @@
     "assets": {
         "web.assets_backend": [
             "clinic_patient_card/static/src/scss/clinic_partner_soft.scss",
+            "clinic_patient_card/static/src/clinic_dialog_discard.js",
             "clinic_patient_card/static/src/clinic_arrived_service.js",
             "clinic_patient_card/static/src/clinic_form_buttons.xml",
             "clinic_patient_card/static/src/planning/clinic_planning.scss",
@@ -64,6 +65,9 @@
             "clinic_patient_card/static/src/supplier_portal/clinic_supplier_portal.scss",
             "clinic_patient_card/static/src/supplier_portal/clinic_supplier_portal.js",
             "clinic_patient_card/static/src/supplier_portal/clinic_supplier_portal.xml",
+            "clinic_patient_card/static/src/gender_widget/clinic_gender_icons.scss",
+            "clinic_patient_card/static/src/gender_widget/clinic_gender_icons.js",
+            "clinic_patient_card/static/src/gender_widget/clinic_gender_icons.xml",
             "clinic_patient_card/static/src/slot_finder/clinic_slot_finder_widget.js",
             "clinic_patient_card/static/src/slot_finder/clinic_new_patient_btn.js",
             "clinic_patient_card/static/src/slot_finder/clinic_new_patient_btn.xml",

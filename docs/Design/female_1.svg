@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160" role="img" aria-label="მდედრობითი">
+  <defs><clipPath id="c"><circle cx="80" cy="80" r="78"/></clipPath></defs>
+  <circle cx="80" cy="80" r="78" fill="#fde7ef"/>
+  <g clip-path="url(#c)">
+    <circle cx="32" cy="36" r="20" fill="#fbd6e3"/>
+    <path d="M44 56c-4 30-6 54 4 76h64c10-22 8-46 4-76z" fill="#5a3a2e"/>
+    <path d="M22 168c0-32 25-52 58-52s58 20 58 52z" fill="#f87ba6"/>
+    <path d="M60 118q20 22 40 0" fill="#fde7ef"/>
+    <rect x="69" y="96" width="22" height="24" rx="9" fill="#e9b692"/>
+    <ellipse cx="80" cy="72" rx="28" ry="31" fill="#f3c9a8"/>
+    <path d="M51 76c-4-30 10-46 30-46 21 0 33 16 28 46-4-16-14-26-30-28-8 12-18 20-28 28z" fill="#5a3a2e"/>
+    <circle cx="80" cy="30" r="13" fill="#5a3a2e"/>
+    <circle cx="69" cy="76" r="3.2" fill="#3a3654"/>
+    <circle cx="91" cy="76" r="3.2" fill="#3a3654"/>
+    <path d="M63 69q5-4 11-1.5M86 67.5q6-2.5 11 1.5" stroke="#5a3a2e" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <path d="M72 88q8 6 16 0" stroke="#c9486f" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="61" cy="85" r="5" fill="#f58aa8" opacity=".45"/>
+    <circle cx="99" cy="85" r="5" fill="#f58aa8" opacity=".45"/>
+    <circle cx="52" cy="92" r="3" fill="#f5c351"/>
+    <circle cx="108" cy="92" r="3" fill="#f5c351"/>
+  </g>
+</svg>

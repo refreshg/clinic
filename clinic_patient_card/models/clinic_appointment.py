@@ -176,7 +176,10 @@ class CalendarEvent(models.Model):
                       "clinic_obj_plaque", "clinic_obj_exam_plan",
                       "clinic_obj_other")
         }
+        is_admin = ev.env.user.has_group(
+            "clinic_patient_card.group_clinic_admin")
         return {
+            "is_admin": is_admin,
             "complaints": {
                 "case_type": ev.clinic_case_type,
                 "ids": ev.clinic_complaint_ids.ids,
@@ -591,6 +594,10 @@ class CalendarEvent(models.Model):
 
     def action_arrive(self):
         # R2/R9 (admin marks arrival) + R10 (notify the dentist).
+        # Guard: birth date + personal no. must be filled before marking arrived.
+        for ev in self:
+            if ev.is_clinic:
+                ev._check_patient_data_complete()
         self.write({"clinic_state": "arrived", "checkin_time": fields.Datetime.now()})
         for ev in self:
             ev._notify_dentist_arrived()

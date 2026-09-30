@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="clinic_patient_card.GenderIcons">
+        <div class="o_clinic_gender_icons d-flex gap-3">
+            <t t-foreach="options" t-as="opt" t-key="opt[0]">
+                <div t-att-class="'o_gender_card o_gender_' + opt[0] + (currentValue === opt[0] ? ' active' : '')"
+                     t-att-title="opt[1]"
+                     t-on-click="() => this.pick(opt[0])">
+                    <div class="o_gender_check">
+                        <i class="fa fa-check"/>
+                    </div>
+                    <img t-att-src="imgSrc(opt[0])"
+                         t-att-alt="opt[1]"
+                         class="o_gender_img"/>
+                    <span class="o_gender_label" t-esc="opt[1]"/>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>
