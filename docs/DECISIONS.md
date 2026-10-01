@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: d4ec77a -->
+<!-- last-synced: 2026-10-01, commit: 67c59a5 -->
 # Decisions (ADR) — clinic_patient_card
 
 Format: Context → Decision → Rejected → Consequences. New custom code requires a D-entry
@@ -253,6 +253,9 @@ dedicated Patients search view (status side panel + filters), and two Clinic men
 xlsxwriter. Download-on-filter-click was NOT built — it would save a file on every click;
 menu items were chosen instead. · Consequences: 57 of 80 patients have no status; the
 standard list Export remains for any other selection.
+**Revised 2026-10-01 (same day, user request):** the menu items and the side panel were dropped; the
+status filters and the Export became buttons in the Patients control panel (`js_class` views,
+`ClinicPatientButtons`, export route kept and extended with `status=all`).
 
 ### D-28: Patient address via standard res.city (new dependency base_address_extended)
 Date 2026-10-01 (uncommitted) · Context: user asked for residence / legal address, a city

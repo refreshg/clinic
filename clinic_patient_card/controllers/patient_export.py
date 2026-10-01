@@ -8,7 +8,7 @@ from odoo import http
 from odoo.http import content_disposition, request
 
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-STATUS_FILE = {"primary": "primary", "unique": "unique"}
+STATUS_FILE = {"primary": "primary", "unique": "unique", "all": "all"}
 HEADER = [
     "პაციენტის ID", "სახელი", "გვარი", "პირადი №", "დაბადების თარიღი",
     "ტელეფონი", "ელ. ფოსტა", "დაზღვევა", "მომართვის წყარო",
@@ -31,10 +31,10 @@ class ClinicPatientExport(http.Controller):
         if status not in STATUS_FILE:
             return request.not_found()
 
-        patients = request.env["res.partner"].search(
-            [("is_patient", "=", True), ("clinic_patient_status", "=", status)],
-            order="name",
-        )
+        domain = [("is_patient", "=", True)]
+        if status != "all":
+            domain.append(("clinic_patient_status", "=", status))
+        patients = request.env["res.partner"].search(domain, order="name")
         referral = dict(
             request.env["res.partner"]._fields["referral_source"]
             ._description_selection(request.env)

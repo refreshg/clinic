@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: d4ec77a -->
+<!-- last-synced: 2026-10-01, commit: 67c59a5 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -60,6 +60,6 @@ Verification for every step = live RPC + browser (no automated tests — D-11).
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-10-01: reviewer follow-ups 14-21 + 30.09-01.10 requests live on the server (committed up to d4ec77a; quick form minimal, required fields on the card, allergy/pregnancy answers, address + cities, patient status + Excel menus, back buttons) — v19.0.61.0.
+Last session 2026-10-01: reviewer follow-ups 14-21 + 30.09-01.10 requests live on the server (committed up to d4ec77a; quick form minimal, required fields on the card, allergy/pregnancy answers, address + cities, patient status + Excel as control-panel buttons, back buttons) — v19.0.61.0.
 Next: user browser-checks the batch (Excel route, live search, back buttons, address) and gets the clinic answers (PRD §9), staff change passwords; then M2 ka.po regen (first unblocked).
 Watch out: D-24/D-25/D-27 unverified in the browser (family form_view_ref side effect, Enter opens 1st patient, Excel download); an admin must NOT carry group_clinic_doctor; supplier on a SEPARATE account; 57/80 patients have no status.

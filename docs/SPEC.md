@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: d4ec77a -->
+<!-- last-synced: 2026-10-01, commit: 67c59a5 -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -259,7 +259,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | B39 | visit page opens | user in `group_clinic_admin` (payload `is_admin`) | admin: no Procedures tab, opens on Billing (itemised procedure table); doctor: no Billing tab (506b4f4) | custom OWL |
 | B40 | typing in the Patients search bar (action ctx `clinic_live_search`) | query non-empty, after 200 ms | patients matching name/phone/email/vat (max 8) REPLACE the generic "Search X for" entries; click opens the card; no match → generic entries stay (D-25) | custom SearchBar patch — std needs Enter |
 | B41 | visit state changes / patient flagged | any | `clinic_patient_status` recomputed: 1 completed visit → primary, 2+ → unique, none → empty (user's naming, 2026-10-01) | custom stored compute |
-| B42 | Clinic menu „📥 პირველადი / უნიკალური პაციენტები (Excel)" | admin or doctor | GET `/clinic/patients/export` builds the .xlsx from the DB and downloads it (no JS) | custom route (std Export needs a manual selection) — D-27 |
+| B42 | Patients control-panel „ექსპორტი" button (menu items removed 2026-10-01) | admin or doctor | GET `/clinic/patients/export?status=primary|unique|all` builds the .xlsx from the DB and downloads it; status = the active primary/unique button, none → all patients | custom route (std Export needs a manual selection) — D-27 |
 | B43 | „პაციენტის ანკეტა" on the booking / visit page | ctx `clinic_return_visit_id` | patient form shows „← back"; button saves, then re-opens the booking dialog (planning ctx `open_visit_id`) or the visit page | custom (D-24 follow-up) |
 | B44 | patient card save | `is_patient` | first/last name, personal no., birth date, phone, referral source, allergy answer (+ list when yes), pregnancy answer (non-men) must be filled — enforced by view `required=`, not by constraints, so non-UI writes are unaffected (D-26) | custom |
 
@@ -327,7 +327,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | Global Save/Discard | `static/src/clinic_form_buttons.xml` (t-inherit web.FormStatusIndicator) | labelled შენახვა/გაუქმება buttons on every form, visible only while dirty/new (D-17) |
 | Supply Shop v2 | `static/src/shop/` (rewritten) | banner carousel, category tiles+chips, brand filter, ⭐/🆕/🔥 strips, ♥ wishlist, 🔁 repeat order, similar strip, vendor comparison table with ★ |
 | Shop Banners | `view_clinic_shop_banner_list/form`, menu Configuration→Shop Banners (admin) | image upload |
-| Patients search | `view_clinic_patient_search` (action `search_view_id`) | status side panel + filters primary/unique, name/phone/email/vat search; Excel menu items under Clinic (B42) |
+| Patients search | `view_clinic_patient_search` (action `search_view_id`) | filters primary/unique + name/phone/email/vat search; the left side panel was dropped; kanban + list are primary inherits of the Contacts views with `js_class` `clinic_patients_kanban/list` (`ClinicPatientButtons`: პირველადი / უნიკალური toggle buttons + ექსპორტი, rendered after the breadcrumb through the `control-panel-additional-actions` slot) bound with `ir.actions.act_window.view` (B42, D-27) |
 | Patients menu | `action_clinic_patients`, `menu_clinic_patients` | Clinic → Patients: kanban/list/form over is_patient (admin+doctor), default_is_patient ctx — reviewer could not find the card via Contacts |
 | Patient quick registration | `view_clinic_patient_quick_form` | Dentos popup: standalone foreign-citizen toggle row, split names, gender avatar cards (506b4f4), birthdate, personal/passport no., primary + extra phones (patient_phone_ids inline), insurance + policy, latin block; opened ONLY from the booking's ➕ widget (a form_view_ref on the field hijacked every open — D-23) |
 | Consent sheets | `view_clinic_consent_form/list` | one form serves both types; personal-data checkboxes + marketing radio; medical signature pad; footer confirm buttons chain the two sheets |
@@ -388,6 +388,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   categories (`data/clinic_shop_seed.xml`, noupdate). v19.0.53 needs nothing special.
 
 ## Drift log
+- 2026-10-01 (later): the primary/unique Excel menu items under Clinic and the left status side panel were REMOVED; the same function now lives in the Patients control panel (buttons პირველადი / უნიკალური / ექსპორტი) — user request.
 - 2026-10-01: the quick-registration form went full → minimal → full → minimal within two days; the FINAL state is minimal (name, phone, insurance, foreign toggle). The "required" list the user gave (names, personal no., birth date, phone, referral source) applies to the patient CARD, not to the popup.
 - 2026-10-01: address fields of the partner form cannot be patched from the main patient-card view: `city_id` is added by base_address_extended's own inherit (priority 16, loaded after ours) — the patch lives in a separate view with priority 20.
 - 2026-10-01: the workplace shown in names comes from the free-text `company_name` as well as `parent_id`; the display-name fix must not key on `parent_id` only.

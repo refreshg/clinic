@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: d4ec77a -->
+<!-- last-synced: 2026-10-01, commit: 67c59a5 -->
 # PRD — კლინიკის პაციენტის ბარათი (Clinic Patient Card)
 
 | | |

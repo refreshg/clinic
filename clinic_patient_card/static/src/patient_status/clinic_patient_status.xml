@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="clinic_patient_card.PatientButtons">
+        <div class="o_clinic_status_btns d-inline-flex align-items-center gap-2 ms-2">
+            <button type="button" title="ერთხელ მოვიდა"
+                    t-att-class="'btn o_clinic_status_btn ' + (isActive('primary') ? 'btn-primary' : 'btn-secondary')"
+                    t-on-click="() => this.toggle('primary')">პირველადი</button>
+            <button type="button" title="რამდენჯერმე მოვიდა"
+                    t-att-class="'btn o_clinic_status_btn ' + (isActive('unique') ? 'btn-primary' : 'btn-secondary')"
+                    t-on-click="() => this.toggle('unique')">უნიკალური</button>
+            <a class="btn btn-secondary o_clinic_export_btn" t-att-href="exportUrl"
+               title="ჩამოტვირთვა Excel-ში">
+                <i class="fa fa-download me-1"/>ექსპორტი
+            </a>
+        </div>
+    </t>
+
+    <!-- the buttons sit right after the "Patients ⚙" breadcrumb: they ride in
+         the control-panel-additional-actions slot (rendered inside Breadcrumbs) -->
+    <t t-name="clinic_patient_card.PatientsKanbanView" t-inherit="web.KanbanView" t-inherit-mode="primary">
+        <xpath expr="//t[@t-set-slot='control-panel-additional-actions']" position="inside">
+            <ClinicPatientButtons/>
+        </xpath>
+    </t>
+    <t t-name="clinic_patient_card.PatientsListView" t-inherit="web.ListView" t-inherit-mode="primary">
+        <xpath expr="//t[@t-set-slot='control-panel-additional-actions']" position="inside">
+            <ClinicPatientButtons/>
+        </xpath>
+    </t>
+
+</templates>
