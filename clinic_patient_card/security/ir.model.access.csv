@@ -57,3 +57,7 @@ access_clinic_complaint_admin,clinic.complaint.admin,model_clinic_complaint,clin
 access_clinic_complaint_doctor,clinic.complaint.doctor,model_clinic_complaint,clinic_patient_card.group_clinic_doctor,1,0,0,0
 access_clinic_prescription_admin,clinic.prescription.admin,model_clinic_prescription,clinic_patient_card.group_clinic_admin,1,1,1,1
 access_clinic_prescription_doctor,clinic.prescription.doctor,model_clinic_prescription,clinic_patient_card.group_clinic_doctor,1,1,1,1
+access_clinic_shift_user,clinic.shift.user,model_clinic_shift,base.group_user,1,0,0,0
+access_clinic_shift_admin,clinic.shift.admin,model_clinic_shift,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_schedule_line_user,clinic.schedule.line.user,model_clinic_schedule_line,base.group_user,1,0,0,0
+access_clinic_schedule_line_admin,clinic.schedule.line.admin,model_clinic_schedule_line,clinic_patient_card.group_clinic_admin,1,1,1,1

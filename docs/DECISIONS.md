@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 67c59a5 -->
+<!-- last-synced: 2026-10-01, commit: 31ad9b4 -->
 # Decisions (ADR) — clinic_patient_card
 
 Format: Context → Decision → Rejected → Consequences. New custom code requires a D-entry
@@ -265,3 +265,18 @@ seed 17 Georgian cities; place the view tweaks in a separate priority-20 inherit
 `city_id` is added after our main inherit. "Non-resident" is implemented as the existing
 `is_foreign` flag — to be confirmed. · Consequences: the city domain is cleared
 (`[]`) for all partners on this form; ZIP/country/state fields stay in the model.
+
+### D-29: Staff schedules on standard hr + two small custom models
+Date 2026-10-01 · Context: the clinic wants per-person schedules for doctors / assistants /
+administration (shifts, days off, vacation, sick leave), worked hours, check-in/out inside
+Odoo, and no bookings outside a doctor's schedule. Enterprise `planning` is unavailable and
+the clinic-wide hours of D-4 cannot express per-person days. · Decision: depend on the
+standard `hr` (employees; `hr_attendance` joins in phase 2 for check-in/out and worked hours);
+add only `clinic.shift` (editable templates, seeded from the user's mock-ups) and
+`clinic.schedule.line` (employee-day: shift / off / vacation / sick). `hr_holidays` was NOT
+used (its approval workflow is overkill). The screen is a custom OWL client action with two
+interchangeable looks (hour grid and per-employee matrix) because the user wanted to choose
+the visual side. Editing is admin-only; a doctor sees only their own days (ACL + ir.rule).
+· Consequences: new standard module `hr` on the live DB (adds an Employees app); shift lists
+are from memory/mock-ups and editable; the booking guard (phase 3) will be keyed on the
+dentist's schedule and falls back to the clinic hours when the schedule is empty.

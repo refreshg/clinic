@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Staff schedule: a doctor sees only their own days; a Clinic
+         Administrator (union of rules) sees everyone's. -->
+    <record id="rule_clinic_schedule_doctor_own" model="ir.rule">
+        <field name="name">Clinic schedule: doctor sees own days</field>
+        <field name="model_id" ref="model_clinic_schedule_line"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_clinic_doctor'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_clinic_schedule_admin_all" model="ir.rule">
+        <field name="name">Clinic schedule: administrator sees all</field>
+        <field name="model_id" ref="model_clinic_schedule_line"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_clinic_admin'))]"/>
+    </record>
+</odoo>

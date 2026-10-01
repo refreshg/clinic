@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 67c59a5 -->
+<!-- last-synced: 2026-10-01, commit: 31ad9b4 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -52,6 +52,20 @@ Verification for every step = live RPC + browser (no automated tests — D-11).
 - [ ] Clinic names the EHR + API docs → record integration decision (D-1x)
 - [ ] Design: outbound queue model + retry/backoff; then implement
 - [ ] Verify AC-6 against a mock endpoint; version bump; `/docs-sync`
+
+## Milestone S — Staff schedules (doctors / assistants / administration) — approved 2026-10-01 ("go" with defaults)
+Source: the user's mock-ups (hour-grid "სამუშაო გრაფიკი", per-person weekly cards, "ნამუშევარი საათები").
+Standard-first: `hr` (+ `hr_attendance` in phase 2) for employees / check-in-out; custom only the shift
+templates + per-day lines (Community has no planning app) — D-29.
+- [x] S1 models `clinic.shift`, `clinic.schedule.line`, `hr.employee.clinic_staff_kind`; shift seed (from the
+      mock-ups); OWL screen `clinic_schedule` (menu Clinic → გრაფიკი): doctor/assistant/admin tabs,
+      day/week/month, hour-grid + matrix looks, admin click-to-assign popover; Configuration → Shifts
+- [ ] S1 browser check by the user (both looks, month, assignment, doctor sees only self)
+- [ ] S2 `hr_attendance`: check-in/out inside Odoo + "ნამუშევარი საათები" window (plan vs actual, difference,
+      lateness, vacation/sick, day/week/month/year, Excel)
+- [ ] S3 booking guard: no booking for a doctor on off/vacation/sick days or outside their shift
+      (when their schedule is filled; empty = old clinic-hours rule); extend `_clinic_validate_schedule`
+- [ ] S4 "ძირითადი გრაფიკი" (weekly pattern applied to a range) — only if the clinic wants it
 
 ## Small chores (any time)
 - [ ] Clinic to confirm: insurer + city lists (written from memory), "primary/unique" definitions, what "non-resident" means (PRD §9)

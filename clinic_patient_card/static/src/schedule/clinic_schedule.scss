@@ -1,0 +1,112 @@
+.o_clinic_schedule {
+    padding: 18px 22px 40px;
+    background: #f7f7fb;
+    min-height: 100%;
+    overflow: auto;
+    font-size: 13px;
+    color: #2b2f4a;
+
+    .cs_dim { color: #8b8fa8; font-size: 11px; }
+    .cs_head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .cs_title { margin: 0; font-weight: 800; letter-spacing: -.3px; }
+    .cs_sub { color: #8b8fa8; margin-top: 2px; }
+    .cs_tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .cs_seg {
+        display: inline-flex; background: #fff; border: 1px solid #e3e4f0; border-radius: 10px; padding: 2px;
+        button {
+            border: 0; background: transparent; padding: 5px 12px; border-radius: 8px;
+            font-weight: 600; color: #6a6e8c; cursor: pointer;
+            &.active { background: #5d4fc2; color: #fff; }
+        }
+    }
+    .cs_nav { display: inline-flex; align-items: center; gap: 6px; }
+    .cs_range { font-weight: 700; min-width: 170px; text-align: center; background: #fff; border: 1px solid #e3e4f0; border-radius: 10px; padding: 5px 12px; }
+    .cs_btn { border: 1px solid #e3e4f0; background: #fff; border-radius: 10px; padding: 5px 12px; font-weight: 600; cursor: pointer; }
+
+    .cs_tabs {
+        display: flex; gap: 6px; margin: 14px 0 10px; border-bottom: 1px solid #e3e4f0;
+        button {
+            border: 0; background: transparent; padding: 8px 14px; font-weight: 700; color: #8b8fa8; cursor: pointer;
+            border-bottom: 3px solid transparent;
+            &.active { color: #5d4fc2; border-bottom-color: #5d4fc2; }
+        }
+        .cs_badge { background: #ece9fb; color: #5d4fc2; border-radius: 10px; padding: 0 7px; font-size: 11px; margin-left: 4px; }
+    }
+    .cs_loading { padding: 40px; text-align: center; color: #8b8fa8; }
+
+    .cs_body { display: flex; gap: 16px; align-items: flex-start; }
+    .cs_main { flex: 1; min-width: 0; background: #fff; border-radius: 16px; box-shadow: 0 1px 4px rgba(40, 40, 90, .08); padding: 10px; overflow-x: auto; }
+    .cs_side {
+        width: 210px; background: #fff; border-radius: 16px; box-shadow: 0 1px 4px rgba(40, 40, 90, .08); padding: 14px;
+        h3 { font-size: 13px; font-weight: 800; margin: 0 0 8px; }
+    }
+    .cs_legend { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .cs_swatch { width: 26px; height: 26px; border-radius: 8px; flex: none; }
+
+    // palette: 0 pink · 1 green · 2 yellow · 3 blue
+    .cs_c0 { background: #fbd5e3; border: 1px solid #f3a9c6; color: #8a2a52; }
+    .cs_c1 { background: #d6f0e3; border: 1px solid #98d5b5; color: #1f6b46; }
+    .cs_c2 { background: #fdeec2; border: 1px solid #f0cd72; color: #7d5a05; }
+    .cs_c3 { background: #d9e8fb; border: 1px solid #9cc2f1; color: #214f8b; }
+    .cs_type.cs_off { background: #25263f; color: #fff; border: 1px solid #25263f; }
+    .cs_type.cs_vacation { background: #fff7ea; color: #b4620a; border: 1.5px solid #e8923a; }
+    .cs_type.cs_sick { background: #fdeceb; color: #b3261e; border: 1.5px solid #e5534b; }
+
+    // matrix
+    .cs_matrix {
+        width: 100%; border-collapse: separate; border-spacing: 4px;
+        th { font-size: 12px; color: #6a6e8c; text-align: center; padding: 6px 2px; font-weight: 700; }
+        th.cs_today { color: #5d4fc2; }
+        .cs_name { text-align: left; min-width: 150px; padding-right: 8px; }
+        .cs_hours { text-align: right; white-space: nowrap; color: #6a6e8c; font-weight: 600; }
+        td.cs_cell { padding: 0; }
+    }
+    .cs_chip {
+        border-radius: 8px; padding: 6px 4px; text-align: center; font-weight: 700; font-size: 11px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; min-height: 30px;
+        &.cs_empty { background: #f3f3f9; border: 1px dashed #d8d9e8; color: #b8bad0; }
+        &.cs_empty:hover { border-color: #5d4fc2; color: #5d4fc2; }
+    }
+
+    // hour grid
+    .cs_grid { display: grid; column-gap: 6px; row-gap: 0; }
+    .cs_dayhead {
+        position: relative; padding: 8px 6px; border-bottom: 1px solid #ececf6; display: flex; flex-direction: column; gap: 2px;
+        &.cs_today b { color: #5d4fc2; }
+        .cs_add {
+            position: absolute; right: 4px; top: 6px; border: 1px solid #d8d9e8; background: #fff; color: #5d4fc2;
+            border-radius: 50%; width: 22px; height: 22px; line-height: 18px; cursor: pointer; padding: 0;
+        }
+    }
+    .cs_chips { min-height: 36px; padding: 4px 2px; display: flex; flex-direction: column; gap: 3px; border-bottom: 1px solid #ececf6; }
+    .cs_axis { position: relative; }
+    .cs_hour { position: absolute; right: 6px; font-size: 10px; color: #8b8fa8; transform: translateY(-6px); }
+    .cs_col {
+        position: relative;
+        background-image: repeating-linear-gradient(to bottom, #f0f0f8 0, #f0f0f8 1px, transparent 1px, transparent 36px);
+        border-left: 1px solid #f0f0f8;
+    }
+    .cs_block {
+        position: absolute; border-radius: 10px; padding: 5px 6px; overflow: hidden; cursor: pointer;
+        display: flex; flex-direction: column; font-size: 11px; line-height: 1.25;
+    }
+}
+
+.cs_pop {
+    position: fixed; z-index: 1100; width: 250px; background: #fff; border-radius: 14px;
+    box-shadow: 0 10px 40px rgba(30, 30, 80, .25); padding: 10px; display: flex; flex-direction: column; gap: 5px;
+    .cs_pop_title { font-size: 12px; color: #6a6e8c; padding: 2px 4px 6px; }
+    .cs_opt {
+        border-radius: 8px; padding: 7px 10px; text-align: left; font-weight: 700; cursor: pointer;
+        border: 1px solid #e3e4f0; background: #fff;
+        &.cs_clear { color: #b3261e; }
+    }
+    .cs_c0 { background: #fbd5e3; border-color: #f3a9c6; color: #8a2a52; }
+    .cs_c1 { background: #d6f0e3; border-color: #98d5b5; color: #1f6b46; }
+    .cs_c2 { background: #fdeec2; border-color: #f0cd72; color: #7d5a05; }
+    .cs_c3 { background: #d9e8fb; border-color: #9cc2f1; color: #214f8b; }
+    .cs_off { background: #25263f; color: #fff; }
+    .cs_vacation { background: #fff7ea; color: #b4620a; border-color: #e8923a; }
+    .cs_sick { background: #fdeceb; color: #b3261e; border-color: #e5534b; }
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_clinic_schedule" model="ir.actions.client">
+        <field name="name">გრაფიკი</field>
+        <field name="tag">clinic_schedule</field>
+    </record>
+
+    <record id="view_clinic_shift_list" model="ir.ui.view">
+        <field name="name">clinic.shift.list</field>
+        <field name="model">clinic.shift</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="staff_kind"/>
+                <field name="start_hour" widget="float_time"/>
+                <field name="end_hour" widget="float_time"/>
+                <field name="color"/>
+                <field name="name" optional="show"/>
+                <field name="hours" widget="float_time" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_clinic_shift" model="ir.actions.act_window">
+        <field name="name">Shifts</field>
+        <field name="res_model">clinic.shift</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- Clinic Role on the employee form: puts the person on the staff schedule
+         (assistants are added by hand; doctors/administrators sync from users). -->
+    <record id="view_employee_form_clinic_role" model="ir.ui.view">
+        <field name="name">hr.employee.form.clinic.role</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='department_id']" position="after">
+                <field name="clinic_staff_kind"/>
+            </xpath>
+        </field>
+    </record>
+
+    <menuitem id="menu_clinic_schedule" name="გრაფიკი"
+              parent="menu_clinic_root" action="action_clinic_schedule" sequence="8"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
+    <menuitem id="menu_clinic_shift" name="Shifts"
+              parent="menu_clinic_config" action="action_clinic_shift" sequence="30"
+              groups="clinic_patient_card.group_clinic_admin"/>
+</odoo>

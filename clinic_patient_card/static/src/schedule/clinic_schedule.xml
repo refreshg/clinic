@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="clinic_patient_card.ClinicSchedule">
+    <div class="o_clinic_schedule" t-on-click="closePop">
+
+        <div class="cs_head">
+            <div>
+                <h2 class="cs_title">სამუშაო გრაფიკი</h2>
+                <div class="cs_sub">ექიმების, ასისტენტებისა და ადმინისტრაციის ცვლები</div>
+            </div>
+            <div class="cs_tools">
+                <div class="cs_seg">
+                    <button type="button" t-att-class="state.mode === 'day' ? 'active' : ''" t-on-click="() => this.setMode('day')">დღე</button>
+                    <button type="button" t-att-class="state.mode === 'week' ? 'active' : ''" t-on-click="() => this.setMode('week')">კვირა</button>
+                    <button type="button" t-att-class="state.mode === 'month' ? 'active' : ''" t-on-click="() => this.setMode('month')">თვე</button>
+                </div>
+                <div class="cs_seg" t-if="state.mode !== 'month'">
+                    <button type="button" t-att-class="state.view === 'grid' ? 'active' : ''" t-on-click="() => this.setView('grid')" title="საათობრივი ხედი">საათობრივი</button>
+                    <button type="button" t-att-class="state.view === 'matrix' ? 'active' : ''" t-on-click="() => this.setView('matrix')" title="ცხრილი თანამშრომლების მიხედვით">ცხრილი</button>
+                </div>
+                <div class="cs_nav">
+                    <button type="button" class="cs_btn" t-on-click="() => this.step(-1)">‹</button>
+                    <span class="cs_range" t-esc="rangeLabel"/>
+                    <button type="button" class="cs_btn" t-on-click="() => this.step(1)">›</button>
+                    <button type="button" class="cs_btn" t-on-click="today">დღეს</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="cs_tabs">
+            <button type="button" t-foreach="KINDS" t-as="k" t-key="k.key"
+                    t-att-class="state.kind === k.key ? 'active' : ''"
+                    t-on-click="() => this.setKind(k.key)">
+                <t t-esc="k.label"/> <span class="cs_badge" t-esc="state.data.counts[k.key] || 0"/>
+            </button>
+        </div>
+
+        <div t-if="state.loading" class="cs_loading">იტვირთება…</div>
+        <div t-elif="!state.data.employees.length" class="cs_loading">
+            ამ ჯგუფში თანამშრომელი ჯერ არ არის. დაამატე Employees-ში და მიუთითე „Clinic Role“.
+        </div>
+        <div t-else="" class="cs_body">
+
+            <div class="cs_main">
+                <table t-if="effView === 'matrix'" class="cs_matrix">
+                    <thead>
+                        <tr>
+                            <th class="cs_name">თანამშრომელი</th>
+                            <th t-foreach="range.dates" t-as="d" t-key="d"
+                                t-att-class="isToday(d) ? 'cs_today' : ''">
+                                <t t-esc="dayCaption(d)"/>
+                            </th>
+                            <th class="cs_hours">საათი</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="state.data.employees" t-as="e" t-key="e.id">
+                            <td class="cs_name"><b t-esc="e.name"/></td>
+                            <td t-foreach="range.dates" t-as="d" t-key="d" class="cs_cell">
+                                <div t-att-class="'cs_chip ' + cellClass(e.id, d)"
+                                     t-on-click="(ev) => this.openPop(ev, e.id, d)">
+                                    <t t-esc="cellText(e.id, d)"/>
+                                    <t t-if="!cellText(e.id, d) and state.data.is_admin">+</t>
+                                </div>
+                            </td>
+                            <td class="cs_hours"><t t-esc="hoursOf(e.id)"/> სთ</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div t-else="" class="cs_grid"
+                     t-att-style="'grid-template-columns:56px repeat(' + range.dates.length + ',minmax(0,1fr));'">
+                    <div class="cs_corner"/>
+                    <div t-foreach="range.dates" t-as="d" t-key="'h' + d"
+                         t-att-class="'cs_dayhead ' + (isToday(d) ? 'cs_today' : '')">
+                        <b t-esc="dayCaptionFull(d)"/>
+                        <span class="cs_dim"><t t-esc="staffOnDay(d)"/> ცვლაში</span>
+                        <button t-if="state.data.is_admin" type="button" class="cs_add" title="დამატება"
+                                t-on-click="(ev) => this.openAdd(ev, d)">+</button>
+                    </div>
+                    <div class="cs_corner"/>
+                    <div t-foreach="range.dates" t-as="d" t-key="'c' + d" class="cs_chips">
+                        <div t-foreach="chipsOf(d)" t-as="c" t-key="c.key"
+                             t-att-class="'cs_chip ' + c.cls"
+                             t-on-click="(ev) => this.openPop(ev, c.empId, d)">
+                            <t t-esc="c.text"/>
+                        </div>
+                    </div>
+                    <div class="cs_axis" t-att-style="'height:' + gridHeight + 'px;'">
+                        <span t-foreach="gridHours" t-as="h" t-key="h" class="cs_hour"
+                              t-att-style="'top:' + ((h - gridStart) * 36) + 'px;'">
+                            <t t-esc="hourLabel(h)"/>
+                        </span>
+                    </div>
+                    <div t-foreach="range.dates" t-as="d" t-key="'b' + d" class="cs_col"
+                         t-att-style="'height:' + gridHeight + 'px;'">
+                        <div t-foreach="blocksOf(d)" t-as="b" t-key="b.key"
+                             t-att-class="'cs_block cs_c' + b.color"
+                             t-att-style="b.style"
+                             t-on-click="(ev) => this.openPop(ev, b.empId, d)">
+                            <b t-esc="b.name"/>
+                            <span t-esc="b.time"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="cs_side">
+                <h3>სამუშაო დრო</h3>
+                <div t-foreach="state.data.shifts" t-as="s" t-key="s.id" class="cs_legend">
+                    <span t-att-class="'cs_swatch cs_c' + s.color"/>
+                    <div><b t-esc="s.name"/><div class="cs_dim"><t t-esc="s.hours"/> სთ</div></div>
+                </div>
+                <h3 class="mt-3">დღის ტიპები</h3>
+                <div t-foreach="DAY_TYPES" t-as="t" t-key="t.key" class="cs_legend">
+                    <span t-att-class="'cs_swatch cs_type cs_' + t.key"/>
+                    <b><t t-esc="t.icon"/> <t t-esc="t.label"/></b>
+                </div>
+            </aside>
+        </div>
+
+        <div t-if="state.pop" class="cs_pop" t-att-style="'left:' + state.pop.x + 'px;top:' + state.pop.y + 'px;'"
+             t-on-click.stop="">
+            <t t-if="!state.pop.empId">
+                <div class="cs_pop_title"><t t-esc="popDateLabel"/> — ვინ?</div>
+                <t t-foreach="state.data.employees" t-as="e" t-key="e.id">
+                    <button type="button" t-if="!lineOf(e.id, state.pop.date)"
+                            class="cs_opt" t-on-click="() => this.pickEmployee(e.id)">
+                        <t t-esc="e.name"/>
+                    </button>
+                </t>
+            </t>
+            <t t-else="">
+                <div class="cs_pop_title"><b t-esc="popEmployeeName"/> · <t t-esc="popDateLabel"/></div>
+                <button type="button" t-foreach="state.data.shifts" t-as="s" t-key="s.id"
+                        t-att-class="'cs_opt cs_shift cs_c' + s.color"
+                        t-on-click="() => this.choose('shift', s.id)">
+                    <t t-esc="s.name"/>
+                </button>
+                <button type="button" t-foreach="DAY_TYPES" t-as="t" t-key="t.key"
+                        t-att-class="'cs_opt cs_type cs_' + t.key"
+                        t-on-click="() => this.choose(t.key, false)">
+                    <t t-esc="t.icon"/> <t t-esc="t.label"/>
+                </button>
+                <button type="button" class="cs_opt cs_clear" t-on-click="() => this.choose(false, false)">
+                    გასუფთავება
+                </button>
+            </t>
+        </div>
+    </div>
+</t>
+
+</templates>

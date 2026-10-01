@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 67c59a5 -->
+<!-- last-synced: 2026-10-01, commit: 31ad9b4 -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -215,6 +215,15 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | static | planning board re-opens a visit when its client-action ctx carries `open_visit_id`; visit page `openPatient` passes the return ctx; gender cards shrunk to 70px |
 | manifest | v19.0.61.0.0; depends += `base_address_extended` |
 
+### 2026-10-01 staff schedules (S1)
+| model | additions |
+|---|---|
+| clinic.shift | name/hours (stored compute "09:30–15:00"), staff_kind (doctor/assistant/admin), start_hour, end_hour, color 0-3 (pink/green/yellow/blue), sequence, active; 12 seed rows (noupdate) |
+| clinic.schedule.line | employee_id (hr.employee), date, day_type (shift/off/vacation/sick), shift_id; one row per employee-day (python constraint); RPC `clinic_schedule_data(kind, from, to)` / `clinic_schedule_set(employee, date, day_type, shift)` (admin only, sudo) |
+| hr.employee | `clinic_staff_kind` (puts the person on the schedule); `clinic_sync_staff()` creates employees for active clinic doctor/administrator users (skips base.user_admin and login `clinic`) |
+| security | ACL: shift/line user read, admin rwcu; rules: doctor reads only own days (employee.user_id), admin all |
+| views | client action `clinic_schedule` (`static/src/schedule/`), menu Clinic → გრაფიკი (admin+doctor), Configuration → Shifts (admin), `hr.view_employee_form` + Clinic Role |
+
 ## Business logic (trigger → condition → action; Standard coverage per row)
 | # | trigger | condition | action | std coverage |
 |---|---|---|---|---|
@@ -262,6 +271,8 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | B42 | Patients control-panel „ექსპორტი" button (menu items removed 2026-10-01) | admin or doctor | GET `/clinic/patients/export?status=primary|unique|all` builds the .xlsx from the DB and downloads it; status = the active primary/unique button, none → all patients | custom route (std Export needs a manual selection) — D-27 |
 | B43 | „პაციენტის ანკეტა" on the booking / visit page | ctx `clinic_return_visit_id` | patient form shows „← back"; button saves, then re-opens the booking dialog (planning ctx `open_visit_id`) or the visit page | custom (D-24 follow-up) |
 | B44 | patient card save | `is_patient` | first/last name, personal no., birth date, phone, referral source, allergy answer (+ list when yes), pregnancy answer (non-men) must be filled — enforced by view `required=`, not by constraints, so non-UI writes are unaffected (D-26) | custom |
+| B45 | schedule screen opens (admin) | — | `clinic_sync_staff` ensures employees for doctor/admin users; doctors get only their own employee | custom over std hr |
+| B46 | admin clicks a cell / block | — | popover → `clinic_schedule_set` upsert / clear of one employee-day; screen reloads | custom |
 
 ## Standard-first check
 | requirement | standard feature checked | covers? | if no → custom + ref |
@@ -269,6 +280,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | Excel of patients by status | list → Actions → Export | partial (manual selection each time) | menu items + export route (D-27) |
 | city picker | `res.city` + `city_id` (base_address_extended) | yes | reused; only a seed + view tweaks (D-28) |
 | patient status (primary/unique) | none | no | stored compute on res.partner (D-27) |
+| staff schedule / shifts | Enterprise `planning`, std `resource.calendar` | no (Community; calendars are per-resource weekly patterns, no per-day shifts/leave types) | `clinic.shift` + `clinic.schedule.line` on std `hr.employee` (D-29) |
 | family link between patients | res.partner parent_id/child_ids | no (company/address hierarchy) | `family_member_ids` M2m + B36 hook (D-24) |
 | search-as-you-type | web SearchBar | no (needs Enter; per-field entries) | SearchBar patch, opt-in by action ctx (D-25) |
 | gender picker | radio/selection widget | partial | avatar-card widget (design handoff, 506b4f4) |
@@ -388,6 +400,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   categories (`data/clinic_shop_seed.xml`, noupdate). v19.0.53 needs nothing special.
 
 ## Drift log
+- 2026-10-01: staff schedules (S1) — `hr` is now a dependency; the 'clinic' and Administrator accounts are NOT staff (excluded from the employee sync). Assistants do not exist as users yet: they are added as employees with Clinic Role = Assistant.
 - 2026-10-01 (later): the primary/unique Excel menu items under Clinic and the left status side panel were REMOVED; the same function now lives in the Patients control panel (buttons პირველადი / უნიკალური / ექსპორტი) — user request.
 - 2026-10-01: the quick-registration form went full → minimal → full → minimal within two days; the FINAL state is minimal (name, phone, insurance, foreign toggle). The "required" list the user gave (names, personal no., birth date, phone, referral source) applies to the patient CARD, not to the popup.
 - 2026-10-01: address fields of the partner form cannot be patched from the main patient-card view: `city_id` is added by base_address_extended's own inherit (priority 16, loaded after ours) — the patch lives in a separate view with priority 20.

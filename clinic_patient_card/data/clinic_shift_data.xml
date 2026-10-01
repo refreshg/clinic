@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shift templates from the clinic's schedule mock-ups; editable in
+     Configuration → Shifts. noupdate: edits are kept. -->
+<odoo noupdate="1">
+    <record id="shift_doctor_1" model="clinic.shift">
+        <field name="staff_kind">doctor</field>
+        <field name="sequence">10</field>
+        <field name="start_hour">9</field>
+        <field name="end_hour">15</field>
+        <field name="color">0</field>
+    </record>
+    <record id="shift_doctor_2" model="clinic.shift">
+        <field name="staff_kind">doctor</field>
+        <field name="sequence">20</field>
+        <field name="start_hour">10</field>
+        <field name="end_hour">18</field>
+        <field name="color">1</field>
+    </record>
+    <record id="shift_doctor_3" model="clinic.shift">
+        <field name="staff_kind">doctor</field>
+        <field name="sequence">30</field>
+        <field name="start_hour">12</field>
+        <field name="end_hour">20</field>
+        <field name="color">2</field>
+    </record>
+    <record id="shift_doctor_4" model="clinic.shift">
+        <field name="staff_kind">doctor</field>
+        <field name="sequence">40</field>
+        <field name="start_hour">14</field>
+        <field name="end_hour">20</field>
+        <field name="color">3</field>
+    </record>
+    <record id="shift_assistant_1" model="clinic.shift">
+        <field name="staff_kind">assistant</field>
+        <field name="sequence">10</field>
+        <field name="start_hour">9</field>
+        <field name="end_hour">15</field>
+        <field name="color">0</field>
+    </record>
+    <record id="shift_assistant_2" model="clinic.shift">
+        <field name="staff_kind">assistant</field>
+        <field name="sequence">20</field>
+        <field name="start_hour">10</field>
+        <field name="end_hour">18</field>
+        <field name="color">1</field>
+    </record>
+    <record id="shift_assistant_3" model="clinic.shift">
+        <field name="staff_kind">assistant</field>
+        <field name="sequence">30</field>
+        <field name="start_hour">12</field>
+        <field name="end_hour">20</field>
+        <field name="color">2</field>
+    </record>
+    <record id="shift_assistant_4" model="clinic.shift">
+        <field name="staff_kind">assistant</field>
+        <field name="sequence">40</field>
+        <field name="start_hour">14</field>
+        <field name="end_hour">20</field>
+        <field name="color">3</field>
+    </record>
+    <record id="shift_admin_1" model="clinic.shift">
+        <field name="staff_kind">admin</field>
+        <field name="sequence">10</field>
+        <field name="start_hour">9.5</field>
+        <field name="end_hour">15</field>
+        <field name="color">0</field>
+    </record>
+    <record id="shift_admin_2" model="clinic.shift">
+        <field name="staff_kind">admin</field>
+        <field name="sequence">20</field>
+        <field name="start_hour">15</field>
+        <field name="end_hour">20</field>
+        <field name="color">1</field>
+    </record>
+    <record id="shift_admin_3" model="clinic.shift">
+        <field name="staff_kind">admin</field>
+        <field name="sequence">30</field>
+        <field name="start_hour">10</field>
+        <field name="end_hour">15</field>
+        <field name="color">2</field>
+    </record>
+    <record id="shift_admin_4" model="clinic.shift">
+        <field name="staff_kind">admin</field>
+        <field name="sequence">40</field>
+        <field name="start_hour">9.5</field>
+        <field name="end_hour">20</field>
+        <field name="color">3</field>
+    </record>
+</odoo>

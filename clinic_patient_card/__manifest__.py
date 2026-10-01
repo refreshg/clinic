@@ -14,6 +14,7 @@
         "base",
         "contacts",
         "base_address_extended",  # res.city + partner.city_id (patient address picker)
+        "hr",  # employees for the staff schedule (hr_attendance follows)
         "product",
         "account",
         "mail",
@@ -27,6 +28,7 @@
     "data": [
         "security/clinic_groups.xml",
         "security/ir.model.access.csv",
+        "security/clinic_schedule_rules.xml",
         "data/ir_sequence.xml",
         "data/clinic_direction_data.xml",
         "data/clinic_cron.xml",
@@ -36,6 +38,7 @@
         "data/clinic_complaint_seed.xml",
         "data/clinic_insurers_seed.xml",
         "data/clinic_cities_seed.xml",
+        "data/clinic_shift_data.xml",
         "wizard/clinic_payment_wizard_views.xml",
         "wizard/clinic_cancel_wizard_views.xml",
         "wizard/clinic_slot_finder_views.xml",
@@ -49,6 +52,7 @@
         "views/clinic_purchase_request_views.xml",
         "views/clinic_b4_views.xml",
         "views/res_partner_views.xml",
+        "views/clinic_schedule_views.xml",
     ],
     "assets": {
         "web.assets_backend": [
@@ -75,6 +79,9 @@
             "clinic_patient_card/static/src/patient_status/clinic_patient_status.js",
             "clinic_patient_card/static/src/patient_status/clinic_patient_status.xml",
             "clinic_patient_card/static/src/patient_status/clinic_patient_status.scss",
+            "clinic_patient_card/static/src/schedule/clinic_schedule.scss",
+            "clinic_patient_card/static/src/schedule/clinic_schedule.js",
+            "clinic_patient_card/static/src/schedule/clinic_schedule.xml",
             "clinic_patient_card/static/src/slot_finder/clinic_slot_finder_widget.js",
             "clinic_patient_card/static/src/slot_finder/clinic_new_patient_btn.js",
             "clinic_patient_card/static/src/slot_finder/clinic_new_patient_btn.xml",
