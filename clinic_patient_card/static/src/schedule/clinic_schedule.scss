@@ -1,3 +1,11 @@
+// 12 shift colours (bg, border, text) — index = clinic.shift.color
+$cs_palette: (
+    (#fbd5e3 #f3a9c6 #8a2a52), (#d6f0e3 #98d5b5 #1f6b46), (#fdeec2 #f0cd72 #7d5a05),
+    (#d9e8fb #9cc2f1 #214f8b), (#e6dcf7 #bda6ea #4b2f8a), (#fde0cc #f3ab7c #8a4310),
+    (#cdeeee #7fcfcf #14605f), (#fbd3d0 #ef9a94 #8e2019), (#e6f2c4 #bcd96f #4c6212),
+    (#d3d8f8 #99a4ec #26319a), (#efe3d1 #d4bc98 #6b4f26), (#dde1e8 #b0b8c6 #3a4456)
+);
+
 .o_clinic_schedule {
     padding: 18px 22px 40px;
     background: #f7f7fb;
@@ -44,14 +52,25 @@
     .cs_legend { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
     .cs_swatch { width: 26px; height: 26px; border-radius: 8px; flex: none; }
 
-    // palette: 0 pink · 1 green · 2 yellow · 3 blue
-    .cs_c0 { background: #fbd5e3; border: 1px solid #f3a9c6; color: #8a2a52; }
-    .cs_c1 { background: #d6f0e3; border: 1px solid #98d5b5; color: #1f6b46; }
-    .cs_c2 { background: #fdeec2; border: 1px solid #f0cd72; color: #7d5a05; }
-    .cs_c3 { background: #d9e8fb; border: 1px solid #9cc2f1; color: #214f8b; }
+    // palette: 12 colours, see $cs_palette at the top of this file (index = clinic.shift.color)
+    @for $i from 1 through 12 {
+        .cs_c#{$i - 1} {
+            background: nth(nth($cs_palette, $i), 1);
+            border: 1px solid nth(nth($cs_palette, $i), 2);
+            color: nth(nth($cs_palette, $i), 3);
+        }
+    }
     .cs_type.cs_off { background: #25263f; color: #fff; border: 1px solid #25263f; }
     .cs_type.cs_vacation { background: #fff7ea; color: #b4620a; border: 1.5px solid #e8923a; }
     .cs_type.cs_sick { background: #fdeceb; color: #b3261e; border: 1.5px solid #e5534b; }
+
+    // closed clinic day (e.g. Sunday): hatched, not editable
+    .cs_closed {
+        background: repeating-linear-gradient(135deg, #f1f1f8 0, #f1f1f8 6px, #e8e8f3 6px, #e8e8f3 12px);
+        color: #9a9db6; border: 1px solid #e3e4f0; cursor: default; font-weight: 700;
+    }
+    .cs_closed_head { color: #b5b8cc; }
+    .cs_col_closed { background-color: #f1f1f8; background-image: repeating-linear-gradient(135deg, #f1f1f8 0, #f1f1f8 6px, #e8e8f3 6px, #e8e8f3 12px); }
 
     // matrix
     .cs_matrix {
@@ -93,6 +112,29 @@
     }
 }
 
+.o_clinic_schedule {
+    .cs_palette { display: flex; flex-wrap: wrap; gap: 5px; padding: 2px 0; }
+    .cs_pal { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; box-sizing: border-box; }
+    .cs_pal.sel { outline: 2px solid #5d4fc2; outline-offset: 2px; }
+    .cs_mini { border: 1px solid #e3e4f0; background: #fff; border-radius: 8px; padding: 2px 8px; cursor: pointer; font-weight: 700; }
+    .cs_mini.cs_ok { background: #5d4fc2; color: #fff; border-color: #5d4fc2; }
+    .cs_mini.cs_del { color: #b3261e; }
+    .cs_mini:disabled { opacity: .4; cursor: default; }
+    .cs_shift_edit { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; padding: 8px; background: #f7f7fb; border-radius: 10px; }
+    .cs_shift_edit .cs_input { border: 1px solid #e3e4f0; border-radius: 8px; padding: 4px 8px; font-weight: 600; width: 100%; }
+    .cs_shift_btns { display: flex; gap: 6px; }
+    .cs_newshift { width: 100%; margin-top: 4px; }
+}
+
+.o_clinic_schedule .cs_btn.cs_primary { background: #5d4fc2; color: #fff; border-color: #5d4fc2; }
+
+.cs_pop .cs_input {
+    border: 1px solid #e3e4f0; border-radius: 8px; padding: 5px 8px; font-weight: 600; width: 100%;
+}
+.cs_pop .cs_custom_row { display: flex; align-items: center; gap: 6px; }
+.cs_pop .cs_save { background: #5d4fc2; color: #fff; border-color: #5d4fc2; text-align: center; }
+.cs_pop .cs_save:disabled { opacity: .4; cursor: default; }
+
 .cs_pop {
     position: fixed; z-index: 1100; width: 250px; background: #fff; border-radius: 14px;
     box-shadow: 0 10px 40px rgba(30, 30, 80, .25); padding: 10px; display: flex; flex-direction: column; gap: 5px;
@@ -102,10 +144,14 @@
         border: 1px solid #e3e4f0; background: #fff;
         &.cs_clear { color: #b3261e; }
     }
-    .cs_c0 { background: #fbd5e3; border-color: #f3a9c6; color: #8a2a52; }
-    .cs_c1 { background: #d6f0e3; border-color: #98d5b5; color: #1f6b46; }
-    .cs_c2 { background: #fdeec2; border-color: #f0cd72; color: #7d5a05; }
-    .cs_c3 { background: #d9e8fb; border-color: #9cc2f1; color: #214f8b; }
+    // popover shift options: same colours, higher specificity than .cs_opt
+    @for $i from 1 through 12 {
+        .cs_opt.cs_c#{$i - 1} {
+            background: nth(nth($cs_palette, $i), 1);
+            border-color: nth(nth($cs_palette, $i), 2);
+            color: nth(nth($cs_palette, $i), 3);
+        }
+    }
     .cs_off { background: #25263f; color: #fff; }
     .cs_vacation { background: #fff7ea; color: #b4620a; border-color: #e8923a; }
     .cs_sick { background: #fdeceb; color: #b3261e; border-color: #e5534b; }

@@ -36,6 +36,7 @@
             (4, ref('stock.group_stock_user')),
             (4, ref('stock.group_production_lot')),
             (4, ref('stock.group_stock_multi_locations')),
+            (4, ref('hr_attendance.group_hr_attendance_user')),
         ]"/>
     </record>
 

@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 31ad9b4 -->
+<!-- last-synced: 2026-10-01, commit: 1606da0 -->
 # Decisions (ADR) — clinic_patient_card
 
 Format: Context → Decision → Rejected → Consequences. New custom code requires a D-entry
@@ -277,6 +277,10 @@ add only `clinic.shift` (editable templates, seeded from the user's mock-ups) an
 used (its approval workflow is overkill). The screen is a custom OWL client action with two
 interchangeable looks (hour grid and per-employee matrix) because the user wanted to choose
 the visual side. Editing is admin-only; a doctor sees only their own days (ACL + ir.rule).
-· Consequences: new standard module `hr` on the live DB (adds an Employees app); shift lists
+**Extras (2026-10-01):** shift colours are a 12-colour palette with auto-unique assignment (python mirror of the scss list); the Planning board overlays the doctor's shift on the existing OWL board (colour band + hatched rest) instead of a new screen; closed weekdays come live from the company's Clinic Schedule, never hard-coded; custom hours entered in the day popover become shift templates.
+**S3 (2026-10-01):** the booking guard reads the doctor's schedule live (no cache) and only when an entry exists for that day; existing visits are never moved when the schedule changes, the admin gets a warning count. Shift-time edits apply from today so past worked-hours history stays true.
+**S2 (2026-10-01):** `hr_attendance` added; check-in/out stays 100% standard; the plan-vs-fact screen and Excel are custom over
+`hr.attendance`; hours are raw clock time (the standard `worked_hours` subtracts a lunch break the clinic does not use); a check-in more
+than 5 minutes after the shift start counts as late. · Consequences: new standard module `hr` on the live DB (adds an Employees app); shift lists
 are from memory/mock-ups and editable; the booking guard (phase 3) will be keyed on the
 dentist's schedule and falls back to the clinic hours when the schedule is empty.

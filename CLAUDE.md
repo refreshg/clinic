@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 31ad9b4 -->
+<!-- last-synced: 2026-10-01, commit: 1606da0 -->
 # Clinic — project notes for Claude
 
 ## Platform

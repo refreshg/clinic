@@ -14,7 +14,8 @@
         "base",
         "contacts",
         "base_address_extended",  # res.city + partner.city_id (patient address picker)
-        "hr",  # employees for the staff schedule (hr_attendance follows)
+        "hr",  # employees for the staff schedule
+        "hr_attendance",  # check-in / check-out + worked hours (S2)
         "product",
         "account",
         "mail",
@@ -82,6 +83,9 @@
             "clinic_patient_card/static/src/schedule/clinic_schedule.scss",
             "clinic_patient_card/static/src/schedule/clinic_schedule.js",
             "clinic_patient_card/static/src/schedule/clinic_schedule.xml",
+            "clinic_patient_card/static/src/hours/clinic_worked_hours.scss",
+            "clinic_patient_card/static/src/hours/clinic_worked_hours.js",
+            "clinic_patient_card/static/src/hours/clinic_worked_hours.xml",
             "clinic_patient_card/static/src/slot_finder/clinic_slot_finder_widget.js",
             "clinic_patient_card/static/src/slot_finder/clinic_new_patient_btn.js",
             "clinic_patient_card/static/src/slot_finder/clinic_new_patient_btn.xml",

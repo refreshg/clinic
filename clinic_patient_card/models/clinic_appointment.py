@@ -427,6 +427,80 @@ class CalendarEvent(models.Model):
                     cm=int(round((company.clinic_work_end % 1) * 60)),
                 ))
 
+    @api.model
+    def clinic_board_staff(self, date):
+        """The doctors' schedule of one day for the Planning board:
+        {user_id: {type: shift|off|vacation|sick, start, end, name, bg, border,
+        text, label}}. Doctors without an entry that day are simply absent."""
+        from .clinic_schedule import DAY_TYPES, SHIFT_PALETTE
+        labels = dict(DAY_TYPES)
+        lines = self.env["clinic.schedule.line"].sudo().search([
+            ("date", "=", date), ("employee_id.clinic_staff_kind", "=", "doctor")])
+        out = {}
+        for ln in lines:
+            user = ln.employee_id.user_id
+            if not user:
+                continue
+            if ln.day_type == "shift" and ln.shift_id:
+                bg, border, text = SHIFT_PALETTE[ln.shift_id.color % len(SHIFT_PALETTE)]
+                out[user.id] = {
+                    "type": "shift", "start": ln.shift_id.start_hour, "end": ln.shift_id.end_hour,
+                    "name": ln.shift_id.name, "bg": bg, "border": border, "text": text,
+                }
+            else:
+                out[user.id] = {"type": ln.day_type, "label": labels.get(ln.day_type, "")}
+        return out
+
+    @api.model
+    def _clinic_staff_window(self, dentist, local_date):
+        """The doctor's scheduled working window on a local date (staff
+        schedule, milestone S): None = no entry (fall back to the clinic
+        hours), False = not working (day off / vacation / sick), or
+        (start_hour, end_hour) of the assigned shift."""
+        if not dentist:
+            return None
+        emp = self.env["hr.employee"].sudo().search([
+            ("user_id", "=", dentist.id), ("clinic_staff_kind", "=", "doctor")], limit=1)
+        if not emp:
+            return None
+        line = self.env["clinic.schedule.line"].sudo().search([
+            ("employee_id", "=", emp.id), ("date", "=", local_date)], limit=1)
+        if not line:
+            return None
+        if line.day_type != "shift" or not line.shift_id:
+            return False
+        return (line.shift_id.start_hour, line.shift_id.end_hour)
+
+    def _clinic_validate_staff_schedule(self, dentist, start_dt, stop_dt=None):
+        """No booking on a doctor's day off / vacation / sick day or outside
+        their scheduled shift (only when their schedule is filled in for that
+        day). clinic_force=1 skips it, like the other schedule guards."""
+        if self.env.context.get("clinic_force") or not dentist or not start_dt:
+            return
+        local_start = fields.Datetime.context_timestamp(self, start_dt)
+        win = self._clinic_staff_window(dentist, local_start.date())
+        if win is None:
+            return
+        day = local_start.strftime("%d.%m.%Y")
+        if win is False:
+            raise UserError(_(
+                "%(doc)s does not work on %(day)s (day off / vacation / sick leave "
+                "in the staff schedule) — booking is not possible.",
+                doc=dentist.name, day=day))
+        start_h = local_start.hour + local_start.minute / 60.0
+        stop_h = None
+        if stop_dt:
+            local_stop = fields.Datetime.context_timestamp(self, stop_dt)
+            stop_h = local_stop.hour + local_stop.minute / 60.0
+            if local_stop.date() != local_start.date():
+                stop_h += 24.0
+        if start_h < win[0] - 1e-6 or (stop_h is not None and stop_h > win[1] + 1e-6):
+            def hm(v):
+                return "%02d:%02d" % (int(v), int(round((v % 1) * 60)))
+            raise UserError(_(
+                "%(doc)s works %(a)s–%(b)s on %(day)s — booking outside this time is not possible.",
+                doc=dentist.name, a=hm(win[0]), b=hm(win[1]), day=day))
+
     @api.constrains("start", "stop", "dentist_id", "room_id", "clinic_state", "active")
     def _check_clinic_overlap(self):
         # Booked time is locked: the same dentist (and, if enabled, the same
@@ -537,10 +611,13 @@ class CalendarEvent(models.Model):
                     " — " + atype.name if atype else "")
             # Scheduling rules: no past bookings, working hours only.
             if vals.get("start"):
-                self._clinic_validate_schedule(
-                    fields.Datetime.to_datetime(vals["start"]),
-                    vals.get("stop") and fields.Datetime.to_datetime(vals["stop"]),
-                )
+                start_dt = fields.Datetime.to_datetime(vals["start"])
+                stop_dt = vals.get("stop") and fields.Datetime.to_datetime(vals["stop"])
+                self._clinic_validate_schedule(start_dt, stop_dt)
+                # the doctor's own schedule (reserve entries have no real slot)
+                if vals.get("clinic_state") != "requested" and vals.get("dentist_id"):
+                    self._clinic_validate_staff_schedule(
+                        self.env["res.users"].browse(vals["dentist_id"]), start_dt, stop_dt)
         events = super().create(vals_list)
         events._clinic_remember_family_link()
         return events
@@ -572,6 +649,26 @@ class CalendarEvent(models.Model):
                 fields.Datetime.to_datetime(vals["start"]),
                 vals.get("stop") and fields.Datetime.to_datetime(vals["stop"]),
             )
+        # the doctor's own schedule — when the time or the doctor changes
+        if any(k in vals for k in ("start", "stop", "duration", "dentist_id")):
+            for ev in self:
+                if not ev.is_clinic or ev.clinic_state in ("requested", "cancelled", "no_show"):
+                    continue
+                new_start = (fields.Datetime.to_datetime(vals["start"])
+                             if vals.get("start") else ev.start)
+                if not new_start:
+                    continue
+                if vals.get("stop"):
+                    new_stop = fields.Datetime.to_datetime(vals["stop"])
+                elif vals.get("duration"):
+                    new_stop = new_start + timedelta(hours=vals["duration"])
+                elif ev.start and ev.stop:
+                    new_stop = new_start + (ev.stop - ev.start)
+                else:
+                    new_stop = None
+                dentist = (self.env["res.users"].browse(vals["dentist_id"])
+                           if vals.get("dentist_id") else ev.dentist_id)
+                ev._clinic_validate_staff_schedule(dentist, new_start, new_stop)
         resched_ids, dured_ids = [], []
         if not self.env.context.get("clinic_flagging") and (
             "start" in vals or "stop" in vals or "duration" in vals
@@ -917,9 +1014,16 @@ class CalendarEvent(models.Model):
             open_dt = day + timedelta(hours=w_start)
             close_dt = day + timedelta(hours=w_end)
             for doc in doctors:
-                cur = open_dt
+                win = self._clinic_staff_window(doc, day.date())
+                if win is False:
+                    continue  # day off / vacation / sick leave
+                doc_open, doc_close = open_dt, close_dt
+                if win:
+                    doc_open = max(open_dt, day + timedelta(hours=win[0]))
+                    doc_close = min(close_dt, day + timedelta(hours=win[1]))
+                cur = doc_open
                 intervals = sorted(by_doc.get(doc.id, []))
-                while cur + dur <= close_dt:
+                while cur + dur <= doc_close:
                     if cur < now_local:  # never offer the past
                         cur += step
                         continue

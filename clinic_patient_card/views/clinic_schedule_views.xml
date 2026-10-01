@@ -5,6 +5,11 @@
         <field name="tag">clinic_schedule</field>
     </record>
 
+    <record id="action_clinic_worked_hours" model="ir.actions.client">
+        <field name="name">ნამუშევარი საათები</field>
+        <field name="tag">clinic_worked_hours</field>
+    </record>
+
     <record id="view_clinic_shift_list" model="ir.ui.view">
         <field name="name">clinic.shift.list</field>
         <field name="model">clinic.shift</field>
@@ -42,6 +47,9 @@
 
     <menuitem id="menu_clinic_schedule" name="გრაფიკი"
               parent="menu_clinic_root" action="action_clinic_schedule" sequence="8"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
+    <menuitem id="menu_clinic_worked_hours" name="ნამუშევარი საათები"
+              parent="menu_clinic_root" action="action_clinic_worked_hours" sequence="9"
               groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
     <menuitem id="menu_clinic_shift" name="Shifts"
               parent="menu_clinic_config" action="action_clinic_shift" sequence="30"

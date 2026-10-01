@@ -684,3 +684,25 @@
     }
     .o_form_button_cancel { border-radius: 10px; }
 }
+
+/* ===== doctor schedule on the board (shift colour band, hatched off-time) ===== */
+.cp_denthead .cp_shiftchip {
+    display: inline-block; margin-top: 3px; padding: 1px 9px; border-radius: 10px;
+    border: 1px solid #d8d9e8; background: #f3f3f9; color: #55597a;
+    font-size: 11px; font-weight: 700; white-space: nowrap;
+    &.cp_st_off { background: #25263f; border-color: #25263f; color: #fff; }
+    &.cp_st_vacation { background: #fff7ea; border-color: #e8923a; color: #b4620a; }
+    &.cp_st_sick { background: #fdeceb; border-color: #e5534b; color: #b3261e; }
+}
+.cp_col .cp_stzone {
+    position: absolute; left: 0; right: 0; pointer-events: none;
+    &.cp_st_on { opacity: .55; }
+    &.cp_st_out {
+        background: repeating-linear-gradient(135deg, #eceef3 0 7px, #e2e5ec 7px 14px);
+        opacity: .85;
+    }
+    .cp_stlabel {
+        position: absolute; top: 10px; left: 0; right: 0; text-align: center;
+        font-weight: 800; letter-spacing: .3px; color: #6a6e8c; font-size: 12px;
+    }
+}

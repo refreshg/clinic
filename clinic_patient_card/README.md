@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 31ad9b4 -->
+<!-- last-synced: 2026-10-01, commit: 1606da0 -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -82,7 +82,7 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
 - Odontogram on the partner form is visual-only (clickable version = PLAN M4).
 - `i18n/ka.po` is stale for the 28.08.26 batch strings (PLAN M2).
 - No automated tests by decision D-11 — verify live (RPC + browser).
-- Staff schedule (S1): shift lists are from the user's mock-ups, assistants must be added as employees with Clinic Role; attendance, worked hours and the booking guard are phases S2/S3 (PLAN).
+- Staff schedule (S1) + worked hours (S2): shift lists are from the user's mock-ups, assistants must be added as employees with Clinic Role; check-in/out is the standard Odoo attendance; worked hours are raw clock time (no lunch deduction), lateness = more than 5 min after the shift start; the booking guard (S3) refuses bookings outside a doctor's scheduled shift on days where their schedule is filled in (empty day = clinic hours only); the Planning board shows each doctor's shift colour. Closed weekdays follow Settings → Companies → Clinic Schedule; public holidays are not modelled.
 - Form-100 / EHR sync not implemented (templates/target unknown).
 - Insurer list (`data/clinic_insurers_seed.xml`) and city list (`data/clinic_cities_seed.xml`) are unconfirmed — written from memory.
 - Patient status counts COMPLETED visits only; the Patients Export button downloads the active status (primary/unique) or all patients (57 of 80 have no status). Required card fields are enforced by the form, not by constraints.

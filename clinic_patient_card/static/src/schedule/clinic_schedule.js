@@ -24,6 +24,7 @@ const DAY_TYPES = [
     { key: "sick", label: "ბიულეტენი", icon: "✚" },
 ];
 const HOUR_PX = 36;
+const PALETTE = Array.from({ length: 12 }, (_v, i) => i); // classes cs_c0 .. cs_c11
 
 function iso(d) {
     const off = d.getTimezoneOffset() * 60000;
@@ -49,20 +50,87 @@ export class ClinicSchedule extends Component {
 
     setup() {
         this.orm = useService("orm");
+        this.notification = useService("notification");
         this.KINDS = KINDS;
         this.DAY_TYPES = DAY_TYPES;
+        this.PALETTE = PALETTE;
         this.state = useState({
-            kind: "admin",
+            kind: false, // the server picks the user's own group on first load
             mode: "week",
             view: "matrix",
             anchor: iso(new Date()),
             loading: true,
-            data: { employees: [], shifts: [], lines: [], counts: {}, is_admin: false },
+            data: { employees: [], shifts: [], lines: [], counts: {}, is_admin: false,
+                    closed_weekdays: [], visible_kinds: [] },
             pop: null, // {empId, date, x, y}
+            custom: { start: "09:00", end: "18:00" },
+            editShift: null, // {id (0 = new), start, end} — the sidebar "სამუშაო დრო" editor
         });
         this.lineMap = {};
         this.shiftMap = {};
         onWillStart(() => this.load());
+    }
+
+    get activeShifts() {
+        return this.state.data.shifts.filter((s) => !s.archived);
+    }
+
+    // ---- shift templates (sidebar editor, administrators) ----
+    _toHHMM(v) {
+        return fmtHour(v);
+    }
+    startEditShift(s) {
+        this.state.editShift = {
+            id: s.id, start: this._toHHMM(s.start), end: this._toHHMM(s.end), color: s.color,
+        };
+    }
+    startNewShift() {
+        // pre-select the first colour no shift of this group uses yet
+        const used = this.activeShifts.map((s) => s.color);
+        const free = PALETTE.find((c) => !used.includes(c));
+        this.state.editShift = { id: 0, start: "09:00", end: "18:00", color: free === undefined ? 0 : free };
+    }
+    pickShiftColor(c) {
+        this.state.editShift.color = c;
+    }
+    cancelEditShift() {
+        this.state.editShift = null;
+    }
+    get editShiftInvalid() {
+        const e = this.state.editShift;
+        if (!e) {
+            return true;
+        }
+        const s = this._hhmm(e.start);
+        const t = this._hhmm(e.end);
+        return s === false || t === false || t <= s;
+    }
+    async saveShift() {
+        const e = this.state.editShift;
+        if (this.editShiftInvalid) {
+            return;
+        }
+        await this.orm.call("clinic.schedule.line", "clinic_shift_save",
+            [this.state.kind, e.id, this._hhmm(e.start), this._hhmm(e.end), e.color]);
+        this.state.editShift = null;
+        await this.load();
+        this.notification.add(
+            e.id ? "ცვლის საათები შეიცვალა — ცვლილება ვრცელდება დღევანდლიდან, წარსული დღეები უცვლელია."
+                 : "ახალი დრო დაემატა.",
+            { type: "success" });
+    }
+    async deleteShift(s) {
+        if (!window.confirm("წაიშალოს ცვლა " + s.name + "?")) {
+            return;
+        }
+        await this.orm.call("clinic.schedule.line", "clinic_shift_delete", [s.id]);
+        this.state.editShift = null;
+        await this.load();
+    }
+
+    get visibleKinds() {
+        const ok = this.state.data.visible_kinds;
+        return KINDS.filter((k) => ok.includes(k.key));
     }
 
     // ---- range ----
@@ -110,6 +178,7 @@ export class ClinicSchedule extends Component {
         const data = await this.orm.call("clinic.schedule.line", "clinic_schedule_data",
             [this.state.kind, from, to]);
         this.state.data = data;
+        this.state.kind = data.kind;
         this.lineMap = {};
         for (const ln of data.lines) {
             this.lineMap[ln.employee_id + "|" + ln.date] = ln;
@@ -201,6 +270,9 @@ export class ClinicSchedule extends Component {
         const d = parse(date);
         return WD_FULL[(d.getDay() + 6) % 7] + ", " + d.getDate();
     }
+    isClosed(date) {
+        return this.state.data.closed_weekdays.includes((parse(date).getDay() + 6) % 7);
+    }
     isToday(date) {
         return date === iso(new Date());
     }
@@ -274,7 +346,7 @@ export class ClinicSchedule extends Component {
 
     // ---- editing (administrators) ----
     openPop(ev, empId, date) {
-        if (!this.state.data.is_admin) {
+        if (!this.state.data.is_admin || this.isClosed(date)) {
             return;
         }
         ev.stopPropagation();
@@ -287,6 +359,17 @@ export class ClinicSchedule extends Component {
     }
     openAdd(ev, date) {
         this.openPop(ev, 0, date);
+    }
+    // toolbar "＋ დამატება": pick the employee and the date inside the popover
+    openToolbarAdd(ev) {
+        ev.stopPropagation();
+        const r = ev.currentTarget.getBoundingClientRect();
+        this.state.pop = {
+            empId: 0,
+            date: this.state.anchor,
+            x: Math.max(Math.min(r.left, window.innerWidth - 270), 8),
+            y: Math.min(r.bottom + 4, window.innerHeight - 380),
+        };
     }
     closePop() {
         this.state.pop = null;
@@ -302,12 +385,35 @@ export class ClinicSchedule extends Component {
     pickEmployee(empId) {
         this.state.pop.empId = empId;
     }
-    async choose(dayType, shiftId) {
+    async choose(dayType, shiftId, start, end) {
         const p = this.state.pop;
-        await this.orm.call("clinic.schedule.line", "clinic_schedule_set",
-            [p.empId, p.date, dayType || false, shiftId || false]);
+        const res = await this.orm.call("clinic.schedule.line", "clinic_schedule_set",
+            [p.empId, p.date, dayType || false, shiftId || false, start || false, end || false]);
         this.state.pop = null;
         await this.load();
+        if (res && res.conflicts) {
+            this.notification.add(
+                res.conflicts + " უკვე დაჯავშნილი ვიზიტი ექცევა ახალი გრაფიკის გარეთ — "
+                + "გადაამოწმეთ და საჭიროების შემთხვევაში გადაიტანეთ.",
+                { type: "warning", sticky: true });
+        }
+    }
+    _hhmm(value) {
+        const [h, m] = (value || "").split(":").map(Number);
+        return Number.isNaN(h) || Number.isNaN(m) ? false : Math.round((h + m / 60) * 100) / 100;
+    }
+    async chooseCustom() {
+        const start = this._hhmm(this.state.custom.start);
+        const end = this._hhmm(this.state.custom.end);
+        if (start === false || end === false || end <= start) {
+            return; // the inputs show the problem; nothing sent
+        }
+        await this.choose("shift", false, start, end);
+    }
+    get customInvalid() {
+        const s = this._hhmm(this.state.custom.start);
+        const e = this._hhmm(this.state.custom.end);
+        return s === false || e === false || e <= s;
     }
 }
 

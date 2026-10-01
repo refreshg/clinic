@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 31ad9b4 -->
+<!-- last-synced: 2026-10-01, commit: 1606da0 -->
 # Architecture — clinic_patient_card
 
 ## Components
@@ -20,6 +20,8 @@
 | Family link hook | `models/clinic_appointment.py` `_clinic_remember_family_link` | two-way family_member_ids + patient flag on visit save (D-24) |
 | Patient export | `controllers/patient_export.py` + Patients control-panel buttons (`static/src/patient_status/`) | GET `/clinic/patients/export?status=primary|unique` → .xlsx (xlsxwriter) built from `clinic_patient_status` (D-27) |
 | Staff schedule | `models/clinic_schedule.py` + `static/src/schedule/` (OWL, tag `clinic_schedule`) | shift templates, per-day lines on std `hr.employee`, doctor/assistant/admin tabs, day/week/month, grid + matrix looks, admin popover editing (D-29) |
+| Board schedule overlay | `calendar.event.clinic_board_staff` + `static/src/planning/` (`staffZones`, `chipLabel`) | per-doctor shift chip, colour band and hatched off-time on the Planning board; blocks click/drag outside the shift (D-29) |
+| Worked hours | `clinic_hours_data` (models/clinic_schedule.py) + `static/src/hours/` + `controllers/hours_export.py` | plan (schedule) vs fact (std `hr.attendance`) per employee for day/week/month/year, chart, Excel (D-29) |
 | Live alerts | `static/src/clinic_arrived_service.js` | bus subscriber + WebAudio chimes for 6 channels |
 | Supply Shop v2.1 | `static/src/shop/` + `models/purchase_order.py` + `models/clinic_shop.py` | clinic buys: banner slots+links, category sections (any-depth subcats), strips, wishlist, ⇄ compare tray, repeat order, localStorage cart persistence → cart → 1 RFQ/vendor + mirror SO |
 | Supplier warehouse | `models/clinic_supplier_stock.py` + `wizard/clinic_supplier_move.py` | per-supplier location pair + shelves; count/Apply, Move wizard, ship-at-In-Transit, scoped My Warehouse/Locations/Transfers menus (D-19) |

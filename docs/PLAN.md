@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 31ad9b4 -->
+<!-- last-synced: 2026-10-01, commit: 1606da0 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -60,11 +60,17 @@ templates + per-day lines (Community has no planning app) — D-29.
 - [x] S1 models `clinic.shift`, `clinic.schedule.line`, `hr.employee.clinic_staff_kind`; shift seed (from the
       mock-ups); OWL screen `clinic_schedule` (menu Clinic → გრაფიკი): doctor/assistant/admin tabs,
       day/week/month, hour-grid + matrix looks, admin click-to-assign popover; Configuration → Shifts
+- [x] S1 extras (user): custom start–end time, toolbar "＋ დამატება", closed clinic days (Sunday) shown as უქმე from the company config
 - [ ] S1 browser check by the user (both looks, month, assignment, doctor sees only self)
-- [ ] S2 `hr_attendance`: check-in/out inside Odoo + "ნამუშევარი საათები" window (plan vs actual, difference,
-      lateness, vacation/sick, day/week/month/year, Excel)
-- [ ] S3 booking guard: no booking for a doctor on off/vacation/sick days or outside their shift
-      (when their schedule is filled; empty = old clinic-hours rule); extend `_clinic_validate_schedule`
+- [x] S2 `hr_attendance` (check-in/out inside Odoo: systray / kiosk, admin corrects in Attendances) + "ნამუშევარი საათები"
+      screen (plan vs actual, difference, overtime, lateness, absence, vacation/sick, day/week/month/year, chart, Excel)
+- [ ] S2 browser check by the user (systray check-in/out for a doctor, the hours screen, Excel download)
+- [x] S3 booking guard: no booking for a doctor on off/vacation/sick days or outside their shift
+      (when their schedule is filled; empty = old clinic-hours rule) — `_clinic_validate_staff_schedule` on create/write,
+      `clinic_free_slots` respects the shift; admin gets a warning when a schedule change leaves live visits outside it
+- [x] S1 extra (user): shift times editable / addable from the schedule sidebar (change applies from today, past days keep the old hours)
+- [x] S3 visual (user): the Planning board shows each doctor's shift (colour chip + tinted band, rest hatched, no click/drag outside it); shift colours = 12-colour palette, auto-unique, admin-pickable
+- [ ] S3 browser check by the user (booking at 16:00 for a doctor working until 15:00 is refused)
 - [ ] S4 "ძირითადი გრაფიკი" (weekly pattern applied to a range) — only if the clinic wants it
 
 ## Small chores (any time)
@@ -75,5 +81,6 @@ templates + per-day lines (Community has no planning app) — D-29.
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
 Last session 2026-10-01: reviewer follow-ups 14-21 + 30.09-01.10 requests live on the server (committed up to d4ec77a; quick form minimal, required fields on the card, allergy/pregnancy answers, address + cities, patient status + Excel as control-panel buttons, back buttons) — v19.0.61.0.
+Schedule milestone S (S1 screen, S2 attendance + worked hours + Excel, S3 booking guard + board overlay) is on the server, UNCOMMITTED since 1606da0.
 Next: user browser-checks the batch (Excel route, live search, back buttons, address) and gets the clinic answers (PRD §9), staff change passwords; then M2 ka.po regen (first unblocked).
 Watch out: D-24/D-25/D-27 unverified in the browser (family form_view_ref side effect, Enter opens 1st patient, Excel download); an admin must NOT carry group_clinic_doctor; supplier on a SEPARATE account; 57/80 patients have no status.

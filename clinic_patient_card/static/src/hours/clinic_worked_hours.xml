@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="clinic_patient_card.ClinicWorkedHours">
+    <div class="o_clinic_hours">
+
+        <div class="cw_head">
+            <h2 class="cw_title">ნამუშევარი საათები</h2>
+            <div class="cw_tools">
+                <div class="cw_seg">
+                    <button type="button" t-foreach="visibleKinds" t-as="k" t-key="k.key"
+                            t-att-class="state.kind === k.key ? 'active' : ''"
+                            t-on-click="() => this.setKind(k.key)">
+                        <t t-esc="k.label"/>
+                    </button>
+                </div>
+                <div class="cw_seg">
+                    <button type="button" t-att-class="state.mode === 'day' ? 'active' : ''" t-on-click="() => this.setMode('day')">დღე</button>
+                    <button type="button" t-att-class="state.mode === 'week' ? 'active' : ''" t-on-click="() => this.setMode('week')">კვირა</button>
+                    <button type="button" t-att-class="state.mode === 'month' ? 'active' : ''" t-on-click="() => this.setMode('month')">თვე</button>
+                    <button type="button" t-att-class="state.mode === 'year' ? 'active' : ''" t-on-click="() => this.setMode('year')">წელი</button>
+                </div>
+                <div class="cw_nav">
+                    <button type="button" class="cw_btn" t-on-click="() => this.step(-1)">‹</button>
+                    <span class="cw_range" t-esc="rangeLabel"/>
+                    <button type="button" class="cw_btn" t-on-click="() => this.step(1)">›</button>
+                    <button type="button" class="cw_btn" t-on-click="today">დღეს</button>
+                </div>
+                <a class="cw_btn cw_excel" t-att-href="exportUrl">⬇ Excel</a>
+            </div>
+        </div>
+
+        <div t-if="state.loading" class="cw_loading">იტვირთება…</div>
+        <div t-elif="!state.data.rows.length" class="cw_loading">ამ ჯგუფში თანამშრომელი ჯერ არ არის.</div>
+        <t t-else="">
+            <div class="cw_cards">
+                <div class="cw_card">
+                    <div class="cw_dim">გეგმიური</div>
+                    <div class="cw_big"><t t-esc="fmt(state.data.totals.planned)"/> <small>სთ</small></div>
+                </div>
+                <div class="cw_card">
+                    <div class="cw_dim">ნამუშევარი</div>
+                    <div class="cw_big cw_accent"><t t-esc="fmt(state.data.totals.worked)"/> <small>სთ</small></div>
+                </div>
+                <div class="cw_card">
+                    <div class="cw_dim">სხვაობა გეგმასთან</div>
+                    <div t-att-class="'cw_big ' + diffClass(state.data.totals.diff)"><t t-esc="signed(state.data.totals.diff)"/> <small>სთ</small></div>
+                </div>
+                <div class="cw_card">
+                    <div class="cw_dim">შეგანაკვეთური</div>
+                    <div class="cw_big"><t t-esc="fmt(state.data.totals.overtime)"/> <small>სთ</small></div>
+                </div>
+                <div class="cw_card">
+                    <div class="cw_dim">დაგვიანება / გაცდენა</div>
+                    <div class="cw_big">
+                        <t t-esc="state.data.totals.late_minutes"/> <small>წთ</small> ·
+                        <t t-esc="state.data.totals.absent_days"/> <small>დღე</small>
+                    </div>
+                    <div class="cw_dim">
+                        შვებულება <b t-esc="state.data.totals.vacation"/> · ბიულეტენი <b t-esc="state.data.totals.sick"/>
+                    </div>
+                </div>
+            </div>
+
+            <div t-if="showChart" class="cw_panel">
+                <div class="cw_panel_head">
+                    <b>ნამუშევარი საათები — პერიოდების მიხედვით</b>
+                    <span class="cw_legend"><i class="cw_sw cw_sw_plan"/> გეგმა <i class="cw_sw cw_sw_work"/> ნამუშევარი</span>
+                </div>
+                <div class="cw_chart">
+                    <div t-foreach="state.data.buckets" t-as="b" t-key="b.from" class="cw_col">
+                        <div class="cw_bars">
+                            <div class="cw_bar cw_bar_plan" t-att-style="barStyle(b.planned)" t-att-title="'გეგმა ' + fmt(b.planned) + ' სთ'"/>
+                            <div class="cw_bar cw_bar_work" t-att-style="barStyle(b.worked)" t-att-title="'ნამუშევარი ' + fmt(b.worked) + ' სთ'"/>
+                        </div>
+                        <div class="cw_val" t-esc="fmt(b.worked)"/>
+                        <div class="cw_lbl" t-esc="b.label"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cw_panel">
+                <table class="cw_table">
+                    <thead>
+                        <tr>
+                            <th>თანამშრომელი</th>
+                            <th t-if="state.mode === 'day'">მოსვლა</th>
+                            <th t-if="state.mode === 'day'">წასვლა</th>
+                            <th>გეგმა</th>
+                            <th>ნამუშევარი</th>
+                            <th>სხვაობა</th>
+                            <th>შეგანაკვ.</th>
+                            <th>დაგვიან.</th>
+                            <th>გაცდენა</th>
+                            <th>შვებ. / ბიულ.</th>
+                            <th>შესრულება</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="state.data.rows" t-as="r" t-key="r.id">
+                            <td><b t-esc="r.name"/><div class="cw_dim" t-esc="r.job"/></td>
+                            <td t-if="state.mode === 'day'"><t t-esc="r.first_in || '—'"/></td>
+                            <td t-if="state.mode === 'day'"><t t-esc="r.last_out || '—'"/></td>
+                            <td><t t-esc="fmt(r.planned)"/></td>
+                            <td><b t-esc="fmt(r.worked)"/></td>
+                            <td><span t-att-class="'cw_pill ' + diffClass(r.diff)" t-esc="signed(r.diff)"/></td>
+                            <td><t t-esc="r.overtime ? fmt(r.overtime) : '—'"/></td>
+                            <td><t t-if="r.late_minutes"><t t-esc="r.late_minutes"/> წთ</t><t t-else="">—</t></td>
+                            <td><t t-esc="r.absent_days || '—'"/></td>
+                            <td><t t-esc="r.vacation"/> / <t t-esc="r.sick"/></td>
+                            <td class="cw_prog">
+                                <t t-if="r.pct === null">—</t>
+                                <t t-else="">
+                                    <div class="cw_track"><div class="cw_fill" t-att-style="pctWidth(r)"/></div>
+                                    <span t-esc="r.pct + '%'"/>
+                                </t>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+    </div>
+</t>
+
+</templates>

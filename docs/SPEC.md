@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 31ad9b4 -->
+<!-- last-synced: 2026-10-01, commit: 1606da0 -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -218,11 +218,34 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 ### 2026-10-01 staff schedules (S1)
 | model | additions |
 |---|---|
-| clinic.shift | name/hours (stored compute "09:30–15:00"), staff_kind (doctor/assistant/admin), start_hour, end_hour, color 0-3 (pink/green/yellow/blue), sequence, active; 12 seed rows (noupdate) |
+| clinic.shift | name/hours (stored compute "09:30–15:00"), staff_kind (doctor/assistant/admin), start_hour, end_hour, color 0-11 (12-colour palette: pink, green, yellow, blue, purple, orange, teal, red, lime, indigo, sand, slate; new times take the first unused colour, the admin can pick one), sequence, active; 12 seed rows (noupdate) |
 | clinic.schedule.line | employee_id (hr.employee), date, day_type (shift/off/vacation/sick), shift_id; one row per employee-day (python constraint); RPC `clinic_schedule_data(kind, from, to)` / `clinic_schedule_set(employee, date, day_type, shift)` (admin only, sudo) |
 | hr.employee | `clinic_staff_kind` (puts the person on the schedule); `clinic_sync_staff()` creates employees for active clinic doctor/administrator users (skips base.user_admin and login `clinic`) |
 | security | ACL: shift/line user read, admin rwcu; rules: doctor reads only own days (employee.user_id), admin all |
 | views | client action `clinic_schedule` (`static/src/schedule/`), menu Clinic → გრაფიკი (admin+doctor), Configuration → Shifts (admin), `hr.view_employee_form` + Clinic Role |
+
+### 2026-10-01 worked hours (S2)
+| model | additions |
+|---|---|
+| clinic.schedule.line | RPC `clinic_hours_data(kind, from, to, mode)`: per employee planned (shift hours), planned-to-date, worked (hr.attendance, local day of check-in; an open attendance counts until now, max 16 h), diff, overtime (per-day excess), lateness (first check-in later than shift start + 5 min), absent days (shift day before today with no attendance), vacation/sick/off counts, completion %, in/out of the day; chart buckets (day/week → days, month → weeks, year → months) |
+| controllers | `/clinic/worked_hours/export?kind&mode&date_from&date_to` → .xlsx of the same rows (admin or doctor; a doctor gets only their own row) |
+| security | `group_clinic_admin` implies `hr_attendance.group_hr_attendance_user` (corrects any attendance); doctors check in/out through the standard systray / kiosk |
+| views | client action `clinic_worked_hours` (`static/src/hours/`), menu Clinic → ნამუშევარი საათები; manifest depends += `hr_attendance` |
+
+### 2026-10-01 booking guard + shift editing (S3)
+| model | additions |
+|---|---|
+| calendar.event | `_clinic_staff_window(dentist, date)` → None (no schedule entry: clinic hours rule only) / False (off, vacation, sick) / (start_h, end_h); `_clinic_validate_staff_schedule` on create (needs dentist_id, not reserve) and on write when start/stop/duration/dentist change; `clinic_free_slots` intersects the shift and skips non-working days; `clinic_force=1` skips |
+| clinic.schedule.line | `clinic_shift_save(kind, shift_id, start, end)` (admin; new time or edit — an edit applies from TODAY: if the old shift has past days, a new template takes today/future days and the old one is archived), `clinic_shift_delete`, `clinic_schedule_set` now returns `{conflicts: n}` (live visits of that doctor/day outside the new window — warned, never moved) |
+
+### 2026-10-01 schedule extras (after S1-S3)
+| area | additions |
+|---|---|
+| clinic.schedule.line RPC | `clinic_schedule_data` also returns `kind`, `visible_kinds`, `closed_weekdays` (from `res.company._clinic_workdays`; Sunday today), archived shifts still referenced; non-admin is forced to their own staff group (`_clinic_resolve_kind`: a doctor always opens "ექიმები", an administrator "ადმინისტრაცია", Administrator → doctors); `clinic_schedule_set(..., start, end)` accepts custom hours (find-or-create `clinic.shift`, `_clinic_custom_shift`), refuses closed weekdays, returns `{conflicts}` |
+| clinic.shift colour | `_clinic_next_color(kind)` (first unused of 12), `clinic_shift_save(kind, id, start, end, color)` (colour-only change = in place), SHIFT_PALETTE mirrors `$cs_palette` in clinic_schedule.scss |
+| calendar.event | `clinic_board_staff(date)` → {user_id: shift (start/end/name/colours) \| off/vacation/sick (label)} for the Planning board |
+| Planning board | per-doctor column: shift chip in the header, shift band tinted with the shift colour, everything else hatched (`.cp_stzone`), whole column hatched on off/vacation/sick; hover / drag / click disabled outside the shift (`_isWorkTime(hour, dentistId)`), a drag-sized visit cannot pass the shift end |
+| schedule screen | day / week / month, grid + matrix looks, toolbar ＋ დამატება, "საკუთარი დრო" inputs, sidebar shift editor with colour palette, closed days hatched "უქმე" |
 
 ## Business logic (trigger → condition → action; Standard coverage per row)
 | # | trigger | condition | action | std coverage |
@@ -273,6 +296,12 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | B44 | patient card save | `is_patient` | first/last name, personal no., birth date, phone, referral source, allergy answer (+ list when yes), pregnancy answer (non-men) must be filled — enforced by view `required=`, not by constraints, so non-UI writes are unaffected (D-26) | custom |
 | B45 | schedule screen opens (admin) | — | `clinic_sync_staff` ensures employees for doctor/admin users; doctors get only their own employee | custom over std hr |
 | B46 | admin clicks a cell / block | — | popover → `clinic_schedule_set` upsert / clear of one employee-day; screen reloads | custom |
+| B47 | employee checks in / out | std `hr_attendance` (systray, kiosk) | creates the `hr.attendance` row — nothing custom | standard |
+| B48 | „ნამუშევარი საათები" opens / period changes | admin (all) or doctor (self) | `clinic_hours_data` compares schedule vs attendance (see S2 table); Excel link downloads the same figures | custom report over std attendance |
+| B49 | booking / move / re-time / change doctor of a clinic visit | doctor has a schedule entry that day | day off/vacation/sick → refused; outside the shift → refused (start before it or end after it); no entry → clinic hours only | custom guard (D-29) |
+| B50 | admin edits a shift time in the schedule sidebar | admin | in-place when never used in the past, else new template from today + old archived (past hours stay true) | custom |
+| B51 | Planning board loads a day | doctors with schedule entries | `clinic_board_staff` colours each doctor's shift band + header chip, hatches non-working time, blocks click/drag there; no entry = clinic hours only | custom (S3 visual) |
+| B52 | schedule screen opens | any clinic user | opens on the user's own staff group; closed weekdays (company config) render as უქმე and cannot be edited (server also refuses) | custom |
 
 ## Standard-first check
 | requirement | standard feature checked | covers? | if no → custom + ref |
@@ -280,6 +309,9 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | Excel of patients by status | list → Actions → Export | partial (manual selection each time) | menu items + export route (D-27) |
 | city picker | `res.city` + `city_id` (base_address_extended) | yes | reused; only a seed + view tweaks (D-28) |
 | patient status (primary/unique) | none | no | stored compute on res.partner (D-27) |
+| shift colours | none | no | 12-colour palette (scss + python mirror) with auto-unique assignment (D-29) |
+| doctor schedule on the booking board | Enterprise `planning` | no (Community) | `clinic_board_staff` + OWL zones on the existing board (D-29) |
+| check-in / out + worked hours | `hr_attendance` | yes | used as is; only the plan-vs-fact screen and Excel are custom (D-29) |
 | staff schedule / shifts | Enterprise `planning`, std `resource.calendar` | no (Community; calendars are per-resource weekly patterns, no per-day shifts/leave types) | `clinic.shift` + `clinic.schedule.line` on std `hr.employee` (D-29) |
 | family link between patients | res.partner parent_id/child_ids | no (company/address hierarchy) | `family_member_ids` M2m + B36 hook (D-24) |
 | search-as-you-type | web SearchBar | no (needs Enter; per-field entries) | SearchBar patch, opt-in by action ctx (D-25) |
@@ -400,6 +432,10 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   categories (`data/clinic_shop_seed.xml`, noupdate). v19.0.53 needs nothing special.
 
 ## Drift log
+- 2026-10-01: shift colours grew from 4 to 12 (`clinic.shift.color` 0-3 → 0-11); two shifts created with the old modulo-4 rule duplicated colours — recoloured by hand in the live DB (data fix only, no migration code).
+- 2026-10-01: my own live tests wrote/cleared schedule rows on real dates before the clinic started entering data; the user confirmed that losing them is fine. Tests now use far-future dates.
+- 2026-10-01: before S3 the doctor's own schedule was NOT checked at booking (only the clinic-wide hours) — a visit could be booked at 16:00 for a doctor working until 15:00 (user report). Fixed by B49.
+- 2026-10-01: worked hours are RAW clock time (check-out − check-in). Odoo's own `hr.attendance.worked_hours` deducts the employee's calendar lunch break (09:20–15:30 → 5.17 h in the standard field vs 6.17 h on our screen); the clinic has no lunch rule — to confirm.
 - 2026-10-01: staff schedules (S1) — `hr` is now a dependency; the 'clinic' and Administrator accounts are NOT staff (excluded from the employee sync). Assistants do not exist as users yet: they are added as employees with Clinic Role = Assistant.
 - 2026-10-01 (later): the primary/unique Excel menu items under Clinic and the left status side panel were REMOVED; the same function now lives in the Patients control panel (buttons პირველადი / უნიკალური / ექსპორტი) — user request.
 - 2026-10-01: the quick-registration form went full → minimal → full → minimal within two days; the FINAL state is minimal (name, phone, insurance, foreign toggle). The "required" list the user gave (names, personal no., birth date, phone, referral source) applies to the patient CARD, not to the popup.

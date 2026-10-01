@@ -45,6 +45,7 @@ export class ClinicPlanning extends Component {
             startHour: DEFAULT_START_HOUR, // dynamic window, fitted to the day's visits
             endHour: DEFAULT_END_HOUR,
             config: null,         // clinic working schedule (grey out closed time)
+            staff: {},            // {user_id: schedule of that doctor for the shown day}
             waitlist: [],         // reserve entries (clinic_state=requested)
             waitlistOpen: false,
             hover: null,          // {d, top} — 10-min cell under the pointer
@@ -146,7 +147,7 @@ export class ClinicPlanning extends Component {
         const from = this._iso(prev) + " 00:00:00";
         const to = this._iso(next) + " 23:59:59";
 
-        const [events, types, rooms, fg, dentists, config, waitlist] = await Promise.all([
+        const [events, types, rooms, fg, dentists, config, waitlist, staff] = await Promise.all([
             this.orm.searchRead("calendar.event",
                 [["is_clinic", "=", true], ["clinic_state", "!=", "requested"],
                  ["start", ">=", from], ["start", "<=", to]],
@@ -164,8 +165,11 @@ export class ClinicPlanning extends Component {
                  ["start", ">=", this._todayStr() + " 00:00:00"]],
                 ["name", "start", "patient_id", "dentist_id", "is_dispensary"],
                 { order: "start asc", limit: 80 }),
+            // each doctor's own schedule for the shown day (shift, colour, days off)
+            this.orm.call("calendar.event", "clinic_board_staff", [this.state.date]),
         ]);
         this.state.config = config;
+        this.state.staff = staff || {};
         this.state.waitlist = waitlist;
         this.state.stateLabels = Object.fromEntries(
             (fg.clinic_state && fg.clinic_state.selection) || []
@@ -373,12 +377,74 @@ export class ClinicPlanning extends Component {
         }
         return zones;
     }
-    _isWorkTime(hour) {
+    _isWorkTime(hour, dentistId) {
         const c = this.state.config;
-        if (!c) {
-            return true;
+        if (c && (this.closedDay || hour < c.work_start - 1e-6 || hour >= c.work_end - 1e-6)) {
+            return false;
         }
-        return !this.closedDay && hour >= c.work_start - 1e-6 && hour < c.work_end - 1e-6;
+        const w = this.staffWindow(dentistId);
+        if (w === undefined) {
+            return true; // no schedule entry: only the clinic hours apply
+        }
+        return w !== false && hour >= w.start - 1e-6 && hour < w.end - 1e-6;
+    }
+
+    // ---- the doctor's own schedule (staff schedule milestone) ----
+    staffInfo(dentistId) {
+        return this.state.staff[dentistId];
+    }
+    /** undefined = no entry, false = not working, {start, end} = scheduled shift */
+    staffWindow(dentistId) {
+        const s = this.state.staff[dentistId];
+        if (!s) {
+            return undefined;
+        }
+        return s.type === "shift" ? { start: s.start, end: s.end } : false;
+    }
+    chipLabel(dentistId) {
+        const s = this.state.staff[dentistId];
+        return s ? (s.type === "shift" ? s.name : s.label) : "";
+    }
+    chipStyle(dentistId) {
+        const s = this.state.staff[dentistId];
+        if (!s || s.type !== "shift") {
+            return "";
+        }
+        return "background:" + s.bg + ";border-color:" + s.border + ";color:" + s.text + ";";
+    }
+    chipClass(dentistId) {
+        const s = this.state.staff[dentistId];
+        return s && s.type !== "shift" ? "cp_shiftchip cp_st_" + s.type : "cp_shiftchip";
+    }
+    /** coloured band for the shift, hatched everything else; whole column when not working */
+    staffZones(dentistId) {
+        const s = this.state.staff[dentistId];
+        if (!s) {
+            return [];
+        }
+        const sH = this.state.startHour;
+        const eH = this.state.endHour;
+        const total = this.totalHeight;
+        if (s.type !== "shift") {
+            return [{ cls: "cp_stzone cp_st_out cp_st_whole", top: 0, height: total, label: s.label }];
+        }
+        const a = Math.min(Math.max(s.start, sH), eH);
+        const b = Math.min(Math.max(s.end, sH), eH);
+        const zones = [];
+        if (a > sH) {
+            zones.push({ cls: "cp_stzone cp_st_out", top: 0, height: (a - sH) * HOUR_PX });
+        }
+        if (b > a) {
+            zones.push({
+                cls: "cp_stzone cp_st_on", top: (a - sH) * HOUR_PX, height: (b - a) * HOUR_PX,
+                style: "background:" + s.bg + ";box-shadow:inset 3px 0 0 " + s.border + ";",
+            });
+        }
+        if (b < eH) {
+            const top = (b - sH) * HOUR_PX;
+            zones.push({ cls: "cp_stzone cp_st_out", top, height: total - top });
+        }
+        return zones;
     }
 
     openHistory() {
@@ -516,7 +582,7 @@ export class ClinicPlanning extends Component {
         if (drag) {
             return;
         }
-        if (ev.target.closest(".cp_event") || !this._isWorkTime(this._slotHour(slot))) {
+        if (ev.target.closest(".cp_event") || !this._isWorkTime(this._slotHour(slot), dentist.id)) {
             this.state.hover = null;
             return;
         }
@@ -536,7 +602,7 @@ export class ClinicPlanning extends Component {
         }
         const rect = ev.currentTarget.getBoundingClientRect();
         const slot = this._slotFromY(ev.clientY - rect.top);
-        if (!this._isWorkTime(this._slotHour(slot))) {
+        if (!this._isWorkTime(this._slotHour(slot), dentist.id)) {
             return;
         }
         this.state.drag = { d: dentist.id, s: slot, e: slot };
@@ -557,6 +623,10 @@ export class ClinicPlanning extends Component {
         const cfg = this.state.config;
         if (cfg && !this.closedDay) {
             endHour = Math.min(endHour, cfg.work_end);
+        }
+        const win = this.staffWindow(dentist.id);
+        if (win) {
+            endHour = Math.min(endHour, win.end); // never past the doctor's shift
         }
         if (endHour <= startHour) {
             return;

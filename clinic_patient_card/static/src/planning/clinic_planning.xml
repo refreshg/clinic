@@ -113,6 +113,8 @@
                                         <span class="cp_doc_name" t-esc="d.name"/>
                                     </span>
                                     <small class="cp_doc_room d-block" t-esc="d.room"/>
+                                    <span t-if="staffInfo(d.id)" t-att-class="chipClass(d.id)"
+                                          t-att-style="chipStyle(d.id)" t-esc="chipLabel(d.id)"/>
                                 </div>
                             </t>
                         </div>
@@ -147,6 +149,12 @@
                                          class="cp_evdrag_ghost" t-att-style="evDragGhostStyle(d)">
                                         <span class="cp_drag_lbl" t-esc="evDragGhostLabel(d)"/>
                                     </div>
+                                    <!-- the doctor's schedule: coloured shift band, hatched rest -->
+                                    <t t-foreach="staffZones(d.id)" t-as="z" t-key="z_index">
+                                        <div t-att-class="z.cls" t-att-style="'top:' + z.top + 'px;height:' + z.height + 'px;' + (z.style || '')">
+                                            <span t-if="z.label" class="cp_stlabel" t-esc="z.label"/>
+                                        </div>
+                                    </t>
                                     <!-- closed (non-working) time is greyed out -->
                                     <t t-foreach="offZones" t-as="z" t-key="z_index">
                                         <div class="cp_offzone"
