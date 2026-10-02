@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_clinic_treatment_plan_form" model="ir.ui.view">
+        <field name="name">clinic.treatment.plan.form</field>
+        <field name="model">clinic.treatment.plan</field>
+        <field name="arch" type="xml">
+            <form string="Treatment Plan">
+                <header>
+                    <button name="action_pull_planned" type="object"
+                            string="⟳ დაგეგმილი პროცედურების წამოღება" invisible="not id or not patient_id"/>
+                    <button name="%(action_report_clinic_treatment_plan)d" type="action"
+                            string="🖨 PDF" class="btn-primary" invisible="not id"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="patient_name" placeholder="Name as printed on the document…"/>
+                            <field name="patient_id"/>
+                            <field name="date"/>
+                        </group>
+                        <group>
+                            <field name="implantologist"/>
+                            <field name="prosthodontist"/>
+                            <field name="chief_doctor"/>
+                        </group>
+                    </group>
+                    <separator string="RECOMMENDED TREATMENT"/>
+                    <field name="line_ids" nolabel="1">
+                        <list editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="visit"/>
+                            <field name="department"/>
+                            <field name="tooth"/>
+                            <field name="procedure"/>
+                            <field name="unit_price"/>
+                            <field name="price"/>
+                        </list>
+                    </field>
+                    <group>
+                        <field name="note" placeholder="NOTE — one point per line…"/>
+                        <field name="schedule" placeholder="Scheduled appointments — one per line…"/>
+                        <field name="total_implantology"/>
+                        <field name="total_prosthodontics"/>
+                        <field name="payment_note" placeholder="Payment note — one point per line…"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_clinic_treatment_plan_list" model="ir.ui.view">
+        <field name="name">clinic.treatment.plan.list</field>
+        <field name="model">clinic.treatment.plan</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="date"/>
+                <field name="patient_name"/>
+                <field name="patient_id" optional="show"/>
+                <field name="implantologist" optional="show"/>
+                <field name="prosthodontist" optional="show"/>
+                <field name="chief_doctor" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_clinic_treatment_plan_search" model="ir.ui.view">
+        <field name="name">clinic.treatment.plan.search</field>
+        <field name="model">clinic.treatment.plan</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="patient_id"/>
+                <field name="patient_name"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_clinic_treatment_plan" model="ir.actions.act_window">
+        <field name="name">მკურნალობის გეგმა</field>
+        <field name="res_model">clinic.treatment.plan</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_clinic_treatment_plan" name="მკურნალობის გეგმა"
+              parent="menu_clinic_root" action="action_clinic_treatment_plan" sequence="7"
+              groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
+</odoo>

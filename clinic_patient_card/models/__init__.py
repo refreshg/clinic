@@ -24,3 +24,5 @@ from . import clinic_consent
 from . import clinic_icd10
 from . import clinic_visit_medical
 from . import clinic_schedule
+from . import clinic_card_type
+from . import clinic_treatment_plan

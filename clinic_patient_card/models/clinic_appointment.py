@@ -43,6 +43,34 @@ class CalendarEvent(models.Model):
     family_member_domain_ids = fields.Many2many(
         "res.partner", compute="_compute_family_member_domain",
     )
+    # Pregnancy is asked afresh for EVERY visit: booking a new visit clears the
+    # patient's answer (see _clinic_reset_pregnancy), the administrator fills it on
+    # the card before arrival, and it is frozen on the visit at arrival.
+    visit_pregnancy = fields.Selection(
+        [("yes", "კი"), ("no", "არა")], string="Pregnancy (this visit)", copy=False)
+    # Warning for the doctor on the visit form: only a POSITIVE answer shows
+    # (pregnant / allergic), with the clinic's sign icons.
+    health_pregnancy_alert = fields.Boolean(compute="_compute_health_info")
+    health_allergy_alert = fields.Boolean(compute="_compute_health_info")
+    health_allergy_info = fields.Char(compute="_compute_health_info")
+
+    @api.depends("patient_id", "patient_id.gender", "patient_id.pregnancy_answer",
+                 "visit_pregnancy", "patient_id.allergy_answer",
+                 "patient_id.allergy_ids.name", "patient_id.allergy_ids.reaction")
+    def _compute_health_info(self):
+        for ev in self:
+            p = ev.patient_id
+            preg = bool(p and p.gender == "female"
+                        and (ev.visit_pregnancy or p.pregnancy_answer) == "yes")
+            allergic = bool(p and p.allergy_answer == "yes")
+            info = False
+            if allergic:
+                info = ", ".join(
+                    a.name + (" — " + a.reaction if a.reaction else "")
+                    for a in p.allergy_ids) or "რაზე — არ არის მითითებული"
+            ev.health_pregnancy_alert = preg
+            ev.health_allergy_alert = allergic
+            ev.health_allergy_info = info
     # Referral source right on the booking (writes through to the patient).
     referral_source = fields.Selection(
         related="patient_id.referral_source", readonly=False,
@@ -99,35 +127,75 @@ class CalendarEvent(models.Model):
             ev.consent_signed = bool(signed) and len(signed) == len(
                 ev.consent_ids) and len(ev.consent_ids) >= 2
 
-    def clinic_visit_register_payment(self, cash=0.0, terminal=0.0):
+    def _clinic_pending_retail(self):
+        """Retail sales (რეალიზაცია) made for the patient ON THE VISIT'S DAY (the
+        administration sells e.g. a toothbrush while the patient settles up)
+        that are not paid yet: they are added to the amount due on the billing
+        tab. Older unpaid sales are not pulled into a later visit."""
+        self.ensure_one()
+        if not (self.patient_id and self.start):
+            return self.env["sale.order"]
+        local = fields.Datetime.context_timestamp(self, self.start)
+        day0 = local.replace(hour=0, minute=0, second=0, microsecond=0)
+        utc = lambda d: d.astimezone(pytz.UTC).replace(tzinfo=None)
+        return self.env["sale.order"].sudo().search([
+            ("partner_id", "=", self.patient_id.id), ("is_clinic_retail", "=", True),
+            ("state", "in", ("draft", "sent", "sale")),
+            ("clinic_visit_id", "=", False),
+            ("date_order", ">=", utc(day0)),
+            ("date_order", "<", utc(day0 + timedelta(days=1)))], order="date_order, id")
+
+    def clinic_visit_register_payment(self, cash=0.0, terminal=0.0, method=None,
+                                      card_type_id=None):
         """D4 — payment straight from the visit page's billing tab.
 
-        Mirrors clinic.payment.wizard.action_confirm: cash + terminal must
-        cover the discounted procedures total; the invoice is created the
-        same way and the visit lands in `paid`."""
+        `method` is the chosen payment method (cash / card / transfer /
+        insurance / mixed). cash / card / mixed: cash + terminal must cover the
+        discounted procedures total; transfer / insurance pay the whole total
+        outside the till. Without `method` the old rule applies (derived from
+        the amounts). The invoice is created like in
+        clinic.payment.wizard.action_confirm and the visit lands in `paid`."""
         self.ensure_one()
         cash = cash or 0.0
         terminal = terminal or 0.0
-        total = sum(self.procedure_line_ids.mapped("amount_total"))
+        retail = self._clinic_pending_retail()
+        total = (sum(self.procedure_line_ids.mapped("amount_total"))
+                 + sum(retail.mapped("amount_total")))
         rounding = self.currency_id.rounding or 0.01
-        if cash < 0 or terminal < 0:
-            raise UserError(_("Cash and terminal amounts cannot be negative."))
-        if float_compare(cash + terminal, total,
-                         precision_rounding=rounding) != 0:
-            raise UserError(_(
-                "Cash (%(cash).2f) + terminal (%(term).2f) must equal the "
-                "total (%(total).2f).", cash=cash, term=terminal, total=total,
-            ))
-        method = ("mixed" if cash and terminal
-                  else "card" if terminal else "cash")
+        if method not in (None, False, "cash", "card", "transfer", "insurance", "mixed"):
+            raise UserError(_("Unknown payment method."))
+        if method in ("transfer", "insurance"):
+            cash = terminal = 0.0
+        else:
+            if cash < 0 or terminal < 0:
+                raise UserError(_("Cash and terminal amounts cannot be negative."))
+            if float_compare(cash + terminal, total,
+                             precision_rounding=rounding) != 0:
+                raise UserError(_(
+                    "Cash (%(cash).2f) + terminal (%(term).2f) must equal the "
+                    "total (%(total).2f).", cash=cash, term=terminal, total=total,
+                ))
+        if not method:
+            method = ("mixed" if cash and terminal
+                      else "card" if terminal else "cash")
         self.payment_method = method
-        self._create_invoice_from_procedures()
-        self.write({
+        if self.procedure_line_ids:
+            self._create_invoice_from_procedures()
+        # the retail sales are settled with this payment: approve the draft ones
+        # (the standard approval raises their invoice) and tie them to the visit
+        for order in retail:
+            if order.state in ("draft", "sent"):
+                order.action_confirm()
+            order.clinic_visit_id = self.id
+        vals = {
             "clinic_state": "paid",
             "amount_paid": total,
             "amount_cash": cash if method == "mixed" else 0.0,
             "amount_terminal": terminal if method == "mixed" else 0.0,
-        })
+        }
+        if method in ("card", "mixed") and card_type_id:
+            vals["card_type_id"] = self.env["clinic.card.type"].browse(card_type_id).exists().id
+        self.write(vals)
         return True
 
     def action_open_visit_page(self):
@@ -182,6 +250,7 @@ class CalendarEvent(models.Model):
             "clinic_patient_card.group_clinic_admin")
         return {
             "is_admin": is_admin,
+            "card_types": self.env["clinic.card.type"].sudo().search_read([], ["name"]),
             "complaints": {
                 "case_type": ev.clinic_case_type,
                 "ids": ev.clinic_complaint_ids.ids,
@@ -214,9 +283,17 @@ class CalendarEvent(models.Model):
                 "insurance": p.insurance_company_id.name or "",
                 "allergies": p.allergy_ids.mapped("display_name"),
                 "balance": 0.0,
+                "health": dict(p._clinic_health_warning(),
+                               pregnancy=ev.visit_pregnancy or p.pregnancy_answer or False),
             },
             "sections": sections,
             "procedures": procs,
+            "retail": [
+                {"id": o.id, "name": o.name, "amount": o.amount_total,
+                 "lines": ", ".join(
+                     "%s × %g" % (l.product_id.display_name or l.name, l.product_uom_qty)
+                     for l in o.order_line if not l.display_type)}
+                for o in ev._clinic_pending_retail()],
             "icd10": icd,
             "products": products,
         }
@@ -289,6 +366,10 @@ class CalendarEvent(models.Model):
     # Procedures performed/planned in THIS visit (auto-pushed to patient history).
     procedure_line_ids = fields.One2many(
         "clinic.procedure.history", "appointment_id", string="Procedures",
+    )
+    card_type_id = fields.Many2one(
+        "clinic.card.type", string="Card Type", copy=False,
+        help="Type of the card used for a card / mixed payment.",
     )
     payment_method = fields.Selection(
         [
@@ -620,6 +701,7 @@ class CalendarEvent(models.Model):
                         self.env["res.users"].browse(vals["dentist_id"]), start_dt, stop_dt)
         events = super().create(vals_list)
         events._clinic_remember_family_link()
+        events.filtered(lambda e: e.clinic_state != "requested")._clinic_reset_pregnancy()
         return events
 
     def _clinic_remember_family_link(self):
@@ -717,6 +799,9 @@ class CalendarEvent(models.Model):
                 ev._check_patient_data_complete()
         self.write({"clinic_state": "arrived", "checkin_time": fields.Datetime.now()})
         for ev in self:
+            if ev.is_clinic and ev.patient_id.gender == "female":
+                ev.visit_pregnancy = ev.patient_id.pregnancy_answer or False
+        for ev in self:
             ev._notify_dentist_arrived()
 
     def action_start(self):
@@ -725,7 +810,48 @@ class CalendarEvent(models.Model):
         for ev in self:
             if ev.is_clinic:
                 ev._check_patient_data_complete()
+                ev._check_patient_health_answers()
         self.write({"clinic_state": "in_progress", "treat_start_time": fields.Datetime.now()})
+
+    def _check_patient_health_answers(self):
+        """No procedure can be added to a visit while the patient card lacks the
+        allergy answer (or, for a woman, the pregnancy answer)."""
+        self.ensure_one()
+        if self.env.context.get("clinic_force") or not self.patient_id:
+            return
+        missing = self.patient_id._clinic_missing_health_answers()
+        if missing:
+            raise UserError(_(
+                "Cannot start the procedure — fill in on the patient card first: %s.",
+                ", ".join(missing)))
+
+    def _clinic_clear_card_pregnancy(self):
+        """Clear the patient's card pregnancy answer once their visit is over
+        (unless another visit of theirs is being treated right now)."""
+        self.ensure_one()
+        p = self.patient_id
+        if not (self.is_clinic and p and p.pregnancy_answer):
+            return
+        busy = self.sudo().search_count([
+            ("is_clinic", "=", True), ("patient_id", "=", p.id), ("id", "!=", self.id),
+            ("clinic_state", "in", ("arrived", "in_progress"))])
+        if not busy:
+            p.sudo().write({"pregnancy_answer": False, "is_pregnant": False})
+
+    def _clinic_reset_pregnancy(self):
+        """A new booking asks pregnancy afresh: clear the card's answer for the
+        patients of the new visits (unless that patient is being treated right
+        now — their current visit keeps its answer)."""
+        Event = self.sudo()
+        for ev in self:
+            p = ev.patient_id
+            if not (ev.is_clinic and p and p.gender == "female" and p.pregnancy_answer):
+                continue
+            busy = Event.search_count([
+                ("is_clinic", "=", True), ("patient_id", "=", p.id), ("id", "!=", ev.id),
+                ("clinic_state", "in", ("arrived", "in_progress"))])
+            if not busy:
+                p.sudo().write({"pregnancy_answer": False, "is_pregnant": False})
 
     def _check_patient_data_complete(self):
         self.ensure_one()
@@ -741,6 +867,9 @@ class CalendarEvent(models.Model):
             missing.append(_("Phone"))
         if not patient or not patient.birthdate:
             missing.append(_("Birth Date"))
+        # allergy + (female) pregnancy answers — pregnancy is re-asked for every visit
+        if patient and not self.env.context.get("clinic_force"):
+            missing += patient._clinic_missing_health_answers()
         if missing:
             raise UserError(
                 _("Cannot start the visit — fill in the patient's data first: %s")
@@ -753,6 +882,11 @@ class CalendarEvent(models.Model):
         today = fields.Date.context_today(self)
         for ev in self:
             ev.write({"clinic_state": "done", "treat_end_time": now})
+            # the pregnancy answer belongs to THIS visit only: clear the card's
+            # copy so the next visit asks again (the visit keeps its own value)
+            if ev.is_clinic and ev.patient_id and not ev.visit_pregnancy:
+                ev.visit_pregnancy = ev.patient_id.pregnancy_answer or False
+            ev._clinic_clear_card_pregnancy()
             for line in ev.procedure_line_ids:
                 vals = {}
                 if line.status != "done":
@@ -769,8 +903,12 @@ class CalendarEvent(models.Model):
                 ev.patient_id.last_dental_visit_date = today
 
     def action_pay(self):
-        # R14 — open the payment wizard (shows amount + payment method).
+        # Payment now happens on the visit page's billing tab (method, card
+        # type, amounts) — the button only takes the administrator there.
+        # The old wizard stays below as a fallback for the missing-page case.
         self.ensure_one()
+        if self.env.user.has_group("clinic_patient_card.group_clinic_admin"):
+            return self.action_open_visit_page()
         return {
             "type": "ir.actions.act_window",
             "name": _("Register Payment"),

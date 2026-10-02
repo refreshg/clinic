@@ -61,3 +61,9 @@ access_clinic_shift_user,clinic.shift.user,model_clinic_shift,base.group_user,1,
 access_clinic_shift_admin,clinic.shift.admin,model_clinic_shift,clinic_patient_card.group_clinic_admin,1,1,1,1
 access_clinic_schedule_line_user,clinic.schedule.line.user,model_clinic_schedule_line,base.group_user,1,0,0,0
 access_clinic_schedule_line_admin,clinic.schedule.line.admin,model_clinic_schedule_line,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_card_type_user,clinic.card.type.user,model_clinic_card_type,base.group_user,1,0,0,0
+access_clinic_card_type_admin,clinic.card.type.admin,model_clinic_card_type,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_treatment_plan_admin,clinic.treatment.plan.admin,model_clinic_treatment_plan,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_treatment_plan_doctor,clinic.treatment.plan.doctor,model_clinic_treatment_plan,clinic_patient_card.group_clinic_doctor,1,1,1,1
+access_clinic_treatment_plan_line_admin,clinic.treatment.plan.line.admin,model_clinic_treatment_plan_line,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_treatment_plan_line_doctor,clinic.treatment.plan.line.doctor,model_clinic_treatment_plan_line,clinic_patient_card.group_clinic_doctor,1,1,1,1

@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 1606da0 -->
+<!-- last-synced: 2026-10-02, commit: 101440c -->
 # Architecture — clinic_patient_card
 
 ## Components
@@ -21,6 +21,9 @@
 | Patient export | `controllers/patient_export.py` + Patients control-panel buttons (`static/src/patient_status/`) | GET `/clinic/patients/export?status=primary|unique` → .xlsx (xlsxwriter) built from `clinic_patient_status` (D-27) |
 | Staff schedule | `models/clinic_schedule.py` + `static/src/schedule/` (OWL, tag `clinic_schedule`) | shift templates, per-day lines on std `hr.employee`, doctor/assistant/admin tabs, day/week/month, grid + matrix looks, admin popover editing (D-29) |
 | Board schedule overlay | `calendar.event.clinic_board_staff` + `static/src/planning/` (`staffZones`, `chipLabel`) | per-doctor shift chip, colour band and hatched off-time on the Planning board; blocks click/drag outside the shift (D-29) |
+| Treatment plan | `models/clinic_treatment_plan.py` + `report/clinic_treatment_plan_report.xml` | printable plan with auto-pulled planned procedures; QWeb PDF with repeating header (D-32) |
+| Payment & card types | `calendar.event.clinic_visit_register_payment` + `models/clinic_card_type.py` + visit page billing tab | method / card type / same-day retail in the amount due (D-30) |
+| Health answers | `res.partner` allergy / pregnancy answers + `calendar.event` guards | mandatory at arrival; pregnancy asked per visit; red sign on the visit form (D-31) |
 | Worked hours | `clinic_hours_data` (models/clinic_schedule.py) + `static/src/hours/` + `controllers/hours_export.py` | plan (schedule) vs fact (std `hr.attendance`) per employee for day/week/month/year, chart, Excel (D-29) |
 | Live alerts | `static/src/clinic_arrived_service.js` | bus subscriber + WebAudio chimes for 6 channels |
 | Supply Shop v2.1 | `static/src/shop/` + `models/purchase_order.py` + `models/clinic_shop.py` | clinic buys: banner slots+links, category sections (any-depth subcats), strips, wishlist, ⇄ compare tray, repeat order, localStorage cart persistence → cart → 1 RFQ/vendor + mirror SO |

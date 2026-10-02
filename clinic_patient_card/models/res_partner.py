@@ -479,6 +479,32 @@ class ResPartner(models.Model):
             if full and "name" not in vals:
                 vals["name"] = full
 
+    def _clinic_missing_health_answers(self):
+        """Labels of the mandatory health answers still empty on this patient:
+        allergy (yes/no) always, pregnancy (yes/no) only for female patients.
+        The doctor may not start a procedure while any is missing."""
+        self.ensure_one()
+        missing = []
+        if not self.allergy_answer:
+            missing.append(_("Allergies (yes/no)"))
+        if self.gender == "female" and not self.pregnancy_answer:
+            missing.append(_("Pregnancy (yes/no)"))
+        return missing
+
+    def _clinic_health_warning(self):
+        """Data for the red warning on the visit page."""
+        self.ensure_one()
+        allergies = [
+            (a.name + (" — " + a.reaction if a.reaction else ""))
+            for a in self.allergy_ids
+        ]
+        return {
+            "allergy": self.allergy_answer or False,
+            "allergies": allergies,
+            "pregnancy": self.pregnancy_answer or False,
+            "pregnancy_applies": self.gender == "female",
+        }
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -492,7 +518,7 @@ class ResPartner(models.Model):
 
     @api.model
     def _clinic_sync_pregnancy(self, vals):
-        if vals.get("pregnancy_answer"):
+        if "pregnancy_answer" in vals:
             vals["is_pregnant"] = vals["pregnancy_answer"] == "yes"
 
     def write(self, vals):

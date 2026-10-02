@@ -41,7 +41,8 @@
         <!-- ===== tabs ===== -->
         <div class="cvp_tabs">
             <button class="cvp_back" t-on-click="backToCalendar">← კალენდარი</button>
-            <button class="cvp_visitform" t-on-click="openVisitForm">✎ ვიზიტის ფორმა</button>
+            <button class="cvp_visitform" t-on-click="openVisitForm"
+                    t-if="!state.data.is_admin">✎ ვიზიტის ფორმა</button>
             <button class="cvp_patientbtn" t-on-click="openPatient">🧑 პაციენტის ანკეტა</button>
             <button t-att-class="state.tab === 'procedures' ? 'active' : ''"
                     t-on-click="() => state.tab = 'procedures'"
@@ -54,6 +55,23 @@
         </div>
 
         <!-- ===== procedures tab ===== -->
+        <!-- ===== health warning (red) where the doctor starts the service (Procedures tab) ===== -->
+        <div class="cvp_health" t-if="state.tab === 'procedures' and !state.data.is_admin"
+             t-att-class="healthSevere ? 'cvp_health_hot' : ''">
+            <span class="cvp_h_item" t-if="state.data.patient.health.pregnancy_applies">
+                <t t-if="state.data.patient.health.pregnancy === 'yes'"><img class="cvp_h_ico" src="/clinic_patient_card/static/src/img/pregnant.svg" alt=""/> <b>ორსულია</b></t>
+                <t t-elif="state.data.patient.health.pregnancy === 'no'"><b>ორსულობა:</b> არა</t>
+                <t t-else=""><b>ორსულობა:</b> <span class="cvp_h_missing">შეუვსებელია!</span></t>
+            </span>
+            <span class="cvp_h_item">
+                <t t-if="state.data.patient.health.allergy === 'yes'"><img class="cvp_h_ico" src="/clinic_patient_card/static/src/img/allergy.svg" alt=""/> <b>ალერგია:</b>
+                    <t t-esc="state.data.patient.health.allergies.length ? state.data.patient.health.allergies.join(', ') : 'რაზე — არ არის მითითებული'"/>
+                </t>
+                <t t-elif="state.data.patient.health.allergy === 'no'"><b>ალერგია:</b> არა</t>
+                <t t-else=""><b>ალერგია:</b> <span class="cvp_h_missing">შეუვსებელია!</span></t>
+            </span>
+        </div>
+
         <div class="cvp_body" t-if="state.tab === 'procedures' and !state.data.is_admin">
             <!-- left: medical sections -->
             <div class="cvp_side">
@@ -321,7 +339,7 @@
                         </tbody>
                         <tfoot><tr>
                             <td colspan="4" class="text-end fw-bold">ჯამური ფასი:</td>
-                            <td class="fw-bold" t-esc="totalAmount"/>
+                            <td class="fw-bold" t-esc="procTotal"/>
                             <td colspan="2"/>
                         </tr></tfoot>
                     </table>
@@ -361,30 +379,55 @@
                         </t>
                     </tbody>
                     <tfoot>
+                        <tr t-foreach="state.data.retail || []" t-as="r" t-key="r.id">
+                            <td colspan="2" class="text-end">რეალიზაცია</td>
+                            <td colspan="3"><span t-esc="r.name"/> — <span class="text-muted" t-esc="r.lines"/></td>
+                            <td class="text-end fw-bold" t-esc="(r.amount || 0).toFixed(2)"/>
+                        </tr>
                         <tr>
                             <td colspan="5" class="text-end fw-bold">სულ:</td>
                             <td class="text-end fw-bold" t-esc="totalAmount.toFixed(2) + ' ₾'"/>
                         </tr>
                     </tfoot>
                 </table>
-                <div t-if="!state.data.procedures.length" class="text-muted mb-3">
+                <div t-if="!state.data.procedures.length and !(state.data.retail || []).length" class="text-muted mb-3">
                     პროცედურები ჯერ არ არის დამატებული
                 </div>
+                <table t-if="!state.data.procedures.length and (state.data.retail || []).length" class="cvp_bill_table">
+                    <tbody>
+                        <tr t-foreach="state.data.retail" t-as="r" t-key="r.id">
+                            <td>რეალიზაცია</td>
+                            <td><span t-esc="r.name"/> — <span class="text-muted" t-esc="r.lines"/></td>
+                            <td class="text-end fw-bold" t-esc="(r.amount || 0).toFixed(2) + ' ₾'"/>
+                        </tr>
+                    </tbody>
+                </table>
 
                 <div class="cvp_bill_cards mt-3">
                     <div class="cvp_card"><div class="cvp_ctitle">გადასახდელი</div>
                         <div class="cvp_amount" t-esc="totalAmount.toFixed(2) + ' ₾'"/></div>
                     <div class="cvp_card"><div class="cvp_ctitle">გადახდილი</div>
                         <div class="cvp_amount" t-esc="(state.data.visit.amount_paid || 0) + ' ₾'"/></div>
-                    <div class="cvp_card">
-                        <div class="cvp_ctitle">ხელზე (₾)</div>
-                        <input type="number" min="0" class="cvp_payin" t-model="state.payCash"
-                               t-att-disabled="state.data.visit.state === 'paid'"/>
+                    <div class="cvp_card" t-if="state.data.visit.state !== 'paid'">
+                        <div class="cvp_ctitle">გადახდის მეთოდი</div>
+                        <select class="cvp_payin cvp_paysel" t-on-change="onPayMethod">
+                            <option t-foreach="payMethods" t-as="m" t-key="m.key"
+                                    t-att-value="m.key" t-att-selected="state.payMethod === m.key"
+                                    t-esc="m.label"/>
+                        </select>
                     </div>
-                    <div class="cvp_card">
+                    <div class="cvp_card" t-if="state.data.visit.state !== 'paid' and showCash">
+                        <div class="cvp_ctitle">ხელზე (₾)</div>
+                        <input type="number" min="0" class="cvp_payin" t-model="state.payCash"/>
+                    </div>
+                    <div class="cvp_card" t-if="state.data.visit.state !== 'paid' and showTerminal">
                         <div class="cvp_ctitle">ბარათით (₾)</div>
-                        <input type="number" min="0" class="cvp_payin" t-model="state.payTerminal"
-                               t-att-disabled="state.data.visit.state === 'paid'"/>
+                        <input type="number" min="0" class="cvp_payin" t-model="state.payTerminal"/>
+                        <select class="cvp_payin cvp_cardtype mt-1" t-model="state.payCardType">
+                            <option value="0">ბარათის ტიპი…</option>
+                            <option t-foreach="state.data.card_types" t-as="ct" t-key="ct.id"
+                                    t-att-value="ct.id" t-esc="ct.name"/>
+                        </select>
                     </div>
                     <div t-if="state.data.visit.state !== 'paid'"
                          t-att-class="'cvp_card ' + (debtPreview > 0 ? 'cvp_debt' : '')">

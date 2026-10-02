@@ -22,6 +22,15 @@
     .cvp_phone { background: #1f2937; color: #fff; border-radius: 999px; padding: 0 8px; }
     .cvp_ctitle { color: #8a919c; font-size: 11px; margin-bottom: 2px; }
     .cvp_warn { border-color: #f5c6cb; background: #fff5f5; }
+    /* red health warning under the header cards */
+    .cvp_health {
+        display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 8px 0 12px; padding: 9px 16px;
+        border: 1.5px solid #e5534b; border-radius: 12px; background: #fdeceb; color: #b3261e;
+        font-weight: 600;
+        .cvp_h_missing { background: #b3261e; color: #fff; border-radius: 6px; padding: 0 8px; margin-left: 4px; }
+    }
+    .cvp_health .cvp_h_ico { width: 30px; height: 30px; vertical-align: middle; }
+    .cvp_health_hot { border-color: #b3261e; box-shadow: 0 0 0 2px rgba(179, 38, 30, .12); }
     .cvp_doc { margin-left: auto; text-align: right; }
     .cvp_amount { font-size: 20px; font-weight: 800; color: #714b67; }
 
@@ -136,6 +145,8 @@
         border: 1px solid #e5e8ec; border-radius: 8px; padding: 5px 8px;
         width: 110px; font-weight: 700; font-size: 15px;
     }
+    .cvp_paysel { width: 170px; }
+    .cvp_cardtype { font-weight: 600; font-size: 13px; }
     .cvp_paybtn {
         background: #f0a24a; color: #fff; border-radius: 10px;
         font-weight: 700; padding: 8px 26px;

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- header repeats on every page (logo + contacts), so the top margin is large -->
+    <record id="paperformat_clinic_treatment_plan" model="report.paperformat">
+        <field name="name">Clinic Treatment Plan</field>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">44</field>
+        <field name="margin_bottom">16</field>
+        <field name="margin_left">13</field>
+        <field name="margin_right">13</field>
+        <field name="header_spacing">4</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="action_report_clinic_treatment_plan" model="ir.actions.report">
+        <field name="name">Treatment Plan</field>
+        <field name="model">clinic.treatment.plan</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">clinic_patient_card.report_clinic_treatment_plan</field>
+        <field name="report_file">clinic_patient_card.report_clinic_treatment_plan</field>
+        <field name="print_report_name">'Treatment plan - %s' % (object.patient_name or '')</field>
+        <field name="paperformat_id" ref="paperformat_clinic_treatment_plan"/>
+        <field name="binding_model_id" ref="model_clinic_treatment_plan"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_clinic_treatment_plan">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="a" t-value="o._report_assets()"/>
+                <!-- FIXED header, repeated on every page -->
+                <div class="header" style="font-family: Arial, 'DejaVu Sans', sans-serif; font-size:13px; color:#111;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr>
+                            <td style="width:42%; vertical-align:top;">
+                                <img t-att-src="a['logo']" style="height:128px;"/>
+                            </td>
+                            <td style="vertical-align:middle; line-height:26px;">
+                                <div><img t-att-src="a['icon_location']" style="width:17px;height:17px;vertical-align:middle;"/> 12 Pavle Aslanidi Street, Tbilisi, Georgia</div>
+                                <div><img t-att-src="a['icon_phone']" style="width:17px;height:17px;vertical-align:middle;"/> 032 224 21 24</div>
+                                <div><img t-att-src="a['icon_mail']" style="width:17px;height:17px;vertical-align:middle;"/> info@metrevelidental.com</div>
+                                <div><img t-att-src="a['icon_web']" style="width:17px;height:17px;vertical-align:middle;"/> <span style="color:#1a55c4; text-decoration:underline;">www.metrevelidental.com</span></div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- "article" + data-oe-* is what makes Odoo wrap the body in the minimal
+                     layout (<meta charset>): without it Georgian / € came out garbled -->
+                <div class="article" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id">
+                <div class="page" style="font-family: Arial, 'DejaVu Sans', sans-serif; font-size:13px; color:#111;">
+                    <h1 style="text-align:center; color:#0d5c74; font-weight:bold; margin:6px 0 22px; font-size:34px;">TREATMENT PLAN</h1>
+
+                    <div style="line-height:1.55; font-size:14px;">
+                        <div><b style="color:#0d5c74;">Patient Name:</b> <b t-out="o._ent(o.patient_name)"/></div>
+                        <div t-if="o.implantologist"><b style="color:#0d5c74;">Implantologist:</b> <b t-out="o._ent(o.implantologist)"/></div>
+                        <div t-if="o.prosthodontist"><b style="color:#0d5c74;">Prosthodontist:</b> <b t-out="o._ent(o.prosthodontist)"/></div>
+                        <div t-if="o.chief_doctor"><b style="color:#0d5c74;">Chief Medical Officer:</b> <b t-out="o._ent(o.chief_doctor)"/></div>
+                    </div>
+
+                    <div style="color:#0d5c74; font-size:17px; margin:22px 0 8px;">RECOMMENDED TREATMENT</div>
+                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                        <thead>
+                            <tr style="background:#0d5c74; color:#fff;">
+                                <th style="border:1px solid #111; padding:9px 6px; text-align:center; width:12%;">Visit</th>
+                                <th style="border:1px solid #111; padding:9px 6px; text-align:center; width:14%;">Department</th>
+                                <th style="border:1px solid #111; padding:9px 6px; text-align:center; width:12%;">Tooth #</th>
+                                <th style="border:1px solid #111; padding:9px 6px; text-align:center;">Procedure</th>
+                                <th style="border:1px solid #111; padding:9px 6px; text-align:center; width:13%;">Unit price</th>
+                                <th style="border:1px solid #111; padding:9px 6px; text-align:center; width:13%;">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o.line_ids" t-as="l" style="page-break-inside:avoid;">
+                                <td style="border:1px solid #111; padding:10px 8px; text-align:center; vertical-align:middle;"><b style="white-space:pre-line;" t-out="o._ent(l.visit)"/></td>
+                                <td style="border:1px solid #111; padding:10px 8px; text-align:center; vertical-align:middle;"><b style="white-space:pre-line;" t-out="o._ent(l.department)"/></td>
+                                <td style="border:1px solid #111; padding:10px 8px; text-align:center; vertical-align:middle;"><b style="white-space:pre-line;" t-out="o._ent(l.tooth)"/></td>
+                                <td style="border:1px solid #111; padding:10px 8px; text-align:center; vertical-align:middle;"><b style="white-space:pre-line;" t-out="o._ent(l.procedure)"/></td>
+                                <td style="border:1px solid #111; padding:10px 8px; text-align:center; vertical-align:middle;"><b style="white-space:pre-line;" t-out="o._ent(l.unit_price)"/></td>
+                                <td style="border:1px solid #111; padding:10px 8px; text-align:center; vertical-align:middle;"><b style="white-space:pre-line;" t-out="o._ent(l.price)"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <t t-set="notes" t-value="o._lines_of(o.note)"/>
+                    <div t-if="notes" style="margin-top:22px; page-break-inside:avoid;">
+                        <div style="font-weight:bold; font-style:italic; font-size:15px; margin-bottom:6px;">NOTE:</div>
+                        <ul style="margin:0; padding-left:26px; line-height:1.5;">
+                            <li t-foreach="notes" t-as="n"><span t-out="o._ent(n)"/></li>
+                        </ul>
+                    </div>
+
+                    <t t-set="sched" t-value="o._lines_of(o.schedule)"/>
+                    <div t-if="sched" style="margin-top:18px; page-break-inside:avoid;">
+                        <div style="font-weight:bold; margin-bottom:6px;">Scheduled appointments:</div>
+                        <ol style="margin:0; padding-left:30px; line-height:1.5; font-weight:bold; font-style:italic; color:#233e8b;">
+                            <li t-foreach="sched" t-as="s"><span t-out="o._ent(s)"/></li>
+                        </ol>
+                    </div>
+
+                    <div t-if="o.total_implantology or o.total_prosthodontics" style="margin-top:26px; page-break-inside:avoid;">
+                        <table t-if="o.total_implantology" style="width:100%; border-collapse:collapse; margin-bottom:18px;">
+                            <tr>
+                                <td style="border:1px solid #111; padding:10px 12px; width:48%; color:#0d5c74; font-weight:bold; font-size:15px;">Total Treatment Cost <span style="font-weight:normal;">(Implantology)</span></td>
+                                <td style="border:1px solid #111; padding:10px 12px; font-weight:bold; font-size:17px;"><span t-out="o._ent(o.total_implantology)"/></td>
+                            </tr>
+                        </table>
+                        <table t-if="o.total_prosthodontics" style="width:100%; border-collapse:collapse;">
+                            <tr>
+                                <td style="border:1px solid #111; padding:10px 12px; width:48%; color:#0d5c74; font-weight:bold; font-size:15px;">Total Treatment Cost <span style="font-weight:normal;">(Prosthodontics)</span></td>
+                                <td style="border:1px solid #111; padding:10px 12px; font-weight:bold; font-size:17px;"><span t-out="o._ent(o.total_prosthodontics)"/></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <t t-set="pay" t-value="o._lines_of(o.payment_note)"/>
+                    <div t-if="pay" style="margin-top:22px; page-break-inside:avoid;">
+                        <div style="font-weight:bold; margin-bottom:6px;">Payment note:</div>
+                        <ul style="margin:0; padding-left:26px; line-height:1.5; color:#d11a1a; font-weight:bold; text-decoration:underline;">
+                            <li t-foreach="pay" t-as="p"><span t-out="o._ent(p)"/></li>
+                        </ul>
+                    </div>
+
+                    <!-- FIXED approval block (same on every plan) -->
+                    <div style="margin-top:34px; page-break-inside:avoid; font-size:14px;">
+                        <div style="font-weight:bold;">Approved by:</div>
+                        <div style="margin-top:14px; font-weight:bold;">Giorgi Bitchashvili</div>
+                        <div style="font-weight:bold;">Chief Executive Officer (CEO)</div>
+                        <div>Anna Metreveli Dental Center</div>
+                        <table style="width:100%; margin-top:30px;">
+                            <tr>
+                                <td style="font-weight:bold;">Signature:</td>
+                                <td style="text-align:right;"><b>Date</b>: <span t-if="o.date" t-out="o.date.strftime('%d/%m/%Y')"/></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -83,6 +83,8 @@ export class ClinicVisitPage extends Component {
             saving: false,
             payCash: 0,
             payTerminal: 0,
+            payMethod: "cash",
+            payCardType: 0,
             compDraft: {},
             objDraft: {},
             rxDraft: {},
@@ -295,13 +297,63 @@ export class ClinicVisitPage extends Component {
         await this.orm.unlink("clinic.procedure.history", [proc.id]);
         await this.load();
     }
-    get totalAmount() {
+    get procTotal() {
         return this.state.data.procedures.reduce(
             (s, p) => s + (p.amount_total || 0), 0);
     }
+    get retailTotal() {
+        return (this.state.data.retail || []).reduce((s, r) => s + (r.amount || 0), 0);
+    }
+    /** amount due on the billing tab = procedures + the patient's unpaid retail sales */
+    get totalAmount() {
+        return this.procTotal + this.retailTotal;
+    }
+
+    get healthSevere() {
+        const h = this.state.data.patient.health;
+        return !h.allergy || h.allergy === "yes"
+            || (h.pregnancy_applies && (!h.pregnancy || h.pregnancy === "yes"));
+    }
 
     // ---- billing (D4) ---------------------------------------------------
+    get payMethods() {
+        return [
+            { key: "cash", label: _t("ნაღდი") },
+            { key: "card", label: _t("ბარათი") },
+            { key: "transfer", label: _t("საბანკო გადარიცხვა") },
+            { key: "insurance", label: _t("დაზღვევა") },
+            { key: "mixed", label: _t("შერეული") },
+        ];
+    }
+    get showCash() {
+        return ["cash", "mixed"].includes(this.state.payMethod);
+    }
+    get showTerminal() {
+        return ["card", "mixed"].includes(this.state.payMethod);
+    }
+    onPayMethod(ev) {
+        const m = ev.target.value;
+        this.state.payMethod = m;
+        // pre-fill the amounts for the one-way methods; mixed stays manual
+        const total = Math.round(this.totalAmount * 100) / 100;
+        if (m === "cash") {
+            this.state.payCash = total;
+            this.state.payTerminal = 0;
+        } else if (m === "card") {
+            this.state.payCash = 0;
+            this.state.payTerminal = total;
+        } else {
+            this.state.payCash = 0;
+            this.state.payTerminal = 0;
+        }
+        if (!["card", "mixed"].includes(m)) {
+            this.state.payCardType = 0;
+        }
+    }
     get debtPreview() {
+        if (["transfer", "insurance"].includes(this.state.payMethod)) {
+            return 0; // the whole total is paid outside the till
+        }
         // live "remaining" while typing the amounts
         const paid = (parseFloat(this.state.payCash) || 0)
             + (parseFloat(this.state.payTerminal) || 0);
@@ -321,7 +373,9 @@ export class ClinicVisitPage extends Component {
             await this.orm.call("calendar.event",
                 "clinic_visit_register_payment", [this.visitId],
                 { cash: parseFloat(this.state.payCash) || 0,
-                  terminal: parseFloat(this.state.payTerminal) || 0 });
+                  terminal: parseFloat(this.state.payTerminal) || 0,
+                  method: this.state.payMethod,
+                  card_type_id: parseInt(this.state.payCardType) || false });
             this.notification.add(_t("გადახდა დაფიქსირდა"), { type: "success" });
             await this.load();
         } catch (e) {

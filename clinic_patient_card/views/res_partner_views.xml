@@ -46,6 +46,29 @@
                 <attribute name="autofocus"/>
             </xpath>
 
+            <!-- "Contacts" tab for a patient = the people around them: guardian /
+                 parent and family members (not phone numbers — those are in the card) -->
+            <xpath expr="//page[@name='contact_addresses']" position="inside">
+                <group string="მეურვე / მშობელი" invisible="not is_patient">
+                    <field name="guardian_id" nolabel="1" colspan="2" readonly="1"
+                           context="{'clinic_show_ids': 1}"/>
+                </group>
+                <group string="ოჯახის წევრები" invisible="not is_patient">
+                    <field name="family_member_ids" nolabel="1" colspan="2"
+                           context="{'clinic_show_ids': 1, 'default_is_patient': True}">
+                        <list>
+                            <field name="name"/>
+                            <field name="birthdate"/>
+                            <field name="phone"/>
+                            <field name="vat"/>
+                        </list>
+                    </field>
+                </group>
+            </xpath>
+            <xpath expr="//page[@name='contact_addresses']//field[@name='child_ids']" position="attributes">
+                <attribute name="invisible">is_patient</attribute>
+            </xpath>
+
             <!-- Meeting-style clutter is hidden for patients (reviewer):
                  job position, website, tags, company/individual switch. -->
             <xpath expr="//field[@name='function']" position="attributes">
@@ -121,7 +144,7 @@
                  key patient fields the reviewer wants on the FIRST page:
                  workplace, insurance company, referral source. -->
             <xpath expr="//notebook" position="before">
-                <group>
+                <group invisible="is_patient">
                     <group>
                         <field name="first_name" string="სახელი"
                                required="is_patient" invisible="not is_patient"/>
@@ -153,26 +176,10 @@
                         <field name="allergy_answer" string="ალერგია"
                                invisible="not is_patient" required="is_patient"/>
                         <field name="pregnancy_answer" string="ორსულობა"
-                               invisible="not is_patient or gender == 'male'"
-                               required="is_patient and gender != 'male'"/>
+                               invisible="not is_patient or gender != 'female'"
+                               required="is_patient and gender == 'female'"/>
                         <field name="can_edit_medical" invisible="1"/>
                     </group>
-                </group>
-                <!-- allergy list: editable by admin AND doctor (it is required
-                     when the answer is "yes") -->
-                <group invisible="not is_patient or allergy_answer != 'yes'">
-                    <field name="allergy_ids" string="ალერგიები" colspan="2"
-                           required="allergy_answer == 'yes'">
-                        <list editable="bottom">
-                            <field name="allergy_type"/>
-                            <field name="name"/>
-                            <field name="reaction"/>
-                            <field name="severity"/>
-                            <field name="test_done"/>
-                            <field name="test_result"/>
-                            <field name="note" optional="hide"/>
-                        </list>
-                    </field>
                 </group>
             </xpath>
 
@@ -195,122 +202,123 @@
                         <button name="action_clinic_todo" type="object"
                                 string="Add Note" class="btn-secondary"/>
                         <button name="action_clinic_todo" type="object"
-                                string="Send Reminder" class="btn-secondary"/>
+                                string="Send Reminder" class="btn-secondary"
+                                groups="clinic_patient_card.group_clinic_admin"/>
                         <button name="action_clinic_todo" type="object"
-                                string="Open Oral Chart" class="btn-secondary"/>
+                                string="Open Oral Chart" class="btn-secondary"
+                                groups="clinic_patient_card.group_clinic_doctor"/>
                         <button name="action_clinic_todo" type="object"
                                 string="Create Invoice" class="btn-secondary"
                                 groups="clinic_patient_card.group_clinic_admin"/>
                         <button name="action_clinic_todo" type="object"
                                 string="Generate Form-100" class="btn-secondary"/>
                         <button name="action_clinic_todo" type="object"
-                                string="Sync EHR" class="btn-secondary"/>
+                                string="Sync EHR" class="btn-secondary"
+                                groups="clinic_patient_card.group_clinic_doctor"/>
                         <button name="action_clinic_todo" type="object"
                                 string="Make Payment / To Debt" class="btn-secondary"
                                 groups="clinic_patient_card.group_clinic_admin"/>
                     </div>
 
-                    <!-- ===== 4 blocks ===== -->
+                    <!-- the patient's identity block lives here, right under the
+                         address and the tabs (user, 2026-10-02) -->
+                        <group>
+                            <group>
+                                <field name="first_name" string="სახელი"
+                                       required="is_patient" invisible="not is_patient"/>
+                                <field name="last_name" string="გვარი"
+                                       required="is_patient" invisible="not is_patient"/>
+                                <field name="vat" string="Personal No." placeholder="digits only"
+                                       required="is_patient"/>
+                                <field name="birthdate" placeholder="dd/mm/yyyy — can be typed"
+                                       required="is_patient"/>
+                                <field name="age"/>
+                                <field name="gender" widget="clinic_gender_icons"/>
+                                <field name="parent_id" string="სამუშაო ადგილი"
+                                       invisible="not is_patient"/>
+                            </group>
+                            <group>
+                                <!-- drives the visibility of every patient field; never shown
+                                     (2026-09-30, user: neither doctor nor admin sees it) —
+                                     new patients get it from the action/popup default -->
+                                <field name="guardian_id" invisible="not is_minor"
+                                       required="is_minor"
+                                       context="{'clinic_show_ids': 1}"/>
+                                <field name="patient_ref" invisible="not is_patient"/>
+                                <field name="insurance_company_id" invisible="not is_patient"
+                                       domain="[('is_insurance_company', '=', True)]"
+                                       context="{'default_is_insurance_company': True, 'default_is_patient': False, 'default_company_type': 'company'}"/>
+                                <field name="referral_source" invisible="not is_patient"
+                                       required="is_patient"/>
+                                <field name="allergy_answer" string="ალერგია"
+                                       invisible="not is_patient" required="is_patient"/>
+                                <field name="pregnancy_answer" string="ორსულობა"
+                                       invisible="not is_patient or gender != 'female'"
+                                       required="is_patient and gender == 'female'"/>
+                            </group>
+                        </group>
+                        <!-- allergy list: editable by admin AND doctor (it is required
+                             when the answer is "yes") -->
+                        <group invisible="not is_patient or allergy_answer != 'yes'">
+                            <field name="allergy_ids" string="ალერგიები" colspan="2"
+                                   required="allergy_answer == 'yes'">
+                                <list editable="bottom">
+                                    <field name="allergy_type"/>
+                                    <field name="name"/>
+                                    <field name="reaction"/>
+                                    <field name="severity"/>
+                                    <field name="test_done"/>
+                                    <field name="test_result"/>
+                                    <field name="note" optional="hide"/>
+                                </list>
+                            </field>
+                        </group>
+
+
+                    <!-- former "Basic" tab, now part of the card itself (user, 2026-10-02) -->
+                    <group string="Basic Information">
+                        <group>
+                            <field name="name_latin" invisible="not is_foreign"/>
+                            <field name="nationality_country_id" invisible="not is_foreign"/>
+                            <field name="registration_date"/>
+                            <field name="referral_source_other"
+                                   invisible="referral_source != 'other'"/>
+                        </group>
+                        <group>
+                            <field name="is_foreign"/>
+                            <field name="is_first_visit"/>
+                            <field name="is_repeat"/>
+                            <field name="is_regular"/>
+                            <field name="is_minor" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Contact Information">
+                        <field name="patient_phone_ids" colspan="2" nolabel="1">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="is_primary"/>
+                                <field name="phone"/>
+                                <field name="country_code"/>
+                                <field name="phone_type"/>
+                                <field name="channel"/>
+                                <field name="is_foreign_number"/>
+                                <field name="is_emergency"/>
+                                <field name="relation"/>
+                                <field name="owner_name" optional="hide"/>
+                                <field name="note" optional="hide"/>
+                            </list>
+                        </field>
+                    </group>
+
+                    <group string="Note">
+                        <field name="patient_note" nolabel="1" colspan="2"
+                               placeholder="Free note about the patient..."/>
+                    </group>
+
                     <notebook>
 
-                        <!-- BLOCK 1 — Basic -->
-                        <page name="block_basic" string="Basic">
-                            <group string="Basic Information">
-                                <group>
-                                    <field name="name_latin" invisible="not is_foreign"/>
-                                    <field name="nationality_country_id" invisible="not is_foreign"/>
-                                    <field name="registration_date"/>
-                                    <field name="referral_source"/>
-                                    <field name="referral_source_other"
-                                           invisible="referral_source != 'other'"/>
-                                </group>
-                                <group>
-                                    <field name="is_foreign"/>
-                                    <field name="is_first_visit"/>
-                                    <field name="is_repeat"/>
-                                    <field name="is_regular"/>
-                                    <field name="is_minor" readonly="1"/>
-                                    <field name="guardian_id"/>
-                                    <field name="family_member_ids" widget="many2many_tags"
-                                           context="{'clinic_show_ids': 1, 'default_is_patient': True}"/>
-                                </group>
-                            </group>
 
-                            <group string="Contact Information">
-                                <field name="patient_phone_ids" colspan="2" nolabel="1">
-                                    <list editable="bottom">
-                                        <field name="sequence" widget="handle"/>
-                                        <field name="is_primary"/>
-                                        <field name="phone"/>
-                                        <field name="country_code"/>
-                                        <field name="phone_type"/>
-                                        <field name="channel"/>
-                                        <field name="is_foreign_number"/>
-                                        <field name="is_emergency"/>
-                                        <field name="relation"/>
-                                        <field name="owner_name" optional="hide"/>
-                                        <field name="note" optional="hide"/>
-                                    </list>
-                                </field>
-                            </group>
-
-                            <group string="Note">
-                                <field name="patient_note" nolabel="1" colspan="2"
-                                       placeholder="Free note about the patient..."/>
-                            </group>
-                        </page>
-
-                        <!-- BLOCK 2 — Medical (editable by doctors only) -->
-                        <page name="block_medical" string="Medical">
-                            <group string="Medical History" readonly="not can_edit_medical">
-                                <field name="anamnesis_general" colspan="2"/>
-                                <group>
-                                    <field name="chronic_diseases"/>
-                                    <field name="current_medications"/>
-                                    <field name="family_history"/>
-                                </group>
-                                <group>
-                                    <field name="smoker"/>
-                                    <field name="alcohol"/>
-                                    <field name="has_bleeding_disorder"/>
-                                    <field name="has_cardio_risk"/>
-                                    <field name="medical_risk_notes"/>
-                                </group>
-                                <group string="Imaging (X-ray / CT)">
-                                    <field name="has_xray"/>
-                                    <field name="has_ct"/>
-                                    <field name="imaging_source"/>
-                                </group>
-                                <group string="Last Update" col="2">
-                                    <field name="medical_update_date"/>
-                                    <field name="medical_update_uid"/>
-                                </group>
-                            </group>
-
-                            <group string="Dental" readonly="not can_edit_medical">
-                                <group>
-                                    <field name="last_dental_visit_date"/>
-                                    <field name="treatment_plan_status" widget="badge"
-                                           decoration-success="treatment_plan_status == 'in_progress'"
-                                           decoration-warning="treatment_plan_status == 'planned'"
-                                           decoration-danger="treatment_plan_status in ('postponed','cancelled')"/>
-                                </group>
-                                <group>
-                                    <field name="has_bruxism"/>
-                                    <field name="periodontitis_risk"/>
-                                </group>
-                                <field name="dental_other_notes" colspan="2"/>
-                                <separator string="Dental Chart (FDI)" colspan="2"/>
-                                <field name="odontogram_html" colspan="2" nolabel="1" readonly="1"/>
-                                <field name="tooth_ids" colspan="2" nolabel="1">
-                                    <list editable="bottom">
-                                        <field name="tooth_number"/>
-                                        <field name="status"/>
-                                        <field name="note"/>
-                                    </list>
-                                </field>
-                            </group>
-                        </page>
 
                         <!-- BLOCK 3 — Financial (visible to clinic administrators) -->
                         <page name="block_financial" string="Financial"
@@ -349,73 +357,130 @@
                             </group>
                         </page>
 
-                        <!-- BLOCK 4 — History -->
-                        <page name="block_history" string="History">
-                            <!-- visits, each opening its Dentos-style page -->
-                            <group string="ვიზიტები">
-                                <field name="clinic_visit_ids" colspan="2"
-                                       nolabel="1" readonly="1">
-                                    <list default_order="start desc">
-                                        <field name="start"/>
-                                        <field name="dentist_id"/>
-                                        <field name="appointment_type_id"/>
-                                        <field name="clinic_state" widget="badge"
-                                               decoration-success="clinic_state in ('done','paid')"
-                                               decoration-info="clinic_state in ('confirmed','arrived','in_progress')"
-                                               decoration-warning="clinic_state in ('booked','requested')"
-                                               decoration-danger="clinic_state in ('cancelled','no_show')"/>
-                                        <field name="amount_paid" optional="show"/>
-                                        <button name="action_open_visit_page"
-                                                type="object" string="🧾 გვერდი"
-                                                class="btn-link"/>
-                                    </list>
-                                </field>
-                            </group>
-                            <!-- the separate procedures table is gone —
-                                 procedures live on each visit's page now,
-                                 reachable from the ვიზიტები list above -->
-                            <group string="Documents">
-                                <field name="document_ids" colspan="2" nolabel="1">
-                                    <list>
+
+                    </notebook>
+                </page>
+            </xpath>
+
+            <!-- Medical + History tabs sit in the OUTER tab bar after Notes (user, 2026-10-02) -->
+            <xpath expr="//page[@name='internal_notes']" position="after">
+                <!-- BLOCK 2 — Medical (editable by doctors only) -->
+                <page name="block_medical" string="Medical" invisible="not is_patient"
+                      groups="clinic_patient_card.group_clinic_doctor">
+                    <group string="Medical History" readonly="not can_edit_medical">
+                        <field name="anamnesis_general" colspan="2"/>
+                        <group>
+                            <field name="chronic_diseases"/>
+                            <field name="current_medications"/>
+                            <field name="family_history"/>
+                        </group>
+                        <group>
+                            <field name="smoker"/>
+                            <field name="alcohol"/>
+                            <field name="has_bleeding_disorder"/>
+                            <field name="has_cardio_risk"/>
+                            <field name="medical_risk_notes"/>
+                        </group>
+                        <group string="Imaging (X-ray / CT)">
+                            <field name="has_xray"/>
+                            <field name="has_ct"/>
+                            <field name="imaging_source"/>
+                        </group>
+                        <group string="Last Update" col="2">
+                            <field name="medical_update_date"/>
+                            <field name="medical_update_uid"/>
+                        </group>
+                    </group>
+
+                    <group string="Dental" readonly="not can_edit_medical">
+                        <group>
+                            <field name="last_dental_visit_date"/>
+                            <field name="treatment_plan_status" widget="badge"
+                                   decoration-success="treatment_plan_status == 'in_progress'"
+                                   decoration-warning="treatment_plan_status == 'planned'"
+                                   decoration-danger="treatment_plan_status in ('postponed','cancelled')"/>
+                        </group>
+                        <group>
+                            <field name="has_bruxism"/>
+                            <field name="periodontitis_risk"/>
+                        </group>
+                        <field name="dental_other_notes" colspan="2"/>
+                        <separator string="Dental Chart (FDI)" colspan="2"/>
+                        <field name="odontogram_html" colspan="2" nolabel="1" readonly="1"/>
+                        <field name="tooth_ids" colspan="2" nolabel="1">
+                            <list editable="bottom">
+                                <field name="tooth_number"/>
+                                <field name="status"/>
+                                <field name="note"/>
+                            </list>
+                        </field>
+                    </group>
+                </page>
+
+                <!-- BLOCK 4 — History -->
+                <page name="block_history" string="History" invisible="not is_patient">
+                    <!-- visits, each opening its Dentos-style page -->
+                    <group string="ვიზიტები">
+                        <field name="clinic_visit_ids" colspan="2"
+                               nolabel="1" readonly="1">
+                            <list default_order="start desc">
+                                <field name="start"/>
+                                <field name="dentist_id"/>
+                                <field name="appointment_type_id"/>
+                                <field name="clinic_state" widget="badge"
+                                       decoration-success="clinic_state in ('done','paid')"
+                                       decoration-info="clinic_state in ('confirmed','arrived','in_progress')"
+                                       decoration-warning="clinic_state in ('booked','requested')"
+                                       decoration-danger="clinic_state in ('cancelled','no_show')"/>
+                                <field name="amount_paid" optional="show"/>
+                                <button name="action_open_visit_page"
+                                        type="object" string="🧾 გვერდი"
+                                        class="btn-link"/>
+                            </list>
+                        </field>
+                    </group>
+                    <!-- the separate procedures table is gone —
+                         procedures live on each visit's page now,
+                         reachable from the ვიზიტები list above -->
+                    <group string="Documents">
+                        <field name="document_ids" colspan="2" nolabel="1">
+                            <list>
+                                <field name="doc_type"/>
+                                <field name="name"/>
+                                <field name="date"/>
+                                <field name="attachment" filename="filename" widget="binary"/>
+                                <field name="filename" column_invisible="1"/>
+                                <field name="note"/>
+                            </list>
+                            <form>
+                                <group>
+                                    <group>
                                         <field name="doc_type"/>
                                         <field name="name"/>
                                         <field name="date"/>
                                         <field name="attachment" filename="filename" widget="binary"/>
-                                        <field name="filename" column_invisible="1"/>
+                                        <field name="filename" invisible="1"/>
                                         <field name="note"/>
-                                    </list>
-                                    <form>
-                                        <group>
-                                            <group>
-                                                <field name="doc_type"/>
-                                                <field name="name"/>
-                                                <field name="date"/>
-                                                <field name="attachment" filename="filename" widget="binary"/>
-                                                <field name="filename" invisible="1"/>
-                                                <field name="note"/>
-                                            </group>
-                                        </group>
-                                        <separator string="Signature"
-                                                   invisible="doc_type != 'consent'"/>
-                                        <field name="signature" widget="signature"
-                                               invisible="doc_type != 'consent'"/>
-                                    </form>
-                                </field>
-                            </group>
-
-                            <group string="Patient Profile">
-                                <group>
-                                    <field name="no_show_rate"/>
-                                    <field name="ltv_forecast"/>
+                                    </group>
                                 </group>
-                                <group>
-                                    <field name="risk_level"/>
-                                    <field name="risk_notes"/>
-                                </group>
-                            </group>
-                        </page>
+                                <separator string="Signature"
+                                           invisible="doc_type != 'consent'"/>
+                                <field name="signature" widget="signature"
+                                       invisible="doc_type != 'consent'"/>
+                            </form>
+                        </field>
+                    </group>
 
-                    </notebook>
+                    <group string="Patient Profile">
+                        <group>
+                            <field name="no_show_rate"/>
+                            <field name="ltv_forecast"/>
+                        </group>
+                        <group>
+                            <field name="risk_level"/>
+                            <field name="risk_notes"/>
+                        </group>
+                    </group>
                 </page>
             </xpath>
         </field>
@@ -430,6 +495,11 @@
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="priority">20</field>
         <field name="arch" type="xml">
+            <!-- "Partner Assignment" (geolocation) tab: pulled in by the standard
+                 base_geolocalize when hr_attendance was installed — not a clinic feature -->
+            <xpath expr="//page[@name='geo_location']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
             <!-- Address block: street = residence, street 2 = legal address,
                  city picked from the (standard res.city) list with Create;
                  state hidden; ZIP + country only for non-residents. -->
@@ -504,6 +574,8 @@
                                    string="სახელი"/>
                             <field name="last_name" required="1"
                                    string="გვარი"/>
+                            <field name="name_latin" string="სახელი და გვარი (ლათინურად)"
+                                   invisible="not is_foreign" required="is_foreign"/>
                         </group>
                         <group>
                             <field name="phone" required="1"

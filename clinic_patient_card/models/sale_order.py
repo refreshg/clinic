@@ -124,6 +124,11 @@ class SaleOrder(models.Model):
     # Retail sale to a patient started from the patient card (batch #2: a
     # doctor may draft one — the admin approves it into billing).
     is_clinic_retail = fields.Boolean(string="Clinic Retail Sale", copy=False)
+    # the visit whose payment settled this retail sale (set by the visit page
+    # payment); until then it is added to the patient's amount due
+    clinic_visit_id = fields.Many2one(
+        "calendar.event", string="Settled with visit", copy=False, readonly=True,
+        index=True, ondelete="set null")
 
     @api.model
     def default_get(self, fields_list):

@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 1606da0 -->
+<!-- last-synced: 2026-10-02, commit: 101440c -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -73,6 +73,14 @@ templates + per-day lines (Community has no planning app) — D-29.
 - [ ] S3 browser check by the user (booking at 16:00 for a doctor working until 15:00 is refused)
 - [ ] S4 "ძირითადი გრაფიკი" (weekly pattern applied to a range) — only if the clinic wants it
 
+## Milestone T — Payment, health answers, patient card, treatment plan (2026-10-02, requested by the user in the browser tests)
+- [x] T1 payment on the visit page: method select, card types catalog, same-day retail added to the bill (D-30); "Register Payment" removed from the visit form
+- [x] T2 allergy + pregnancy mandatory on the card, checked at arrival / start / procedure, pregnancy re-asked every visit, red sign warning on the visit form (D-31)
+- [x] T3 patient card re-layout (identity block, flat Basic, Medical / History in the outer tabs, role-based buttons, Contacts = guardian + family), quick form minimal, latin name for foreigners
+- [x] T4 treatment plan document + PDF (D-32)
+- [ ] T browser check by the user (payment methods + card types, retail in the bill, arrival refusal, pregnancy on a repeat visit, PDF print incl. Georgian text)
+- [ ] T currency: treatment-plan prices follow the company currency (USD) — the user will change it last
+
 ## Small chores (any time)
 - [ ] Clinic to confirm: insurer + city lists (written from memory), "primary/unique" definitions, what "non-resident" means (PRD §9)
 - [ ] Real photos for demo supply products (user drops files into scratchpad)
@@ -80,7 +88,6 @@ templates + per-day lines (Community has no planning app) — D-29.
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-10-01: reviewer follow-ups 14-21 + 30.09-01.10 requests live on the server (committed up to d4ec77a; quick form minimal, required fields on the card, allergy/pregnancy answers, address + cities, patient status + Excel as control-panel buttons, back buttons) — v19.0.61.0.
-Schedule milestone S (S1 screen, S2 attendance + worked hours + Excel, S3 booking guard + board overlay) is on the server, UNCOMMITTED since 1606da0.
-Next: user browser-checks the batch (Excel route, live search, back buttons, address) and gets the clinic answers (PRD §9), staff change passwords; then M2 ka.po regen (first unblocked).
-Watch out: D-24/D-25/D-27 unverified in the browser (family form_view_ref side effect, Enter opens 1st patient, Excel download); an admin must NOT carry group_clinic_doctor; supplier on a SEPARATE account; 57/80 patients have no status.
+Last session 2026-10-02 (later): staff schedules S1-S3 (schedule screen, attendance + worked hours + Excel, booking guard, Planning-board shift overlay, 12 colours) + patient card rework, all live and committed locally up to 101440c; PLUS uncommitted milestone T (payment methods + card types, retail in the bill, health answers, patient-card re-layout, treatment plan) — v19.0.62.0.
+Next: user browser-checks the schedule screens, worked hours/Excel, board overlay, patient buttons and gets the clinic answers (PRD §9); then M2 ka.po regen (first unblocked), S4 only if the clinic wants a weekly pattern.
+Watch out: nothing pushed (5 local commits on main); D-24/D-25/D-27/D-29 unverified in the browser; worked hours = raw clock time, lateness = >5 min; public holidays not modelled; admin must NOT carry group_clinic_doctor; supplier on a SEPARATE account.

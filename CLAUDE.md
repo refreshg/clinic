@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 1606da0 -->
+<!-- last-synced: 2026-10-02, commit: 101440c -->
 # Clinic — project notes for Claude
 
 ## Platform
@@ -67,6 +67,7 @@
 - Upgrade: `docker exec odoo19-odoo-1 odoo -d odoo -u clinic_patient_card --stop-after-init --no-http --db_password=<local memory>`
 - Windows: no sshpass, `pscp` times out — ship via `cat m.tgz | plink -batch -pw <pw> host "cat > /tmp/clinic_module.tgz"`.
 - Flaky VPN: run upload, extract and upgrade as SEPARATE plink calls (and retry); one long pipeline drops silently.
+- QWeb PDF: wrap the body in `<div class="article" t-att-data-oe-model=… t-att-data-oe-id=…>` or wkhtmltopdf garbles Georgian / € (Latin-1).
 - Restart: `cd /opt/odoo19 && docker compose restart odoo` · Logs: `docker logs -f odoo19-odoo-1`
 - Smoke tests: JSON-RPC via scratchpad node script → `http://192.168.0.235:9494/jsonrpc`
   (host `tfs.fmgsoft.ge:9494` works without VPN; SSH needs VPN).

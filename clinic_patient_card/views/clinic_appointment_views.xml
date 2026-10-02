@@ -34,9 +34,6 @@
                 <button name="action_done" type="object" string="Done"
                         groups="clinic_patient_card.group_clinic_doctor" class="btn-primary"
                         invisible="not id or not is_clinic or clinic_state != 'in_progress'"/>
-                <button name="action_pay" type="object" string="Register Payment"
-                        groups="clinic_patient_card.group_clinic_admin" class="btn-primary"
-                        invisible="not id or not is_clinic or clinic_state != 'done'"/>
                 <button name="action_cancel" type="object" string="Cancel"
                         groups="clinic_patient_card.group_clinic_admin"
                         invisible="not id or not is_clinic or clinic_state in ('paid','cancelled','no_show')"/>
@@ -144,6 +141,7 @@
                     <div class="d-flex gap-2 mb-2">
                         <!-- widgets, NOT buttons: buttons auto-save the form -->
                         <widget name="clinic_new_patient_btn"
+                                groups="clinic_patient_card.group_clinic_admin"
                                 invisible="clinic_state in ('done', 'paid')"/>
                         <widget name="clinic_slot_finder_btn"
                                 invisible="clinic_state in ('done', 'paid')"/>
@@ -163,6 +161,25 @@
                                 string="📄 თანხმობა ✓" class="btn-outline-success"
                                 invisible="not patient_id or not consent_signed"/>
                     </div>
+                    <!-- warning for the doctor: pregnant / allergic, with the clinic's signs -->
+                    <field name="health_pregnancy_alert" invisible="1"/>
+                    <field name="health_allergy_alert" invisible="1"/>
+                    <div class="d-flex flex-wrap gap-4 mb-2 align-items-center o_clinic_health_warn"
+                         invisible="not patient_id or (not health_pregnancy_alert and not health_allergy_alert)">
+                        <div class="d-flex align-items-center gap-2 text-danger fw-bold"
+                             invisible="not health_pregnancy_alert">
+                            <img src="/clinic_patient_card/static/src/img/pregnant.svg"
+                                 alt="ორსული" style="width:40px;height:40px;"/>
+                            <span>პაციენტი ორსულია</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-danger fw-bold"
+                             invisible="not health_allergy_alert">
+                            <img src="/clinic_patient_card/static/src/img/allergy.svg"
+                                 alt="ალერგია" style="width:40px;height:40px;"/>
+                            <span>ალერგია: <field name="health_allergy_info" readonly="1" nolabel="1"
+                                                class="d-inline fw-bold"/></span>
+                        </div>
+                    </div>
                     <group>
                         <group>
                             <field name="is_clinic" invisible="1"/>
@@ -174,8 +191,8 @@
                                    options="{'no_quick_create': true}"
                                    context="{'clinic_show_ids': 1, 'default_is_patient': True, 'form_view_ref': 'clinic_patient_card.view_clinic_patient_quick_form'}"
                                    invisible="clinic_state in ('done', 'paid')"/>
-                            <field name="referral_source"
-                                   invisible="clinic_state in ('done', 'paid')"/>
+                            <!-- set on the patient card; kept only for the referral_user_id modifier -->
+                            <field name="referral_source" invisible="1"/>
                             <field name="referral_user_id"
                                    invisible="referral_source != 'doctor_referral' or clinic_state in ('done', 'paid')"/>
                             <field name="diagnosis"/>

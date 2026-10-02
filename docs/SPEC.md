@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-01, commit: 1606da0 -->
+<!-- last-synced: 2026-10-02, commit: 101440c -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -247,6 +247,16 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | Planning board | per-doctor column: shift chip in the header, shift band tinted with the shift colour, everything else hatched (`.cp_stzone`), whole column hatched on off/vacation/sick; hover / drag / click disabled outside the shift (`_isWorkTime(hour, dentistId)`), a drag-sized visit cannot pass the shift end |
 | schedule screen | day / week / month, grid + matrix looks, toolbar ＋ დამატება, "საკუთარი დრო" inputs, sidebar shift editor with colour palette, closed days hatched "უქმე" |
 
+### 2026-10-02 payment, health answers, patient card, treatment plan (uncommitted on top of 101440c, v19.0.62.0)
+| area | additions |
+|---|---|
+| clinic.card.type (new) | name (translate), sequence, active; seed Visa / Mastercard / American Express / UnionPay / სხვა (noupdate, from memory); Configuration → Card Types (admin); ACL user r / admin rwcu |
+| calendar.event | `card_type_id` (m2o), `visit_pregnancy` (yes/no, frozen at arrival), `health_pregnancy_alert` / `health_allergy_alert` / `health_allergy_info` (computes, POSITIVE answers only); `clinic_visit_register_payment(cash, terminal, method, card_type_id)` — methods cash / card / transfer / insurance / mixed (transfer + insurance = whole total, no amounts); total = procedures + `_clinic_pending_retail()`; unpaid same-day retail sales are confirmed (std approval raises their invoice) and tied via `sale.order.clinic_visit_id`; `_clinic_clear_card_pregnancy` (on done) / `_clinic_reset_pregnancy` (on booking); `action_pay` redirects admins to the visit page (old wizard kept as fallback, its form button removed); visit page payload adds `card_types`, `retail`, `patient.health` |
+| res.partner | `allergy_answer` / `pregnancy_answer` yes/no (pregnancy only for gender = female), `_clinic_missing_health_answers`, `_clinic_health_warning`; `is_pregnant` follows the answer; both answers are required on the card and checked at "მოსული" and at start (`_check_patient_data_complete`) and before adding a procedure (`clinic.procedure.history.create` → `_check_patient_health_answers`) |
+| patient card layout | order: address → tabs; Patient Card tab = booking button, quick buttons (by role), identity block (+ allergy list), former Basic block (flat), Contact info, Financial sub-tab (admin); Medical (doctor only) + History moved to the OUTER tab bar after Notes; Contacts tab shows guardian + family members (editable) instead of child contacts; "Partner Assignment" (geo) tab hidden; quick-action buttons: reminder / invoice / payment admin-only, oral chart / EHR doctor-only |
+| quick registration | name, surname, mobile, insurance + foreign toggle; `name_latin` required when `is_foreign` |
+| clinic.treatment.plan (+ .line) (new) | printable "TREATMENT PLAN": patient_name (typed), optional patient_id, date, 3 doctor names, free-text lines (visit / department / tooth / procedure / unit price / price), note, schedule, 2 totals, payment note; lines auto-pulled from the patient's `planned` procedures (`procedure_history_id` prevents duplicates); QWeb PDF with logo + contact icons (data URIs), repeating header via paperformat, fixed header + "Approved by" block; Clinic menu "მკურნალობის გეგმა"; ACL admin + doctor rwcu |
+
 ## Business logic (trigger → condition → action; Standard coverage per row)
 | # | trigger | condition | action | std coverage |
 |---|---|---|---|---|
@@ -302,6 +312,10 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | B50 | admin edits a shift time in the schedule sidebar | admin | in-place when never used in the past, else new template from today + old archived (past hours stay true) | custom |
 | B51 | Planning board loads a day | doctors with schedule entries | `clinic_board_staff` colours each doctor's shift band + header chip, hatches non-working time, blocks click/drag there; no entry = clinic hours only | custom (S3 visual) |
 | B52 | schedule screen opens | any clinic user | opens on the user's own staff group; closed weekdays (company config) render as უქმე and cannot be edited (server also refuses) | custom |
+| B53 | payment on the visit page | admin | method select (cash / card / transfer / insurance / mixed) + card type for card / mixed; amounts must equal procedures + same-day retail; invoice(s) created, retail sale approved + linked to the visit (D-30) | custom over std sale + account |
+| B54 | „მოსული" / „დაწყება" / adding a procedure | patient lacks allergy answer, or (female) pregnancy answer | refused with the missing items named; pregnancy is cleared when a new visit is booked and when a visit is done, so it is asked again every visit (D-31) | custom guard |
+| B55 | visit form opens | patient pregnant / allergic | red sign + text: „პაციენტი ორსულია" (pregnant.svg) / „ალერგია: <allergen — reaction>" (allergy.svg); nothing shown when both are negative | custom |
+| B56 | treatment plan created / „დაგეგმილი პროცედურების წამოღება" | patient chosen | the patient's `planned` procedures become lines (visit n by appointment date, department = visit direction, tooth, price text); PDF via „🖨 PDF" (D-32) | custom + std QWeb report |
 
 ## Standard-first check
 | requirement | standard feature checked | covers? | if no → custom + ref |
@@ -309,6 +323,9 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | Excel of patients by status | list → Actions → Export | partial (manual selection each time) | menu items + export route (D-27) |
 | city picker | `res.city` + `city_id` (base_address_extended) | yes | reused; only a seed + view tweaks (D-28) |
 | patient status (primary/unique) | none | no | stored compute on res.partner (D-27) |
+| card type of a payment | none (account.payment.method is about journals) | no | small catalog `clinic.card.type` (D-30) |
+| retail goods sold at settle-up | sale_management (the რეალიზაცია tab) | yes | reused; only the same-day pull into the visit total is custom (D-30) |
+| treatment plan document | none (Enterprise sign/documents) | no | `clinic.treatment.plan` + QWeb report (D-32) |
 | shift colours | none | no | 12-colour palette (scss + python mirror) with auto-unique assignment (D-29) |
 | doctor schedule on the booking board | Enterprise `planning` | no (Community) | `clinic_board_staff` + OWL zones on the existing board (D-29) |
 | check-in / out + worked hours | `hr_attendance` | yes | used as is; only the plan-vs-fact screen and Excel are custom (D-29) |
@@ -432,6 +449,10 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   categories (`data/clinic_shop_seed.xml`, noupdate). v19.0.53 needs nothing special.
 
 ## Drift log
+- 2026-10-02: QWeb PDF bodies must be wrapped in `<div class="article" t-att-data-oe-model=… data-oe-id=…>`; otherwise Odoo does not put them in the minimal layout (`<meta charset>`) and wkhtmltopdf decoded Georgian / € as Latin-1 ("áƒ¥…"). Dynamic text additionally goes through `clinic.treatment.plan._ent` (numeric entities).
+- 2026-10-02: pregnancy moved from "a card field" to "asked per visit": the card keeps the field (required for women) but it is cleared on booking a new visit and when a visit is done; `visit_pregnancy` freezes the answer at arrival. Earlier the same day a visit-form variant (editable row on the form) was built and removed on request.
+- 2026-10-02: the primary / unique status names were kept; the patient-card buttons "Create Invoice" / "Make Payment" and the "Send Reminder" are admin-only, "Open Oral Chart" / "Sync EHR" doctor-only; the "Individual / Company" switch and `is_patient` stay hidden for patients.
+- 2026-10-02: `base_geolocalize` came in through `hr_attendance` and added a "Partner Assignment" tab to the partner form — hidden in the priority-20 address view (the tab's own inherit is applied later than ours).
 - 2026-10-01: shift colours grew from 4 to 12 (`clinic.shift.color` 0-3 → 0-11); two shifts created with the old modulo-4 rule duplicated colours — recoloured by hand in the live DB (data fix only, no migration code).
 - 2026-10-01: my own live tests wrote/cleared schedule rows on real dates before the clinic started entering data; the user confirmed that losing them is fine. Tests now use far-future dates.
 - 2026-10-01: before S3 the doctor's own schedule was NOT checked at booking (only the clinic-wide hours) — a visit could be booked at 16:00 for a doctor working until 15:00 (user report). Fixed by B49.

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Card types for card payments; editable in Configuration → Card Types
+     (noupdate: edits are kept). The list is a starting point — the clinic adjusts it. -->
+<odoo noupdate="1">
+    <record id="card_type_visa" model="clinic.card.type">
+        <field name="name">Visa</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="card_type_mastercard" model="clinic.card.type">
+        <field name="name">Mastercard</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="card_type_amex" model="clinic.card.type">
+        <field name="name">American Express</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="card_type_unionpay" model="clinic.card.type">
+        <field name="name">UnionPay</field>
+        <field name="sequence">40</field>
+    </record>
+    <record id="card_type_other" model="clinic.card.type">
+        <field name="name">სხვა</field>
+        <field name="sequence">50</field>
+    </record>
+</odoo>

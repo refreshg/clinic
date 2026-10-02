@@ -51,6 +51,25 @@
     <menuitem id="menu_clinic_worked_hours" name="ნამუშევარი საათები"
               parent="menu_clinic_root" action="action_clinic_worked_hours" sequence="9"
               groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"/>
+    <record id="view_clinic_card_type_list" model="ir.ui.view">
+        <field name="name">clinic.card.type.list</field>
+        <field name="model">clinic.card.type</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_clinic_card_type" model="ir.actions.act_window">
+        <field name="name">Card Types</field>
+        <field name="res_model">clinic.card.type</field>
+        <field name="view_mode">list</field>
+    </record>
+    <menuitem id="menu_clinic_card_type" name="Card Types"
+              parent="menu_clinic_config" action="action_clinic_card_type" sequence="31"
+              groups="clinic_patient_card.group_clinic_admin"/>
     <menuitem id="menu_clinic_shift" name="Shifts"
               parent="menu_clinic_config" action="action_clinic_shift" sequence="30"
               groups="clinic_patient_card.group_clinic_admin"/>

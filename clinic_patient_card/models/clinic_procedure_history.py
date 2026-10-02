@@ -81,8 +81,11 @@ class ClinicProcedureHistory(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if vals.get("appointment_id") and not vals.get("partner_id"):
+            if vals.get("appointment_id"):
                 appt = self.env["calendar.event"].browse(vals["appointment_id"])
-                if appt.patient_id:
+                if not vals.get("partner_id") and appt.patient_id:
                     vals["partner_id"] = appt.patient_id.id
+                # no procedure on a visit before the allergy / pregnancy answers
+                if appt.is_clinic:
+                    appt._check_patient_health_answers()
         return super().create(vals_list)
