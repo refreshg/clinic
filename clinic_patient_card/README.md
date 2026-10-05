@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-02, commit: 101440c -->
+<!-- last-synced: 2026-10-05, commit: f8406c7 (+ uncommitted work) -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -57,7 +57,11 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
   complaints seeded (clinic.complaint). Procedures dropdown = service products
   flagged "Clinic Procedure".
 - **Cron jobs** (active by default): low-stock alert (daily), dispensary call reminders
-  (daily, T-14d), weekly booking report to administrators.
+  (daily, T-14d), weekly booking report to administrators, daily reset of yesterday's
+  pregnancy answers (a woman is asked again at every visit day).
+- **Radiology account**: add a user to the group "Clinic Radiologist" — they see only
+  Radiology → Patients / X-ray uploads and upload pictures for a patient (click the empty
+  picture "+" to pick one or many files). Doctors see them in the patient card, Medical tab.
 - Patients also live under **Clinic → Patients** (kanban/list/form over is_patient) —
   same Soft-UI form as in Contacts.
 - **Real users (2026-09-18)**: 4 administrators (გ. ბიჭაშვილი, თ. გეგია, ს. ტეფნაძე,
@@ -79,7 +83,9 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
   deferred (no provider chosen; batch #2).
 - Soft-UI patient-card page is read-only (tooth painting not persisted yet — PLAN M3);
   it opens from the visit form's 🪪 button — the partner-form buttons were removed (v55.9).
-- Odontogram on the partner form is visual-only (clickable version = PLAN M4).
+- Tooth chart (D-35): the diseases / treatments are approximated drawings, the layout choice
+  ("ვიზუალი 1 / 2") is stored per browser, milk teeth are still plain buttons; the pictures
+  follow ICD-10 / procedure names (editable: ICD-10 list column, product field).
 - `i18n/ka.po` is stale for the 28.08.26 batch strings (PLAN M2).
 - No automated tests by decision D-11 — verify live (RPC + browser).
 - Payment (visit page): card-type list is a starting point (Configuration → Card Types); only SAME-DAY unpaid retail sales join a visit's total. Allergy / pregnancy answers are mandatory (pregnancy women-only, cleared after every visit). Treatment-plan PDF prices follow the company currency (USD here) — change the currency last; the PDF engine needs the body wrapped in `div.article` or Georgian text is garbled.

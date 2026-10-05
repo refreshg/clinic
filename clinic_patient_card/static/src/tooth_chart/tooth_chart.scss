@@ -1,0 +1,33 @@
+.clinic_tooth_chart {
+    width: 100%;
+    .tc_svg { width: 100%; max-width: 900px; height: auto; display: block; margin: 0 auto; }
+    // resting teeth are 1-2 tones lighter; hover darkens; the picked tooth is full colour + glow
+    .tc_tooth { cursor: pointer; }
+    .tc_tooth > g { opacity: .55; transition: opacity .15s, filter .15s; }
+    .tc_tooth.tc_has > g { opacity: .8; }
+    .tc_tooth:hover > g { opacity: 1; filter: brightness(.88) saturate(1.2); }
+    .tc_tooth.tc_sel > g { opacity: 1; filter: drop-shadow(0 0 3px #3f6fd1) drop-shadow(0 0 2px #3f6fd1); }
+    .tc_tooth.tc_sel .tc_lbl { fill: #3f6fd1; }
+    .tc_tooth.tc_missing > g { opacity: .25; }
+    .tc_tooth.tc_missing:hover > g { opacity: .5; }
+    .tc_views { display: flex; justify-content: flex-end; gap: 4px; margin-bottom: 4px; }
+    .tc_vbtn { border: 1px solid #cfd5e3; background: #fff; color: #55607a; border-radius: 14px; padding: 2px 12px; font-size: 12px; }
+    .tc_vbtn.on { background: #3f6fd1; border-color: #3f6fd1; color: #fff; }
+    .tc_lbl { font-size: 11px; fill: #55607a; font-weight: 600; pointer-events: none; }
+    .tc_legend {
+        display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center;
+        margin-top: 6px; font-size: 12px; color: #55607a;
+    }
+    .tc_dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #aab; vertical-align: -1px; }
+    .tc_dot_caries { background: #6a3b1f; } .tc_dot_deep_caries { background: #3e2112; }
+    .tc_dot_pulpitis { background: #d6303a; } .tc_dot_periapical { background: #d6303a; opacity: .7; }
+    .tc_dot_cyst { background: #e8a0a8; } .tc_dot_parodontitis { background: #c4505c; }
+    .tc_dot_gingivitis { background: #e0525a; } .tc_dot_fracture { background: #3a2a26; }
+    .tc_dot_defect { background: #6a3b1f; } .tc_dot_attrition { background: #b69d72; }
+    .tc_dot_calculus { background: #b8903a; } .tc_dot_mobility { background: #e08a00; }
+    .tc_dot_retained { background: #3f6fd1; } .tc_dot_root_remnant { background: #8b6a3a; }
+    .tc_dot_filling { background: #7f93b8; } .tc_dot_canal_filled { background: #2f3e6b; }
+    .tc_dot_crown { background: #f0c94e; } .tc_dot_bridge { background: #9fb4d6; }
+    .tc_dot_implant { background: #8a94a6; } .tc_dot_veneer { background: #8fd6cf; }
+    .tc_dot_extracted { background: #c0392b; }
+}

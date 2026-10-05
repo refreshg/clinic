@@ -35,6 +35,9 @@
                 <div class="cvp_meta" t-if="state.data.visit.assistant">
                     რეზიდენტი: <t t-esc="state.data.visit.assistant"/>
                 </div>
+                <div class="cvp_meta" t-if="state.data.visit.curator">
+                    კურატორი: <t t-esc="state.data.visit.curator"/>
+                </div>
             </div>
         </div>
 
@@ -243,10 +246,37 @@
                         </tbody>
                     </table>
                     <div t-else="" class="text-muted mt-3">ჩანაწერი არ მოიძებნა</div>
+
+                    <div class="cvp_algdocs mt-4">
+                        <div class="cvp_ctitle">ალერგიის საბუთები</div>
+                        <label class="btn cvp_finishbtn cvp_upload">
+                            📎 საბუთის ატვირთვა
+                            <input type="file" multiple="multiple" class="d-none"
+                                   t-on-change="uploadAllergyDocs"/>
+                        </label>
+                        <table class="cvp_table" t-if="(state.data.allergy_docs || []).length">
+                            <thead><tr>
+                                <th>ფაილი</th><th>ატვირთვის დრო</th><th>ვინ ატვირთა</th><th/>
+                            </tr></thead>
+                            <tbody>
+                                <tr t-foreach="state.data.allergy_docs" t-as="dc" t-key="dc.id">
+                                    <td><a t-att-href="'/web/content/clinic.patient.document/' + dc.id + '/attachment?download=true'"
+                                           t-esc="dc.filename"/></td>
+                                    <td t-esc="dc.uploaded_at"/>
+                                    <td t-esc="dc.uploaded_by"/>
+                                    <td><button class="cvp_del"
+                                                t-on-click="() => this.removeAllergyDoc(dc)">🗑</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div t-else="" class="text-muted mt-2">საბუთი არ არის ატვირთული</div>
+                    </div>
                 </div>
 
                 <div t-else="">
                     <div class="cvp_odo_title">აირჩიეთ კბილი დიაგნოზის დასამატებლად</div>
+                    <ClinicToothChart partnerId="state.data.patient.id" selected="state.tooth"
+                                      version="state.chartVer" onSelect="(n) => this.pickTooth(n)"/>
                     <div class="cvp_odo">
                         <t t-foreach="fdiRows" t-as="row" t-key="row_index">
                             <div t-att-class="'cvp_row ' + row.cls">

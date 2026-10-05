@@ -9,6 +9,7 @@
             <list editable="bottom">
                 <field name="code"/>
                 <field name="name"/>
+                <field name="tooth_condition"/>
             </list>
         </field>
     </record>

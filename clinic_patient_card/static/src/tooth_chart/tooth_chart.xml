@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="clinic_patient_card.ToothChart">
+        <div class="clinic_tooth_chart">
+            <div class="tc_views">
+                <button type="button" t-att-class="'tc_vbtn ' + (state.view === 'rows' ? 'on' : '')" t-on-click="() => this.setView('rows')">ვიზუალი 1</button>
+                <button type="button" t-att-class="'tc_vbtn ' + (state.view === 'arch' ? 'on' : '')" t-on-click="() => this.setView('arch')">ვიზუალი 2</button>
+            </div>
+            <div class="tc_wrap" t-on-click="onClick"><t t-out="svg"/></div>
+            <div class="tc_legend">
+                <span t-foreach="legend" t-as="l" t-key="l.k" t-att-class="'tc_leg tc_' + l.kind">
+                    <i t-att-class="'tc_dot tc_dot_' + l.k"/> <t t-esc="l.v"/>
+                </span>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="clinic_patient_card.ToothChartWidget">
+        <ClinicToothChart partnerId="partnerId" version="state.ver" onSelect="(n) => this.pick(n)"/>
+    </t>
+
+    <t t-name="clinic_patient_card.ToothAddDialog">
+        <Dialog title="'კბილი ' + props.tooth" size="'md'">
+            <div class="mb-3">
+                <label class="form-label">ICD-10 დიაგნოზი</label>
+                <select class="form-select" t-model.number="state.icd10Id">
+                    <option value="0">აირჩიეთ ICD-10 დიაგნოზი</option>
+                    <option t-foreach="state.icd" t-as="d" t-key="d.id" t-att-value="d.id">
+                        <t t-esc="d.code"/> - <t t-esc="d.name"/>
+                    </option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">პროცედურა</label>
+                <select class="form-select" t-model.number="state.productId">
+                    <option value="0">აირჩიეთ პროცედურა</option>
+                    <option t-foreach="state.products" t-as="p" t-key="p.id" t-att-value="p.id">
+                        <t t-esc="p.name"/> — <t t-esc="p.lst_price"/>₾
+                    </option>
+                </select>
+            </div>
+            <t t-set-slot="footer">
+                <button class="btn btn-primary" t-att-disabled="state.saving" t-on-click="add">დამატება</button>
+                <button class="btn btn-secondary" t-on-click="props.close">გაუქმება</button>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

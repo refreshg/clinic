@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-02, commit: 101440c -->
+<!-- last-synced: 2026-10-05, commit: f8406c7 (+ uncommitted work) -->
 # Architecture — clinic_patient_card
 
 ## Components
@@ -35,7 +35,9 @@
 | Visit working page | `static/src/visit_page/` (OWL, tag `clinic_visit_page`) | Dentos-style per-visit workspace: medical sections, FDI→ICD-10→procedures, billing; one aggregate RPC (calendar.event.clinic_visit_page_data) + plain ORM writes |
 | Patient dashboards | `static/src/patient_dashboard/`, `static/src/patient_card_page/` | read-only visual pages over res.partner (Health-Care style; Soft-UI handoff) |
 | Security | `security/clinic_groups.xml`, `ir.model.access.csv` | 3 roles, ACLs, record rules (doctor scoping GLOBAL rule, supplier own-records) |
-| Jobs | `data/clinic_cron.xml` | low-stock daily, dispensary reminders daily, booking report weekly |
+| Jobs | `data/clinic_cron.xml` | low-stock daily, dispensary reminders daily, booking report weekly, pregnancy-answer reset daily (D-37) |
+| Tooth chart | `static/src/tooth_chart/` + `models/clinic_tooth.py` | one SVG component (2 layouts) on the visit page and the patient card; state from `res.partner.clinic_tooth_states()` over the procedure lines (D-35) |
+| Pictures / documents | `models/clinic_patient_document.py`, `static/src/xray_upload/`, `views/clinic_xray_views.xml` | X-ray gallery with chatter comments + lightbox, exam results, allergy documents, radiologist upload menu (D-36) |
 
 ## Data flow
 ```mermaid

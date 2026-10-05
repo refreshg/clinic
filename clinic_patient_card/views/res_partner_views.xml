@@ -205,9 +205,6 @@
                                 string="Send Reminder" class="btn-secondary"
                                 groups="clinic_patient_card.group_clinic_admin"/>
                         <button name="action_clinic_todo" type="object"
-                                string="Open Oral Chart" class="btn-secondary"
-                                groups="clinic_patient_card.group_clinic_doctor"/>
-                        <button name="action_clinic_todo" type="object"
                                 string="Create Invoice" class="btn-secondary"
                                 groups="clinic_patient_card.group_clinic_admin"/>
                         <button name="action_clinic_todo" type="object"
@@ -316,54 +313,48 @@
                                placeholder="Free note about the patient..."/>
                     </group>
 
-                    <notebook>
-
-
-
-                        <!-- BLOCK 3 — Financial (visible to clinic administrators) -->
-                        <page name="block_financial" string="Financial"
-                              groups="clinic_patient_card.group_clinic_admin">
-                            <group string="Financial Status">
-                                <group string="Balance">
-                                    <field name="credit" string="Receivable (debt)"/>
-                                    <field name="debit" string="Payable (advance)"/>
-                                    <field name="total_invoiced"/>
-                                    <field name="property_payment_term_id"/>
-                                    <field name="preferred_payment_method"/>
-                                </group>
-                                <group string="Discounts and Loyalty">
-                                    <field name="discount_percent"/>
-                                    <field name="discount_fixed"/>
-                                    <field name="loyalty_status"/>
-                                </group>
-                                <group string="Insurance">
-                                    <field name="insurance_company_id"
-                                           context="{'default_is_insurance_company': True, 'default_is_patient': False, 'default_company_type': 'company'}"/>
-                                    <field name="insurance_policy_no"/>
-                                    <field name="insurance_valid_until"/>
-                                    <field name="insurance_notes"/>
-                                </group>
-                                <separator string="Invoices and Payments" colspan="2"/>
-                                <field name="invoice_ids" colspan="2" nolabel="1" readonly="1">
-                                    <list>
-                                        <field name="name"/>
-                                        <field name="invoice_date"/>
-                                        <field name="move_type"/>
-                                        <field name="amount_total"/>
-                                        <field name="payment_state"/>
-                                        <field name="state"/>
-                                    </list>
-                                </field>
-                            </group>
-                        </page>
-
-
-                    </notebook>
                 </page>
             </xpath>
 
             <!-- Medical + History tabs sit in the OUTER tab bar after Notes (user, 2026-10-02) -->
             <xpath expr="//page[@name='internal_notes']" position="after">
+                <!-- Financial now sits in the OUTER tab bar next to Notes (user, 2026-10-05) -->
+                <!-- BLOCK 3 — Financial (visible to clinic administrators) -->
+                <page name="block_financial" string="Financial"
+                      groups="clinic_patient_card.group_clinic_admin">
+                    <group string="Financial Status">
+                        <group string="Balance">
+                            <field name="credit" string="Receivable (debt)"/>
+                            <field name="debit" string="Payable (advance)"/>
+                            <field name="total_invoiced"/>
+                            <field name="property_payment_term_id"/>
+                            <field name="preferred_payment_method"/>
+                        </group>
+                        <group string="Discounts and Loyalty">
+                            <field name="discount_percent"/>
+                            <field name="discount_fixed"/>
+                            <field name="loyalty_status"/>
+                        </group>
+                        <group string="Insurance">
+                            <field name="insurance_company_id"
+                                   context="{'default_is_insurance_company': True, 'default_is_patient': False, 'default_company_type': 'company'}"/>
+                            <field name="insurance_policy_no"/>
+                            <field name="insurance_valid_until"/>
+                            <field name="insurance_notes"/>
+                        </group>
+                        <separator string="Invoices and Payments" colspan="2"/>
+                        <field name="invoice_ids" colspan="2" nolabel="1" readonly="1">
+                            <list>
+                                <field name="name"/>
+                                <field name="invoice_date"/>
+                                <field name="move_type"/>
+                                <field name="amount_total"/>
+                                <field name="payment_state"/>
+                                <field name="state"/>
+                            </list>
+                        </field>
+                    </group>
+                </page>
                 <!-- BLOCK 2 — Medical (editable by doctors only) -->
                 <page name="block_medical" string="Medical" invisible="not is_patient"
                       groups="clinic_patient_card.group_clinic_doctor">
@@ -386,6 +377,103 @@
                             <field name="has_ct"/>
                             <field name="imaging_source"/>
                         </group>
+                        <group string="ალერგიის საბუთები" colspan="2">
+                            <field name="allergy_doc_ids" colspan="2" nolabel="1"
+                                   context="{'default_doc_type': 'allergy_doc'}">
+                                <list>
+                                    <field name="name" string="დასახელება"/>
+                                    <field name="attachment" filename="filename" widget="binary"
+                                           string="ფაილი"/>
+                                    <field name="filename" column_invisible="1"/>
+                                    <field name="create_date" string="ატვირთვის დრო"/>
+                                    <field name="uploaded_by_id" string="ვინ ატვირთა"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <field name="doc_type" invisible="1"/>
+                                        <field name="name" string="დასახელება"/>
+                                        <field name="attachment" filename="filename" widget="binary"
+                                               string="ფაილი"/>
+                                        <field name="filename" invisible="1"/>
+                                        <field name="uploaded_by_id" string="ვინ ატვირთა" readonly="1"
+                                               invisible="not id"/>
+                                        <field name="create_date" string="ატვირთვის დრო" readonly="1"
+                                               invisible="not id"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+                        <group string="გამოკვლევის შედეგები" colspan="2">
+                            <field name="exam_result_ids" colspan="2" nolabel="1"
+                                   context="{'default_doc_type': 'exam_result'}">
+                                <list>
+                                    <field name="name" string="დასახელება"/>
+                                    <field name="result_text" string="შედეგი"/>
+                                    <field name="attachment" filename="filename" widget="binary"
+                                           string="ფაილი"/>
+                                    <field name="filename" column_invisible="1"/>
+                                    <field name="create_date" string="ატვირთვის დრო"/>
+                                    <field name="uploaded_by_id" string="ვინ ატვირთა"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <field name="doc_type" invisible="1"/>
+                                        <field name="name" string="დასახელება"/>
+                                        <field name="result_text" string="შედეგი (ხელით შეყვანა)"
+                                               placeholder="ჩაწერე გამოკვლევის შედეგი..."/>
+                                        <field name="attachment" filename="filename" widget="binary"
+                                               string="ფაილი"/>
+                                        <field name="filename" invisible="1"/>
+                                        <field name="uploaded_by_id" string="ვინ ატვირთა" readonly="1"
+                                               invisible="not id"/>
+                                        <field name="create_date" string="ატვირთვის დრო" readonly="1"
+                                               invisible="not id"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+                        <group string="X-ray / Photos" colspan="2">
+                            <field name="xray_ids" colspan="2" nolabel="1" mode="kanban"
+                                   context="{'default_doc_type': 'xray'}">
+                                <kanban>
+                                    <field name="name"/>
+                                            <field name="create_date"/>
+                                    <field name="uploaded_by_id"/>
+                                    <field name="note"/>
+                                    <field name="write_date"/>
+                                    <field name="attachment"/>
+                                    <templates>
+                                        <t t-name="card">
+                                            <field name="attachment" widget="clinic_zoom_image"
+                                                   options="{'size': [0, 150]}"/>
+                                            <div class="fw-bold mt-1"><field name="name"/></div>
+                                            <div class="text-muted small">
+                                                ⬆ <field name="create_date"/>
+                                                · <field name="uploaded_by_id"/>
+                                            </div>
+                                            <div class="small" t-if="record.note.raw_value">
+                                                <field name="note"/>
+                                            </div>
+                                            <div class="mt-1 d-flex gap-2">
+                                                <button name="action_open_full" type="object"
+                                                        class="btn btn-sm btn-link p-0">💬 კომენტარები</button>
+                                                <a type="delete" class="text-danger">🗑 წაშლა</a>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                                <form>
+                                    <group>
+                                        <field name="name"/>
+                                                    <field name="attachment" filename="filename" widget="clinic_image_upload"
+                                               options="{'size': [0, 300]}"/>
+                                        <field name="filename" invisible="1"/>
+                                        <field name="note"/>
+                                        <field name="doc_type" invisible="1"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
                         <group string="Last Update" col="2">
                             <field name="medical_update_date"/>
                             <field name="medical_update_uid"/>
@@ -406,7 +494,7 @@
                         </group>
                         <field name="dental_other_notes" colspan="2"/>
                         <separator string="Dental Chart (FDI)" colspan="2"/>
-                        <field name="odontogram_html" colspan="2" nolabel="1" readonly="1"/>
+                        <widget name="clinic_tooth_chart" colspan="2"/>
                         <field name="tooth_ids" colspan="2" nolabel="1">
                             <list editable="bottom">
                                 <field name="tooth_number"/>

@@ -54,8 +54,7 @@
 
                     <div style="line-height:1.55; font-size:14px;">
                         <div><b style="color:#0d5c74;">Patient Name:</b> <b t-out="o._ent(o.patient_name)"/></div>
-                        <div t-if="o.implantologist"><b style="color:#0d5c74;">Implantologist:</b> <b t-out="o._ent(o.implantologist)"/></div>
-                        <div t-if="o.prosthodontist"><b style="color:#0d5c74;">Prosthodontist:</b> <b t-out="o._ent(o.prosthodontist)"/></div>
+                        <div t-foreach="o.doctor_line_ids.filtered('name')" t-as="d"><b style="color:#0d5c74;" t-if="d.role"><t t-out="o._ent(d.role)"/>:</b> <b t-out="o._ent(d.name)"/></div>
                         <div t-if="o.chief_doctor"><b style="color:#0d5c74;">Chief Medical Officer:</b> <b t-out="o._ent(o.chief_doctor)"/></div>
                     </div>
 

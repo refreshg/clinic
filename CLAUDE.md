@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-02, commit: 101440c -->
+<!-- last-synced: 2026-10-05, commit: f8406c7 (+ uncommitted work) -->
 # Clinic — project notes for Claude
 
 ## Platform
@@ -9,14 +9,14 @@
   `display_name` not `name_get()`; `env.cr/context/uid`; JSON-2 API available.
 
 ## Product / plan (history lives in docs/ — don't re-read it here)
-- `docs/PRD.md` = source of truth for requirements; `docs/DECISIONS.md` = ADRs D-1…D-23.
+- `docs/PRD.md` = source of truth for requirements; `docs/DECISIONS.md` = ADRs D-1…D-37.
 - DONE & live, user-tested: Phases 1–4 + patient card/dashboard/shop/supplier portal;
   reviewer batch 28.08.26 (v30–46); reviewer batch #2 ჯავშნები+მაღაზია/მარაგები (v47–55,
   D-16…D-20 incl. supplier warehouses); Soft-UI restyles (v55.x, D-21); Dentos-parity
   batch — booking popup, quick registration, consents with signature, OWL visit page,
-  billing, coloured board (v56–60.4, D-22/D-23).
+  billing, coloured board (v56–60.4, D-22/D-23); tooth chart, imaging + radiologist (D-35/36).
 - Deferred: emails + SMS (clinic must decide what/when), ka.po regen (M2, first
-  unblocked), patient-card page write-back, Form-100, EHR sync, clickable odontogram.
+  unblocked), patient-card page write-back, Form-100, EHR sync, periodontal chart.
 - Roles: Clinic Administrator / Doctor / Supplier; doctors see only their own visits
   (global ir.rule) and only their own board column; admin sees all.
 

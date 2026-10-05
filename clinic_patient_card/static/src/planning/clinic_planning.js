@@ -242,7 +242,7 @@ export class ClinicPlanning extends Component {
     }
 
     eventsFor(dentistId) {
-        return this.state.events.filter((e) => {
+        const list = this.state.events.filter((e) => {
             if (!e.dentist_id || e.dentist_id[0] !== dentistId) {
                 return false;
             }
@@ -251,6 +251,54 @@ export class ClinicPlanning extends Component {
             }
             return true;
         });
+        this._layoutLanes(list);
+        return list;
+    }
+    /** A doctor may hold several patients at the same time: overlapping visits
+     *  share the column side by side (lane i of n), like columns in a row. */
+    _layoutLanes(list) {
+        if (!this._lanes) {
+            this._lanes = new Map();
+        }
+        const items = list
+            .map((e) => ({ id: e.id, s: this._hourOf(e.start), e: this._hourOf(e.stop) }))
+            .sort((a, b) => a.s - b.s || a.e - b.e || a.id - b.id);
+        let cluster = [];
+        let clusterEnd = -1;
+        const flush = () => {
+            if (!cluster.length) {
+                return;
+            }
+            const laneEnds = [];
+            for (const it of cluster) {
+                let lane = laneEnds.findIndex((end) => end <= it.s + 1e-9);
+                if (lane < 0) {
+                    lane = laneEnds.length;
+                }
+                laneEnds[lane] = it.e;
+                it.lane = lane;
+            }
+            for (const it of cluster) {
+                this._lanes.set(it.id, { lane: it.lane, count: laneEnds.length });
+            }
+            cluster = [];
+        };
+        for (const it of items) {
+            if (cluster.length && it.s >= clusterEnd - 1e-9) {
+                flush();
+                clusterEnd = -1;
+            }
+            cluster.push(it);
+            clusterEnd = Math.max(clusterEnd, it.e);
+        }
+        flush();
+    }
+    laneOf(ev) {
+        return (this._lanes && this._lanes.get(ev.id)) || { lane: 0, count: 1 };
+    }
+    laneClass(ev) {
+        const n = this.laneOf(ev).count;
+        return n >= 3 ? "cp_lanes cp_lanes3" : n === 2 ? "cp_lanes" : "";
     }
 
     _colorHex(ev) {
@@ -269,7 +317,11 @@ export class ClinicPlanning extends Component {
         const height = Math.max(30, (e - s) * HOUR_PX - 3);
         const hex = this._colorHex(ev);
         const cursor = this.isEventLocked(ev) ? "default" : "grab";
-        return `top:${top}px;height:${height}px;background:${hex}1f;border-left:3px solid ${hex};cursor:${cursor};`;
+        const { lane, count } = this.laneOf(ev);
+        const place = count > 1
+            ? `left:calc(4px + (100% - 8px) * ${lane} / ${count});right:auto;width:calc((100% - 8px) / ${count} - 3px);`
+            : "";
+        return `top:${top}px;height:${height}px;${place}background:${hex}1f;border-left:3px solid ${hex};cursor:${cursor};`;
     }
     evTime(ev) {
         return `${deserializeDateTime(ev.start).toFormat("HH:mm")} – ${deserializeDateTime(ev.stop).toFormat("HH:mm")}`;

@@ -202,6 +202,8 @@
                                    invisible="clinic_state in ('done', 'paid')"/>
                             <field name="assistant_id"
                                    invisible="clinic_state in ('done', 'paid')"/>
+                            <field name="curator_id"
+                                   invisible="clinic_state in ('done', 'paid')"/>
                             <field name="observer_ids" widget="many2many_tags_avatar"/>
                             <field name="room_id"
                                    invisible="clinic_state in ('done', 'paid')"/>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="clinic_patient_card.Lightbox">
+        <div class="clinic_lightbox" t-on-click="props.close">
+            <button type="button" class="cl_close" title="დახურვა" t-on-click.stop="props.close">✕</button>
+            <button t-if="many" type="button" class="cl_nav cl_prev" t-on-click.stop="prev">‹</button>
+            <img class="cl_img" t-att-src="cur.url" t-att-alt="cur.name" t-on-click.stop=""/>
+            <button t-if="many" type="button" class="cl_nav cl_next" t-on-click.stop="next">›</button>
+            <div class="cl_cap" t-on-click.stop="">
+                <t t-esc="cur.name"/> <span t-if="many" class="cl_cnt"> · <t t-esc="state.i + 1"/> / <t t-esc="props.items.length"/></span>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="clinic_patient_card.ZoomImage" t-inherit="web.ImageField" t-inherit-mode="primary">
+        <xpath expr="//img" position="attributes">
+            <attribute name="t-on-click.stop">onZoom</attribute>
+            <attribute name="t-att-style">(sizeStyle) + ';cursor:zoom-in'</attribute>
+        </xpath>
+    </t>
+
+</templates>

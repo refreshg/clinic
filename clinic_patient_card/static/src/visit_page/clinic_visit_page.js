@@ -4,6 +4,7 @@ import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
+import { ClinicToothChart } from "@clinic_patient_card/tooth_chart/tooth_chart";
 
 /**
  * D3 — Dentos-style visit working page.
@@ -58,13 +59,15 @@ const PROC_STATUSES = [
 
 export class ClinicVisitPage extends Component {
     static template = "clinic_patient_card.VisitPage";
+    static components = { ClinicToothChart };
     static props = ["*"];
 
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
         this.notification = useService("notification");
-        this.fdiRows = FDI_ROWS;
+        // permanent teeth are the picture chart; only the milk-teeth rows stay buttons
+        this.fdiRows = FDI_ROWS.filter((r) => r.cls.includes("small"));
         this.sectionsMeta = SECTIONS;
         this.procStatuses = PROC_STATUSES;
         this.objFields = OBJ_FIELDS;
@@ -78,6 +81,7 @@ export class ClinicVisitPage extends Component {
             section: null,          // opened section key (null = odontogram)
             sectionDraft: "",
             tooth: "",
+            chartVer: 0,
             icd10Id: false,
             productId: false,
             saving: false,
@@ -94,6 +98,7 @@ export class ClinicVisitPage extends Component {
     }
 
     async load() {
+        this.state.chartVer++;
         this.state.data = await this.orm.call(
             "calendar.event", "clinic_visit_page_data", [this.visitId]);
         // Admin defaults to billing tab (procedures tab hidden for admin).
@@ -239,6 +244,41 @@ export class ClinicVisitPage extends Component {
             partner_id: this.state.data.patient.id,
             name: d.name, reaction: d.reaction, note: d.note,
         }]);
+        await this.load();
+        this.openSection("allergy");
+    }
+    /** allergy documents: pick one or several files, each becomes a patient document */
+    async uploadAllergyDocs(ev) {
+        const files = [...ev.target.files];
+        ev.target.value = "";
+        if (!files.length) {
+            return;
+        }
+        const b64 = (f) => new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(String(r.result).split(",")[1]);
+            r.onerror = reject;
+            r.readAsDataURL(f);
+        });
+        this.state.saving = true;
+        try {
+            for (const f of files) {
+                await this.orm.create("clinic.patient.document", [{
+                    partner_id: this.state.data.patient.id,
+                    doc_type: "allergy_doc",
+                    name: f.name.replace(/\.[^.]+$/, ""),
+                    filename: f.name,
+                    attachment: await b64(f),
+                }]);
+            }
+        } finally {
+            this.state.saving = false;
+        }
+        await this.load();
+        this.openSection("allergy");
+    }
+    async removeAllergyDoc(doc) {
+        await this.orm.unlink("clinic.patient.document", [doc.id]);
         await this.load();
         this.openSection("allergy");
     }

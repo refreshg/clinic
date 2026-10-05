@@ -25,6 +25,10 @@ class CalendarEvent(models.Model):
         "res.users", string="Assistant / Resident",
         help="Assisting doctor or resident for this visit.",
     )
+    curator_id = fields.Many2one(
+        "res.users", string="Curator",
+        help="Curator of this visit (კურატორი); same user list as the assistant.",
+    )
     room_id = fields.Many2one("clinic.room", string="Room")
     # Reviewer batch #2: "Diagnosis" reads as the visit comment (shown on the
     # board card too); same column, no data lost.
@@ -237,6 +241,15 @@ class CalendarEvent(models.Model):
             order="id",
         )
         allergies = p.allergy_ids.read(["name", "reaction", "note"]) if p else []
+        # uploaded allergy documents (file + when / by whom)
+        allergy_docs = [{
+            "id": d.id, "name": d.name, "filename": d.filename or d.name,
+            "uploaded_at": fields.Datetime.to_string(
+                fields.Datetime.context_timestamp(ev, d.create_date)) if d.create_date else "",
+            "uploaded_by": d.uploaded_by_id.name or "",
+        } for d in ev.env["clinic.patient.document"].search(
+            [("partner_id", "=", p.id), ("doc_type", "=", "allergy_doc")],
+            order="id desc")] if p else []
         complaint_catalog = ev.env["clinic.complaint"].search_read(
             [], ["name"], order="name")
         objective = {
@@ -261,6 +274,7 @@ class CalendarEvent(models.Model):
             "objective": objective,
             "prescriptions": prescriptions,
             "allergies": allergies,
+            "allergy_docs": allergy_docs,
             "visit": {
                 "id": ev.id,
                 "start": ev.start and fields.Datetime.to_string(ev.start),
@@ -269,6 +283,7 @@ class CalendarEvent(models.Model):
                 "case_type": ev.clinic_case_type,
                 "dentist": ev.dentist_id.name or "",
                 "assistant": ev.assistant_id.name or "",
+                "curator": ev.curator_id.name or "",
                 "observers": ev.observer_ids.mapped("name"),
                 "consent_signed": ev.consent_signed,
                 "amount_paid": ev.amount_paid,
@@ -584,8 +599,9 @@ class CalendarEvent(models.Model):
 
     @api.constrains("start", "stop", "dentist_id", "room_id", "clinic_state", "active")
     def _check_clinic_overlap(self):
-        # Booked time is locked: the same dentist (and, if enabled, the same
-        # room) cannot hold two overlapping live clinic visits. sudo() so the
+        # 2026-10-05 (user): a doctor MAY be booked with several patients at the
+        # same time — the dentist clash check is gone. Only the room check
+        # remains, and only when the company setting asks for it. sudo() so the
         # per-doctor record rule can't hide a clashing visit.
         block_room = self.env.company.clinic_block_room_overlap
         for ev in self:
@@ -607,16 +623,13 @@ class CalendarEvent(models.Model):
                 ("stop", ">", ev.start),
             ]
             Event = self.sudo()
-            if ev.dentist_id:
-                clash = Event.search(base + [("dentist_id", "=", ev.dentist_id.id)], limit=1)
-                if clash:
-                    raise ValidationError(_(
-                        "%(dentist)s is already booked at that time (%(visit)s). "
-                        "Pick a free slot.",
-                        dentist=ev.dentist_id.name, visit=clash.display_name,
-                    ))
             if block_room and ev.room_id:
-                clash = Event.search(base + [("room_id", "=", ev.room_id.id)], limit=1)
+                # the same doctor's own overlapping patients share his room: only
+                # ANOTHER doctor using the room at that time is a clash
+                room_dom = base + [("room_id", "=", ev.room_id.id)]
+                if ev.dentist_id:
+                    room_dom.append(("dentist_id", "!=", ev.dentist_id.id))
+                clash = Event.search(room_dom, limit=1)
                 if clash:
                     raise ValidationError(_(
                         "Room %(room)s is already occupied at that time (%(visit)s).",

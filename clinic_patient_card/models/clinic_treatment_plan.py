@@ -25,8 +25,18 @@ class ClinicTreatmentPlan(models.Model):
     # typed by hand for every plan (user): the name printed on the document
     patient_name = fields.Char(string="Patient Name")
     date = fields.Date(default=fields.Date.context_today)
+    # legacy single fields — moved into doctor_line_ids (D-33), kept only for the move
     implantologist = fields.Char(string="Implantologist")
     prosthodontist = fields.Char(string="Prosthodontist")
+    # the doctors printed on top: Implantologist / Prosthodontist by default,
+    # removable, plus any other clinic doctor via "Add doctor" (D-33)
+    doctor_line_ids = fields.One2many(
+        "clinic.treatment.plan.doctor", "plan_id", string="Doctors", copy=True,
+        default=lambda self: [
+            fields.Command.create({"sequence": 10, "role": "Implantologist"}),
+            fields.Command.create({"sequence": 20, "role": "Prosthodontist"}),
+        ],
+    )
     chief_doctor = fields.Char(string="Chief Medical Officer")
     line_ids = fields.One2many(
         "clinic.treatment.plan.line", "plan_id", string="Recommended Treatment", copy=True,
@@ -81,6 +91,22 @@ class ClinicTreatmentPlan(models.Model):
     def _money(self, amount, currency):
         txt = ("%.2f" % amount).rstrip("0").rstrip(".")
         return "%s %s" % (txt, currency.name or "")
+
+    @api.model
+    def _clinic_migrate_doctor_lines(self):
+        """D-33: move the old Implantologist / Prosthodontist texts into doctor
+        lines (runs on every upgrade; idempotent — the texts are cleared)."""
+        plans = self.search(["|", ("implantologist", "!=", False), ("prosthodontist", "!=", False)])
+        for plan in plans:
+            vals = []
+            if plan.implantologist:
+                vals.append({"sequence": 10, "role": "Implantologist", "name": plan.implantologist})
+            if plan.prosthodontist:
+                vals.append({"sequence": 20, "role": "Prosthodontist", "name": plan.prosthodontist})
+            plan.write({
+                "doctor_line_ids": [fields.Command.create(v) for v in vals],
+                "implantologist": False, "prosthodontist": False,
+            })
 
     def action_pull_planned(self):
         """Add the patient's planned procedures that are not on the plan yet."""
@@ -140,3 +166,35 @@ class ClinicTreatmentPlanLine(models.Model):
     price = fields.Char(string="Price")
     procedure_history_id = fields.Many2one(
         "clinic.procedure.history", string="Pulled from", ondelete="set null", copy=False)
+
+
+class ClinicTreatmentPlanDoctor(models.Model):
+    """One "Profession: Name" line on top of the treatment plan (D-33)."""
+    _name = "clinic.treatment.plan.doctor"
+    _description = "Treatment Plan Doctor"
+    _order = "sequence, id"
+
+    plan_id = fields.Many2one("clinic.treatment.plan", required=True, ondelete="cascade", index=True)
+    sequence = fields.Integer(default=10)
+    role = fields.Char(
+        string="Profession", compute="_compute_role", store=True, readonly=False)
+    doctor_id = fields.Many2one(
+        "res.users", string="Doctor",
+        domain=lambda self: [("all_group_ids", "in", self.env.ref(
+            "clinic_patient_card.group_clinic_doctor").id)])
+    # printed name: follows the chosen doctor, can be typed by hand
+    name = fields.Char(
+        string="Printed name", compute="_compute_name", store=True, readonly=False)
+
+    @api.depends("doctor_id")
+    def _compute_role(self):
+        for line in self:
+            if not line.role and line.doctor_id.direction_id:
+                line.role = line.doctor_id.direction_id.name
+            else:
+                line.role = line.role
+
+    @api.depends("doctor_id")
+    def _compute_name(self):
+        for line in self:
+            line.name = line.doctor_id.name if line.doctor_id else line.name

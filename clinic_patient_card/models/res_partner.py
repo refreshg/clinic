@@ -245,6 +245,9 @@ class ResPartner(models.Model):
     pregnancy_answer = fields.Selection(
         [("yes", "კი"), ("no", "არა")], string="Pregnancy",
     )
+    # the day the pregnancy answer was given: an answer is valid for THAT day's
+    # visit only, so every new visit day asks again (even if nothing cleared it)
+    pregnancy_answered_on = fields.Date(string="Pregnancy answered on", copy=False)
     smoker = fields.Boolean(string="Smoker")
     alcohol = fields.Boolean(string="Alcohol")
     family_history = fields.Text(string="Family History")
@@ -346,6 +349,21 @@ class ResPartner(models.Model):
     # ==================================================================
     document_ids = fields.One2many(
         "clinic.patient.document", "partner_id", string="Documents",
+    )
+    # Medical tab: allergy documents (also uploaded from the visit page)
+    allergy_doc_ids = fields.One2many(
+        "clinic.patient.document", "partner_id", string="Allergy documents",
+        domain=[("doc_type", "=", "allergy_doc")],
+    )
+    # Medical tab: examination results (a file and/or typed text), doctor side
+    exam_result_ids = fields.One2many(
+        "clinic.patient.document", "partner_id", string="Examination results",
+        domain=[("doc_type", "=", "exam_result")],
+    )
+    # Medical tab gallery: the pictures (X-ray / photos) among the documents
+    xray_ids = fields.One2many(
+        "clinic.patient.document", "partner_id", string="X-ray / Photos",
+        domain=[("doc_type", "=", "xray")],
     )
 
     # ==================================================================
@@ -487,7 +505,9 @@ class ResPartner(models.Model):
         missing = []
         if not self.allergy_answer:
             missing.append(_("Allergies (yes/no)"))
-        if self.gender == "female" and not self.pregnancy_answer:
+        if self.gender == "female" and (
+                not self.pregnancy_answer
+                or self.pregnancy_answered_on != fields.Date.context_today(self)):
             missing.append(_("Pregnancy (yes/no)"))
         return missing
 
@@ -520,6 +540,23 @@ class ResPartner(models.Model):
     def _clinic_sync_pregnancy(self, vals):
         if "pregnancy_answer" in vals:
             vals["is_pregnant"] = vals["pregnancy_answer"] == "yes"
+            vals["pregnancy_answered_on"] = (
+                fields.Date.context_today(self) if vals["pregnancy_answer"] else False)
+
+    @api.model
+    def _cron_reset_stale_pregnancy(self):
+        """Forget yesterday's pregnancy answers: the next visit asks afresh.
+        Skipped for a patient who is being treated right now."""
+        today = fields.Date.context_today(self)
+        stale = self.sudo().search([
+            ("pregnancy_answer", "!=", False),
+            "|", ("pregnancy_answered_on", "=", False),
+            ("pregnancy_answered_on", "<", today)])
+        busy = set(self.env["calendar.event"].sudo().search([
+            ("is_clinic", "=", True),
+            ("clinic_state", "in", ("arrived", "in_progress"))]).mapped("patient_id").ids)
+        stale.filtered(lambda p: p.id not in busy).write({"pregnancy_answer": False})
+        return len(stale)
 
     def write(self, vals):
         self._clinic_sync_pregnancy(vals)

@@ -22,6 +22,18 @@
         <field name="active" eval="True"/>
     </record>
 
+    <!-- A pregnancy answer is for one visit day only: the next day it is forgotten
+         and the patient is asked again. -->
+    <record id="cron_clinic_reset_pregnancy" model="ir.cron">
+        <field name="name">Clinic: forget yesterday's pregnancy answers</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_reset_stale_pregnancy()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+
     <!-- Weekly booking summary for the administrators (the "manager"). -->
     <record id="cron_clinic_booking_report" model="ir.cron">
         <field name="name">Clinic: weekly booking report</field>

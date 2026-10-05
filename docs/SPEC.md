@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-02, commit: 101440c -->
+<!-- last-synced: 2026-10-05, commit: f8406c7 (+ uncommitted work) -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -83,8 +83,8 @@ test_done(Bool), test_result, note.
 **`clinic.patient.tooth`** — FDI chart rows. partner_id✓, tooth_number(Char, FDI), status(Sel:
 healthy/caries/filled/crown/root_canal/implant/missing/to_extract/other), note.
 
-**`clinic.patient.document`** | partner_id✓, doc_type(Sel; `consent` shows signature),
-name, date, attachment(Binary)+filename, signature(Binary, widget=signature), note.
+**`clinic.patient.document`** (inherits `mail.thread`, D-36) | partner_id✓, doc_type(Sel: id_scan/consent/xray/exam_result/allergy_doc/insurance/other; `consent` shows signature),
+name, date, attachment(Binary)+filename, signature(Binary, widget=signature), note, result_text(Text, typed exam result), uploaded_by_id(M2o users, default creator); upload time = `create_date`; `action_open_full` / `action_add_next`. `res.partner` exposes the filtered o2m `xray_ids`, `exam_result_ids`, `allergy_doc_ids` (Medical tab).
 
 **`clinic.procedure.history`** | partner_id✓(cascade), appointment_id(M2o calendar.event,
 set null), procedure_id(M2o product.product, domain is_clinic_procedure), name, status(Sel,
@@ -103,8 +103,9 @@ summary(Html), note. Mixed: cash+terminal must equal total (float_compare).
   signed_date/uid. action_confirm guards (agreement / signature required),
   chains personal_data → medical, posts to visit chatter, stores the first
   medical signature on the partner as clinic_signature_sample.
-- **clinic.icd10** — code (unique) + name; 24 dental K00–K14 codes seeded
+- **clinic.icd10** — code (unique) + name + `tooth_condition` (Sel, picture on the tooth chart, D-35); 24 dental K00–K14 codes seeded
   (data/clinic_icd10_seed.xml, noupdate); menu Configuration → ICD-10 (admin).
+- **tooth chart (D-35)** — `models/clinic_tooth.py`: `product.template.clinic_tooth_treatment` (Sel), `res.partner.clinic_tooth_states()` (RPC: {fdi: cond/treat/labels} from the procedure lines), tables `ICD_PREFIX` / `TREATMENT_RULES`.
 - **clinic.complaint** — complaints catalog (name); 9 seeded; admin CRUD,
   doctor read.
 - **clinic.prescription** — visit_id, rec_type (e_recipe|prescription|
@@ -128,7 +129,7 @@ summary(Html), note. Mixed: cash+terminal must equal total (float_compare).
 **`calendar.event`** (clinic visit when `is_clinic=True`):
 | group | fields |
 |---|---|
-| core | is_clinic, patient_id(M2o partner — required via constrain when is_clinic), dentist_id(M2o users), assistant_id(M2o users), room_id, appointment_type_id, clinic_state(Sel: requested/booked/confirmed/arrived/in_progress/done/paid/cancelled/no_show; tracked) |
+| core | is_clinic, patient_id(M2o partner — required via constrain when is_clinic), dentist_id(M2o users), assistant_id(M2o users), curator_id(M2o users, "Curator", same user list; shown on the visit page), room_id, appointment_type_id, clinic_state(Sel: requested/booked/confirmed/arrived/in_progress/done/paid/cancelled/no_show; tracked) |
 | medical | diagnosis (string **Comment**, batch #2), procedure_line_ids(o2m clinic.procedure.history), tooth_display(compute) |
 | money | currency_id, amount_paid, amount_cash, amount_terminal, payment_method |
 | tracking | checkin_time, treat_start_time, treat_end_time, waiting_minutes, chair_minutes, parent_appointment_id, parent_visit_info(compute), was_rescheduled, duration_edited, cancel_reason |
@@ -261,7 +262,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | # | trigger | condition | action | std coverage |
 |---|---|---|---|---|
 | B1 | create/write on calendar.event | `'start' in vals`, not `clinic_force`, is_clinic | `_clinic_validate_schedule`: block outside company workdays/hours; block past (>5-min grace) unless user == `base.user_admin` | custom (D-4, D-5) — resource.calendar rejected |
-| B2 | constrains start/stop/dentist/room/state | is_clinic, state not in requested/cancelled/no_show | `_check_clinic_overlap`: same-dentist clash always blocked; same-room behind `clinic_block_room_overlap`; sudo() search (doctor rule can't hide clashes) | custom (D-4) — std calendar has no overlap guard |
+| B2 | constrains start/stop/dentist/room/state | is_clinic, state not in requested/cancelled/no_show | `_check_clinic_overlap`: a doctor MAY have overlapping visits (D-34); same-room clash only against ANOTHER doctor's visit, behind `clinic_block_room_overlap`; sudo() search (doctor rule can't hide clashes) | custom (D-4, narrowed by D-34) |
 | B3 | `action_arrive` | admin | state→arrived, checkin_time; bus `clinic_patient_arrived` + activity to dentist | std bus/mail.activity + custom |
 | B4 | `action_start` | doctor | guard `_check_patient_data_complete` (vat+phone+birthdate) then in_progress | custom (reviewer) |
 | B5 | `action_done` | doctor | push procedure_line_ids → clinic.procedure.history, stamp last_dental_visit_date | custom |
@@ -337,7 +338,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | procedures/price | product.product service | yes | flag is_clinic_procedure only (D-9) |
 | insurance companies | res.partner | yes | flag is_insurance_company (D-9) |
 | working hours | resource.calendar | partial (heavy, per-resource) | 9 fields on res.company (D-4) |
-| double-booking | std calendar | no | constrains B2 (D-4) |
+| double-booking | std calendar | no | constrains B2 (D-4; one doctor may overlap since D-34) |
 | clinic buying UI | website_sale | no (it sells) | OWL Supply Shop over purchase (D-1) |
 | supplier side | purchase portal | partial | mirror sale.order + record rules (D-2, D-3) |
 | retail to patient | sale_management | yes | "რეალიზაცია" tab = plain sale.order |
@@ -405,7 +406,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 
 ## Security
 - Groups (`security/clinic_groups.xml`): `group_clinic_admin` (implies partner_manager,
-  purchase_user, stock_user, production_lot, multi_locations — batch #2 B1), `group_clinic_doctor` (partner_manager), `group_clinic_supplier`
+  purchase_user, stock_user, production_lot, multi_locations — batch #2 B1), `group_clinic_doctor` (partner_manager), `group_clinic_radiologist` (internal user only; "Radiology" menu — Patients + X-ray uploads; D-36), `group_clinic_supplier`
   (purchase_user, stock_user, sale_salesman). Privilege `privilege_clinic`.
 - ACL (`ir.model.access.csv`): CRUD for the 20 clinic models (+supplier.move wizard;
   supplier rwc on stock.location scoped by rule; doctor read-only purchase.order(+line)) (banner user-r/admin-rwcu;
@@ -436,7 +437,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 - Dev access: JSON-RPC (`/jsonrpc`, password auth). JSON-2 available but unused.
 
 ## Migration / data
-- `data/ir_sequence.xml` (patient_ref), `data/clinic_cron.xml` (3 crons above).
+- `data/ir_sequence.xml` (patient_ref), `data/clinic_cron.xml` (3 crons above + `cron_clinic_reset_pregnancy`, daily — forgets yesterday's pregnancy answers, D-37).
 - Upgrade = `-u clinic_patient_card` in-place; no data migrations needed so far; ctx override
   on `contacts.action_contacts` re-asserted on every upgrade.
 - Demo data (patients/doctors/suppliers/products) was seeded via RPC, NOT in module data.
@@ -509,6 +510,12 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
   every purchase.order method below it (clinic_create_rfqs, mirror chain, button_confirm
   hook) silently re-parented to stock.picking — shop checkout was broken until B4. Fixed by
   moving the class to EOF; convention added to CLAUDE.md.
+
+- 2026-10-05: D-4's "same-dentist clash always blocked" is obsolete — one doctor may hold overlapping visits (user request); the room check now compares only with other doctors (D-34). The Planning board draws overlaps in lanes.
+- 2026-10-05: a pregnancy answer is valid for ONE day (`pregnancy_answered_on` + daily cron); before this the card kept an old visit's answer and the question was not asked again (D-37, amends D-31).
+- 2026-10-05: the old `odontogram_html` block and the doctor-only "Open Oral Chart" placeholder button are gone from the patient card — the tooth chart widget (D-35) replaced them; PLAN M4 is superseded.
+- 2026-10-05: the Financial tab moved to the OUTER tab bar next to Notes (the nested notebook was removed).
+- 2026-10-05: "Referral source" stays hidden on the booking form (only its referral_user_id modifier needs it) — a visible variant was built and removed on request.
 
 ## Tests
 Decision (2026-09-03, user): **no automated suite** — verification = live JSON-RPC scenarios +

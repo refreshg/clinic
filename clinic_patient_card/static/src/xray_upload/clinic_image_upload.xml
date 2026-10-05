@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="clinic_patient_card.ImageUpload" t-inherit="web.ImageField" t-inherit-mode="primary">
+        <xpath expr="//div[hasclass('position-relative')]" position="inside">
+            <input type="file" t-ref="fileInput" multiple="multiple" accept="image/*"
+                   class="d-none" t-on-change="onFilesChosen"/>
+        </xpath>
+        <xpath expr="//img" position="attributes">
+            <attribute name="t-on-click">onImgClick</attribute>
+            <attribute name="t-att-style">(sizeStyle) + (props.record.data[props.name] ? ';cursor:zoom-in' : (props.readonly ? '' : ';cursor:pointer'))</attribute>
+        </xpath>
+    </t>
+
+</templates>
