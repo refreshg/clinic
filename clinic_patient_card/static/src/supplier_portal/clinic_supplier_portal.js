@@ -55,6 +55,8 @@ export class ClinicSupplierPortal extends Component {
             preorder: false,
             image: false,
             image_preview: false,
+            media: [], media_remove: [], video_draft: "",
+            options: [],
         };
     }
     editProduct(p) {
@@ -70,7 +72,44 @@ export class ClinicSupplierPortal extends Component {
             preorder: !!p.preorder,
             image: undefined, // undefined => keep existing image on save
             image_preview: p.image_128 ? "data:image/png;base64," + p.image_128 : false,
+            media: (p.media || []).map((m) => ({ ...m })),
+            media_remove: [], video_draft: "",
+            options: (p.options || []).map((o) => ({ ...o })),
         };
+    }
+    // ---- gallery (several pictures + video links) and options (colour, size…) ----
+    onGallery(ev) {
+        for (const file of [...ev.target.files]) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                this.state.editing.media.push({
+                    id: false, preview: reader.result,
+                    image: String(reader.result).split(",")[1] || false, video_url: "",
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+        ev.target.value = "";
+    }
+    addVideo() {
+        const e = this.state.editing;
+        const url = (e.video_draft || "").trim();
+        if (url) {
+            e.media.push({ id: false, preview: false, image: false, video_url: url });
+            e.video_draft = "";
+        }
+    }
+    removeMedia(i) {
+        const e = this.state.editing;
+        const m = e.media[i];
+        if (m && m.id) { e.media_remove.push(m.id); }
+        e.media.splice(i, 1);
+    }
+    addOption() {
+        this.state.editing.options.push({ name: "", values: "" });
+    }
+    removeOption(i) {
+        this.state.editing.options.splice(i, 1);
     }
     cancelEdit() {
         this.state.editing = null;
@@ -131,6 +170,11 @@ export class ClinicSupplierPortal extends Component {
         if (e.image !== undefined) {
             vals.image = e.image; // new/base64 or false to clear
         }
+        vals.media = {
+            add: e.media.filter((m) => !m.id).map((m) => ({ image: m.image, video_url: m.video_url })),
+            remove: e.media_remove,
+        };
+        vals.options = e.options.filter((o) => (o.name || "").trim() && (o.values || "").trim());
         await this.orm.call("product.template", "clinic_supplier_save_product", [vals]);
         this.state.editing = null;
         await this.load();

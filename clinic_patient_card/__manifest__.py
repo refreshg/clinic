@@ -8,7 +8,7 @@
     "author": "refreshg",
     "website": "https://github.com/refreshg/clinic",
     "category": "Healthcare",
-    "version": "19.0.62.0.0",
+    "version": "19.0.63.0.0",
     "license": "LGPL-3",
     "depends": [
         "base",
@@ -97,6 +97,8 @@
             "clinic_patient_card/static/src/xray_upload/clinic_lightbox.xml",
             "clinic_patient_card/static/src/xray_upload/clinic_image_upload.js",
             "clinic_patient_card/static/src/xray_upload/clinic_image_upload.xml",
+            "clinic_patient_card/static/src/xray_upload/clinic_image_click.js",
+            "clinic_patient_card/static/src/xray_upload/clinic_image_click.xml",
             "clinic_patient_card/static/src/tooth_chart/arch_layout.js",
             "clinic_patient_card/static/src/tooth_chart/tooth_chart.js",
             "clinic_patient_card/static/src/tooth_chart/tooth_chart.xml",

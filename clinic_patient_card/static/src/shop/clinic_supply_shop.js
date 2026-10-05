@@ -5,6 +5,7 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 import { user } from "@web/core/user";
+import { ClinicLightbox } from "@clinic_patient_card/xray_upload/clinic_lightbox";
 
 export class ClinicSupplyShop extends Component {
     static template = "clinic_patient_card.ClinicSupplyShop";
@@ -14,6 +15,7 @@ export class ClinicSupplyShop extends Component {
         this.orm = useService("orm");
         this.action = useService("action");
         this.notification = useService("notification");
+        this.dialog = useService("dialog");
         this.state = useState({
             offers: [],
             categories: [],       // raw category rows
@@ -23,6 +25,7 @@ export class ClinicSupplyShop extends Component {
             lastOrder: false,
             vendorOff: {},
             brandOff: {},
+            home: true,           // the shop opens on the home page (banners + sponsored + new)
             catId: false,         // selected top category
             subcatId: false,
             wishlistOnly: false,
@@ -110,7 +113,7 @@ export class ClinicSupplyShop extends Component {
         // top-level categories that actually hold shop offers, keeping photos
         const used = new Set(this.state.offers.map((o) => o.top_categ_id));
         return this.state.categories.filter(
-            (c) => !c.parent_id && used.has(c.id) && c.shop_visible !== false);
+            (c) => !c.parent_id && (used.has(c.id) || c.pinned) && c.shop_visible !== false);
     }
     // ---- category tree (any depth) ----
     get _catById() {
@@ -136,7 +139,7 @@ export class ClinicSupplyShop extends Component {
     _children(parentId) {
         const used = this._catsWithOffers;
         return this.state.categories.filter(
-            (c) => c.parent_id === parentId && used.has(c.id)
+            (c) => c.parent_id === parentId && (used.has(c.id) || c.pinned)
                 && c.shop_visible !== false);
     }
     _descendants(catId) {
@@ -183,8 +186,50 @@ export class ClinicSupplyShop extends Component {
         }
         return rows;
     }
+    /** left-column menu: every top category; the branch of the selection is opened
+     * level by level (children shown even while empty, they are pinned) */
+    get menuRows() {
+        const byId = this._catById;
+        const path = new Set();
+        let c = this.state.subcatId ? byId.get(this.state.subcatId) : null;
+        while (c) {
+            path.add(c.id);
+            c = byId.get(c.parent_id);
+        }
+        if (this.state.catId) {
+            path.add(this.state.catId);
+        }
+        const rows = [];
+        const walk = (cat, depth, parent) => {
+            const on = depth === 0 ? this.state.catId === cat.id && !this.state.subcatId
+                : this.state.subcatId === cat.id;
+            rows.push({ id: cat.id, name: cat.name, depth, parent, on, count: this.catCount(cat.id) });
+            if (path.has(cat.id)) {
+                for (const k of this._children(cat.id)) {
+                    walk(k, depth + 1, cat.id);
+                }
+            }
+        };
+        for (const t of this.topCategories) {
+            walk(t, 0, false);
+        }
+        return rows;
+    }
+    pickMenu(row) {
+        if (!row.depth) {
+            this.pickCat(row.id);
+        } else {
+            this.pickSubcat(row.id, row.parent);
+        }
+    }
+    /** number of offers inside a category (any depth) — shown on the card / in the menu */
+    catCount(id) {
+        const tree = this._descendants(id);
+        return this.state.offers.filter((o) => tree.has(o.categ_id)).length;
+    }
     pickCat(id) {
-        this.state.catId = this.state.catId === id ? false : id;
+        this.state.home = false;
+        this.state.catId = id && this.state.catId !== id ? id : false;
         this.state.subcatId = false;
     }
     pickSubcat(id, parent) {
@@ -290,9 +335,22 @@ export class ClinicSupplyShop extends Component {
         return out;
     }
 
+    /** "all categories" page: the category cards */
     get isPlainView() {
-        return !this.state.search && !this.state.catId
+        return !this.state.home && !this.state.search && !this.state.catId
             && !this.state.wishlistOnly;
+    }
+    /** home page: banners + sponsored + new + bestsellers */
+    get isHomeView() {
+        return this.state.home && !this.state.search && !this.state.catId
+            && !this.state.wishlistOnly;
+    }
+    goHome() {
+        this.state.home = true;
+        this.state.catId = false;
+        this.state.subcatId = false;
+        this.state.wishlistOnly = false;
+        this.state.search = "";
     }
     _uniqueByProduct(list, limit) {
         const seen = new Set();
@@ -468,27 +526,151 @@ export class ClinicSupplyShop extends Component {
     }
 
     async openDetail(offer) {
-        const p = await this.orm.read("product.product", [offer.product_id],
-            ["qty_available", "product_tmpl_id", "image_1920"]);
-        let desc = "";
-        if (p.length && p[0].product_tmpl_id) {
-            const t = await this.orm.read("product.template", [p[0].product_tmpl_id[0]],
-                ["description_sale", "description"]);
-            desc = (t.length && (t[0].description_sale || t[0].description)) || "";
-        }
+        const d = await this.orm.call("product.template", "clinic_shop_detail",
+            [offer.product_id, offer.vendor_id]);
         // similar products (same category), one offer per product
         const similar = this._uniqueByProduct(
             this.state.offers.filter(
                 (o) => o.categ_id === offer.categ_id
                     && o.product_id !== offer.product_id), 6);
+        // preselect the options of the variant the card showed
+        const cur = d.variants.find((v) => v.id === d.current) || d.variants[0];
+        const selected = {};
+        for (const opt of d.options) {
+            const hit = opt.values.find((x) => cur && cur.combo.includes(x.id));
+            selected[opt.id] = hit ? hit.id : (opt.values[0] && opt.values[0].id);
+        }
+        const reviews = await this.orm.call("product.template", "clinic_shop_reviews", [d.tmpl_id]);
         this.state.detail = {
             ...offer,
-            qty_available: p.length ? p[0].qty_available : 0,
-            image_big: (p.length && p[0].image_1920) || offer.image,
-            desc,
+            tmpl_id: d.tmpl_id,
+            reviews,
+            draft: this._newReviewDraft(reviews),
+            media: d.media,
+            mediaIdx: 0,
+            options: d.options,
+            variants: d.variants,
+            selected,
+            desc: d.desc,
             addQty: 1,
             similar,
         };
+    }
+    /** products with options (colour, size…) open the window first: the choice is made BEFORE ordering */
+    addOrChoose(o) {
+        if (o.multi) {
+            this.openDetail(o);
+        } else {
+            this.addToCart(o);
+        }
+    }
+    // ---- reviews inside the product window ----
+    _newReviewDraft(r) {
+        return {
+            rating: r && r.mine ? r.mine.rating : 0,
+            text: r && r.mine ? r.mine.text : "",
+            images: [],
+            open: false,
+        };
+    }
+    setStars(n) {
+        this.state.detail.draft.rating = n;
+    }
+    onReviewImages(ev) {
+        for (const f of [...ev.target.files]) {
+            const rd = new FileReader();
+            rd.onload = () => {
+                this.state.detail.draft.images.push({
+                    preview: rd.result, b64: String(rd.result).split(",")[1] });
+            };
+            rd.readAsDataURL(f);
+        }
+        ev.target.value = "";
+    }
+    dropReviewImage(i) {
+        this.state.detail.draft.images.splice(i, 1);
+    }
+    async saveReview() {
+        const d = this.state.detail;
+        if (!d.draft.rating) {
+            this.notification.add(_t("აირჩიე ვარსკვლავები"), { type: "warning" });
+            return;
+        }
+        await this.orm.call("product.template", "clinic_shop_review_save",
+            [d.tmpl_id, d.draft.rating, d.draft.text, d.draft.images.map((x) => x.b64)]);
+        d.reviews = await this.orm.call("product.template", "clinic_shop_reviews", [d.tmpl_id]);
+        d.draft = this._newReviewDraft(d.reviews);
+        this.notification.add(_t("შეფასება შენახულია"), { type: "success" });
+    }
+    async deleteReview(r) {
+        const d = this.state.detail;
+        await this.orm.call("product.template", "clinic_shop_review_delete", [r.id]);
+        d.reviews = await this.orm.call("product.template", "clinic_shop_reviews", [d.tmpl_id]);
+        d.draft = this._newReviewDraft(d.reviews);
+    }
+    openReviewPhoto(images, i) {
+        this.dialog.add(ClinicLightbox, {
+            index: i, items: images.map((x, k) => ({ id: k, name: "", url: x.url })),
+        });
+    }
+    stars(n) {
+        return "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
+    }
+    // ---- product window helpers ----
+    get detailVariant() {
+        const d = this.state.detail;
+        if (!d) { return null; }
+        const want = Object.values(d.selected).filter(Boolean);
+        return d.variants.find((v) => want.every((id) => v.combo.includes(id))
+            && v.combo.length === want.length) || d.variants[0] || null;
+    }
+    get detailPrice() {
+        const v = this.detailVariant;
+        return v ? v.price : this.state.detail.price;
+    }
+    get detailQty() {
+        const v = this.detailVariant;
+        return v ? v.qty : 0;
+    }
+    /** stock of the supplier's warehouse for one option value, combined with the OTHER
+     * options already chosen (so "L" shows how many L of the chosen colour are left) */
+    optionStock(optId, valueId) {
+        const d = this.state.detail;
+        const want = [];
+        for (const o of d.options) {
+            const id = o.id === optId ? valueId : d.selected[o.id];
+            if (id) { want.push(id); }
+        }
+        return d.variants
+            .filter((v) => want.every((id) => v.combo.includes(id)))
+            .reduce((s, v) => s + (v.qty > 0 ? v.qty : 0), 0);
+    }
+    get detailOrderable() {
+        const d = this.state.detail;
+        return this.detailQty > 0 || d.preorder;
+    }
+    pickOption(optId, valueId) {
+        this.state.detail.selected[optId] = valueId;
+    }
+    get detailMedia() {
+        const d = this.state.detail;
+        return d && d.media.length ? d.media[d.mediaIdx] : null;
+    }
+    mediaGo(step) {
+        const d = this.state.detail;
+        const n = d.media.length;
+        if (n) { d.mediaIdx = (d.mediaIdx + step + n) % n; }
+    }
+    setMedia(i) {
+        this.state.detail.mediaIdx = i;
+    }
+    /** YouTube / Vimeo link -> embeddable url; anything else is treated as a video file */
+    videoEmbed(url) {
+        let m = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/.exec(url || "");
+        if (m) { return { iframe: "https://www.youtube.com/embed/" + m[1] }; }
+        m = /vimeo\.com\/(?:video\/)?(\d+)/.exec(url || "");
+        if (m) { return { iframe: "https://player.vimeo.com/video/" + m[1] }; }
+        return { file: url };
     }
     closeDetail() {
         this.state.detail = null;
@@ -499,7 +681,23 @@ export class ClinicSupplyShop extends Component {
     }
     addDetailToCart() {
         const d = this.state.detail;
-        this.addToCart(d, d.addQty);
+        const v = this.detailVariant;
+        if (!this.detailOrderable) {
+            this.notification.add(_t("ეს ვარიანტი მომწოდებლის საწყობში ამოწურულია"), { type: "warning" });
+            return;
+        }
+        if (!d.preorder && d.addQty > this.detailQty) {
+            this.notification.add(
+                _t("მომწოდებელს ამ ვარიანტზე მხოლოდ ") + this.detailQty + _t(" ერთეული აქვს"),
+                { type: "warning" });
+            return;
+        }
+        // the chosen variant is what goes into the cart (own key, name and price)
+        const offer = v ? {
+            ...d, key: `${v.id}_${d.vendor_id}`, product_id: v.id,
+            name: v.name, price: v.price,
+        } : d;
+        this.addToCart(offer, d.addQty);
         this.closeDetail();
     }
     setQty(key, ev) {

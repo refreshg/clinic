@@ -113,6 +113,37 @@
                             <label>Image</label>
                             <input type="file" accept="image/*" class="form-control"
                                    t-on-change="(ev) => this.onImage(ev)"/>
+
+                            <label class="mt-2">More pictures / videos</label>
+                            <div class="csp_media">
+                                <t t-foreach="state.editing.media" t-as="m" t-key="m_index">
+                                    <div class="csp_media_item">
+                                        <img t-if="m.preview" t-att-src="m.preview" alt=""/>
+                                        <span t-else="" class="csp_media_vid" t-att-title="m.video_url">▶</span>
+                                        <button type="button" class="csp_media_x" t-on-click="() => this.removeMedia(m_index)">✕</button>
+                                    </div>
+                                </t>
+                            </div>
+                            <input type="file" accept="image/*" multiple="multiple" class="form-control"
+                                   t-on-change="(ev) => this.onGallery(ev)"/>
+                            <div class="d-flex gap-1 mt-1">
+                                <input type="text" class="form-control" placeholder="Video link (YouTube / Vimeo / file URL)"
+                                       t-att-value="state.editing.video_draft"
+                                       t-on-input="(ev) => state.editing.video_draft = ev.target.value"/>
+                                <button type="button" class="btn btn-light" t-on-click="() => this.addVideo()">+ Video</button>
+                            </div>
+
+                            <label class="mt-2">Options (colour, size…)</label>
+                            <t t-foreach="state.editing.options" t-as="o" t-key="o_index">
+                                <div class="d-flex gap-1 mb-1">
+                                    <input type="text" class="form-control csp_opt_name" placeholder="Name (e.g. Colour)"
+                                           t-att-value="o.name" t-on-input="(ev) => o.name = ev.target.value"/>
+                                    <input type="text" class="form-control" placeholder="Values, comma-separated (red, blue)"
+                                           t-att-value="o.values" t-on-input="(ev) => o.values = ev.target.value"/>
+                                    <button type="button" class="btn btn-light" t-on-click="() => this.removeOption(o_index)">✕</button>
+                                </div>
+                            </t>
+                            <button type="button" class="btn btn-sm btn-light" t-on-click="() => this.addOption()">+ Option</button>
                         </div>
                         <div class="csp_preview">
                             <img t-if="state.editing.image_preview" t-att-src="state.editing.image_preview" alt=""/>

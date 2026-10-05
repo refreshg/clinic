@@ -69,3 +69,11 @@ access_clinic_treatment_plan_line_admin,clinic.treatment.plan.line.admin,model_c
 access_clinic_treatment_plan_line_doctor,clinic.treatment.plan.line.doctor,model_clinic_treatment_plan_line,clinic_patient_card.group_clinic_doctor,1,1,1,1
 access_clinic_treatment_plan_doctor_line_admin,clinic.treatment.plan.doctor.admin,model_clinic_treatment_plan_doctor,clinic_patient_card.group_clinic_admin,1,1,1,1
 access_clinic_treatment_plan_doctor_line_doctor,clinic.treatment.plan.doctor.doctor,model_clinic_treatment_plan_doctor,clinic_patient_card.group_clinic_doctor,1,1,1,1
+
+access_clinic_product_media_user,clinic.product.media.user,model_clinic_product_media,base.group_user,1,0,0,0
+access_clinic_product_media_admin,clinic.product.media.admin,model_clinic_product_media,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_product_media_supplier,clinic.product.media.supplier,model_clinic_product_media,clinic_patient_card.group_clinic_supplier,1,1,1,1
+access_clinic_shop_review_user,clinic.shop.review.user,model_clinic_shop_review,base.group_user,1,0,0,0
+access_clinic_shop_review_admin,clinic.shop.review.admin,model_clinic_shop_review,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_shop_review_image_user,clinic.shop.review.image.user,model_clinic_shop_review_image,base.group_user,1,0,0,0
+access_clinic_shop_review_image_admin,clinic.shop.review.image.admin,model_clinic_shop_review_image,clinic_patient_card.group_clinic_admin,1,1,1,1

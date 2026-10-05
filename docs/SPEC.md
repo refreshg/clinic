@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-05, commit: f8406c7 (+ uncommitted work) -->
+<!-- last-synced: 2026-10-05, commit: f9cde26 -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user

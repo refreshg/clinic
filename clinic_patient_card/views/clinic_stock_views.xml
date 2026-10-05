@@ -41,6 +41,10 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
+            <!-- click the empty camera "+" = open the file chooser -->
+            <field name="image_1920" position="attributes">
+                <attribute name="widget">clinic_image_click</attribute>
+            </field>
             <field name="categ_id" position="after">
                 <field name="clinic_brand_id"/>
                 <field name="clinic_avg_consumption" invisible="not is_clinic_supply"/>

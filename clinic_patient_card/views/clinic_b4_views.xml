@@ -33,6 +33,21 @@
                             <field name="clinic_rating_note"/>
                         </group>
                     </group>
+                    <group string="Photos of the received goods (shown in the product's reviews)">
+                        <field name="clinic_rating_image_ids" nolabel="1" colspan="2" mode="kanban">
+                            <kanban>
+                                <templates>
+                                    <t t-name="card">
+                                        <field name="image_1024" widget="image" options="{'size': [0, 140]}"/>
+                                        <a type="delete" class="text-danger">🗑</a>
+                                    </t>
+                                </templates>
+                            </kanban>
+                            <form>
+                                <field name="image" widget="image" options="{'size': [0, 300]}"/>
+                            </form>
+                        </field>
+                    </group>
                 </page>
                 <page name="clinic_returns" string="Returns"
                       invisible="not is_clinic_order and not clinic_request_id">

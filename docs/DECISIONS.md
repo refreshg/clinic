@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-05, commit: f8406c7 (+ uncommitted work) -->
+<!-- last-synced: 2026-10-05, commit: f9cde26 -->
 # Decisions (ADR) — clinic_patient_card
 
 Format: Context → Decision → Rejected → Consequences. New custom code requires a D-entry

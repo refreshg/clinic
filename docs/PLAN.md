@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-05, commit: f8406c7 (+ uncommitted work) -->
+<!-- last-synced: 2026-10-05, commit: f9cde26 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -97,6 +97,6 @@ templates + per-day lines (Community has no planning app) — D-29.
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-10-05: milestone U (tooth chart, imaging / exam-result / allergy documents, radiologist user, curator, one-day pregnancy answer, doctor double-booking) — all deployed live, NOT committed (v19.0.62.0 still); the parallel chat also changed the treatment-plan doctors (D-33). Earlier: Last session 2026-10-02 (later): staff schedules S1-S3 (schedule screen, attendance + worked hours + Excel, booking guard, Planning-board shift overlay, 12 colours) + patient card rework, all live and committed locally up to 101440c; PLUS uncommitted milestone T (payment methods + card types, retail in the bill, health answers, patient-card re-layout, treatment plan) — v19.0.62.0.
-Next (2026-10-05): user browser-checks milestone U; decides staff arrival/departure on log-in and whether the periodontal chart is built; then the commit. Earlier next: user browser-checks the schedule screens, worked hours/Excel, board overlay, patient buttons and gets the clinic answers (PRD §9); then M2 ka.po regen (first unblocked), S4 only if the clinic wants a weekly pattern.
-Watch out: nothing pushed (5 local commits on main); D-24/D-25/D-27/D-29 unverified in the browser; worked hours = raw clock time, lateness = >5 min; public holidays not modelled; admin must NOT carry group_clinic_doctor; supplier on a SEPARATE account.
+Last session 2026-10-05: milestone U — tooth chart (2 layouts), X-ray gallery + exam-result + allergy documents, radiologist user, curator, one-day pregnancy answer, doctor double-booking (D-34..D-37); committed locally as f9cde26 + version bump, deployed live (v19.0.63.0); nothing pushed.
+Next: user browser-checks milestone U (U) and schedule screens S1-S3; decides staff arrival/departure on log-in and the periodontal chart; then M2 ka.po regen (first unblocked).
+Watch out: the tooth chart layout choice is per browser; design-2 overlays are approximations; the treatment-plan doctor lines (D-33) came from the parallel chat; worked hours = raw clock time; public holidays not modelled; admin must NOT carry group_clinic_doctor; patient-primary/unique PNGs still untracked (user to say delete or keep).

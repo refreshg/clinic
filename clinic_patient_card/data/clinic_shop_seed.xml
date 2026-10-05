@@ -25,4 +25,6 @@
             <field name="name">საოფისე/სამეურნეო</field>
         </record>
     </data>
+    <!-- pin the seven tiles + starter pictures (idempotent, never overwrites a photo) -->
+    <function model="product.category" name="_clinic_seed_shop_categories"/>
 </odoo>

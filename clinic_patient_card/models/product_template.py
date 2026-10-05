@@ -253,6 +253,12 @@ class ProductTemplate(models.Model):
                  ("location_id.usage", "=", "internal")]):
             key = (q.location_id.clinic_supplier_id.id, q.product_id.id)
             vloc_qty[key] = vloc_qty.get(key, 0.0) + q.quantity
+        # product reviews (stars shown on the cards)
+        prod_rating = {}
+        for rv in env["clinic.shop.review"].sudo().search([]):
+            r = prod_rating.setdefault(rv.tmpl_id.id, [0, 0])
+            r[0] += int(rv.rating)
+            r[1] += 1
         offers = []
         for si in sis:
             if not si.partner_id:
@@ -268,7 +274,13 @@ class ProductTemplate(models.Model):
             offers.append({
                 "key": "%s_%s" % (prod.id, si.partner_id.id),
                 "product_id": prod.id,
-                "name": prod.display_name,
+                "name": (tmpl.name if len(tmpl.product_variant_ids) > 1 and not si.product_id
+                         else prod.display_name),
+                # a template with options (colour / size…): the card opens the window
+                "multi": len(tmpl.product_variant_ids) > 1 and not si.product_id,
+                "p_avg": round(prod_rating[tmpl.id][0] / prod_rating[tmpl.id][1], 1)
+                if tmpl.id in prod_rating else 0,
+                "p_count": prod_rating[tmpl.id][1] if tmpl.id in prod_rating else 0,
                 "vendor_id": si.partner_id.id,
                 "vendor_name": si.partner_id.display_name,
                 "price": si.price or 0.0,
@@ -291,6 +303,7 @@ class ProductTemplate(models.Model):
             "parent_id": c.parent_id.id or False,
             "image": b64(c.image_128),
             "shop_visible": c.clinic_shop_visible,
+            "pinned": c.clinic_shop_pinned,
         } for c in env["product.category"].sudo().search([])]
         banners = [{
             "id": bn.id, "name": bn.name, "note": bn.note or "",

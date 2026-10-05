@@ -23,9 +23,10 @@
                 <span t-if="o.vendor_rating" class="cs_vrating">★ <t t-esc="o.vendor_rating"/></span>
             </div>
             <div class="cs_card_brand" t-esc="o.brand || ' '"/>
+            <div t-if="o.p_count" class="cs_card_stars"><span class="cs_rev_stars" t-esc="stars(o.p_avg)"/> <span class="text-muted small">(<t t-esc="o.p_count"/>)</span></div>
             <div class="cs_price"><t t-esc="o.price.toFixed(2)"/> ₾</div>
             <button class="btn btn-primary btn-sm w-100 mt-2"
-                    t-on-click="() => this.addToCart(o)">კალათაში</button>
+                    t-on-click="() => this.addOrChoose(o)"><t t-esc="o.multi ? 'არჩევა' : 'კალათაში'"/></button>
         </div>
     </t>
 
@@ -56,41 +57,6 @@
                 </button>
             </div>
 
-            <!-- banner slots: two per row (reviewer reference layout);
-                 a banner with a link opens it in a new tab -->
-            <div t-if="state.banners.length and isPlainView" class="cs_banner_wrap mb-3">
-              <div class="cs_banner_grid">
-                <t t-foreach="visibleBanners" t-as="bn" t-key="bn.id">
-                    <div class="cs_banner" t-att-class="{ cs_banner_link: bn.link }"
-                         t-att-title="bn.link || ''"
-                         t-on-click="() => this.openBanner(bn)">
-                        <img t-att-src="'data:image/png;base64,' + bn.image" alt=""/>
-                        <div t-if="bn.show_text" class="cs_banner_txt">
-                            <div class="cs_banner_title" t-esc="bn.name"/>
-                            <div t-if="bn.note" class="cs_banner_note" t-esc="bn.note"/>
-                        </div>
-                    </div>
-                </t>
-              </div>
-              <t t-if="state.banners.length > 2">
-                  <button class="cs_banner_nav cs_banner_prev" t-on-click="() => this.nextBanner(-1)">‹</button>
-                  <button class="cs_banner_nav cs_banner_next" t-on-click="() => this.nextBanner(1)">›</button>
-              </t>
-            </div>
-
-            <!-- category tiles with photos + subcategory chips -->
-            <div class="cs_tiles mb-2">
-                <t t-foreach="topCategories" t-as="c" t-key="c.id">
-                    <div class="cs_tile" t-att-class="{ cs_tile_on: state.catId === c.id }"
-                         t-on-click="() => this.pickCat(c.id)">
-                        <div class="cs_tile_img">
-                            <img t-if="c.image" t-att-src="'data:image/png;base64,' + c.image" alt=""/>
-                            <span t-else="">🗂️</span>
-                        </div>
-                        <div class="cs_tile_name" t-esc="c.name"/>
-                    </div>
-                </t>
-            </div>
             <t t-foreach="chipRows" t-as="row" t-key="row.parent">
                 <div class="cs_subcats mb-2" t-att-style="row_index ? 'margin-left:' + (row_index * 22) + 'px' : ''">
                     <span class="cs_subcats_label">
@@ -108,7 +74,7 @@
                 </div>
             </t>
 
-            <div class="cs_subbar d-flex align-items-center mb-2">
+            <div t-if="!isHomeView" class="cs_subbar d-flex align-items-center mb-2">
                 <div class="text-muted small">ნაპოვნია <t t-esc="shownOffers.length"/></div>
                 <select class="form-select form-select-sm cs_sort ms-auto" t-on-change="(ev) => this.onSort(ev)">
                     <option value="name">სორტირება: სახელით</option>
@@ -120,6 +86,22 @@
             <div class="cs_layout d-flex gap-3">
                 <!-- filters -->
                 <div class="cs_side">
+                    <button type="button" class="btn w-100 mb-3 cs_home_btn"
+                            t-att-class="isHomeView ? 'btn-primary' : 'btn-outline-primary'"
+                            t-on-click="goHome">🏠 მთავარი გვერდი</button>
+                    <div class="fw-semibold mb-1">მენიუ</div>
+                    <div class="cs_menu mb-3">
+                        <div class="cs_menu_item" t-att-class="{ cs_menu_on: isPlainView }"
+                             t-on-click="() => this.pickCat(false)">ყველა კატეგორია</div>
+                        <t t-foreach="menuRows" t-as="r" t-key="r.id">
+                            <div class="cs_menu_item" t-att-class="{ cs_menu_on: r.on, cs_menu_sub: r.depth }"
+                                 t-att-style="r.depth ? 'padding-left:' + (10 + r.depth * 14) + 'px' : ''"
+                                 t-on-click="() => this.pickMenu(r)">
+                                <span t-esc="r.name"/> <span class="cs_menu_cnt" t-esc="r.count"/>
+                            </div>
+                        </t>
+                    </div>
+                    <t t-if="!isHomeView">
                     <div class="fw-semibold mb-1">მომწოდებლები</div>
                     <t t-foreach="vendors" t-as="v" t-key="v.id">
                         <label class="cs_vrow">
@@ -136,12 +118,30 @@
                             <span t-esc="b.name"/>
                         </label>
                     </t>
+                    </t>
                 </div>
 
                 <!-- main -->
                 <div class="cs_main flex-grow-1">
-                    <!-- front-page strips -->
-                    <t t-if="isPlainView">
+                    <!-- home page: sponsored / new / bestsellers (banners are above) -->
+                    <t t-if="isHomeView">
+                    <!-- banner slots: two per row (reviewer reference layout);
+                         a banner with a link opens it in a new tab -->
+                    <div t-if="state.banners.length" class="cs_banner_wrap mb-3">
+                      <div class="cs_banner_grid">
+                        <t t-foreach="state.banners" t-as="bn" t-key="bn.id">
+                            <div class="cs_banner" t-att-class="{ cs_banner_link: bn.link }"
+                                 t-att-title="bn.link || ''"
+                                 t-on-click="() => this.openBanner(bn)">
+                                <img t-att-src="'data:image/png;base64,' + bn.image" alt=""/>
+                                <div t-if="bn.show_text" class="cs_banner_txt">
+                                    <div class="cs_banner_title" t-esc="bn.name"/>
+                                    <div t-if="bn.note" class="cs_banner_note" t-esc="bn.note"/>
+                                </div>
+                            </div>
+                        </t>
+                      </div>
+                    </div>
                         <t t-if="sponsoredOffers.length">
                             <div class="cs_strip_title">⭐ დასპონსორებული</div>
                             <div class="cs_strip">
@@ -158,33 +158,24 @@
                                 </t>
                             </div>
                         </t>
-                        <t t-if="bestsellerOffers.length">
-                            <div class="cs_strip_title">🔥 ბესთსელერები</div>
-                            <div class="cs_strip">
-                                <t t-foreach="bestsellerOffers" t-as="o" t-key="'bs_' + o.key">
-                                    <t t-call="clinic_patient_card.CsCard"/>
-                                </t>
-                            </div>
-                        </t>
-                        <!-- category sections instead of one flat dump -->
-                        <t t-foreach="categorySections" t-as="sec" t-key="sec.cat.id">
-                            <div class="cs_sec_head">
-                                <span class="cs_sec_title">
-                                    <img t-if="sec.cat.image" t-att-src="'data:image/png;base64,' + sec.cat.image" alt=""/>
-                                    <t t-esc="sec.cat.name"/>
-                                    <span class="cs_sec_count">(<t t-esc="sec.total"/>)</span>
-                                </span>
-                                <a href="#" class="cs_sec_all" t-on-click.prevent="() => this.pickCat(sec.cat.id)">ყველას ნახვა →</a>
-                            </div>
-                            <div class="cs_strip">
-                                <t t-foreach="sec.offers" t-as="o" t-key="'sec_' + o.key">
-                                    <t t-call="clinic_patient_card.CsCard"/>
-                                </t>
-                            </div>
-                        </t>
+                    </t>
+                    <!-- all categories page -->
+                    <t t-if="isPlainView">
+                        <!-- front page = the category cards (big pictures) -->
+                        <div class="cs_tiles cs_tiles_big">
+                            <t t-foreach="topCategories" t-as="c" t-key="c.id">
+                                <div class="cs_tile" t-on-click="() => this.pickCat(c.id)">
+                                    <div class="cs_tile_img">
+                                        <img t-if="c.image" t-att-src="'data:image/png;base64,' + c.image" alt=""/>
+                                        <span t-else="">🗂️</span>
+                                    </div>
+                                    <div class="cs_tile_name"><t t-esc="c.name"/> <span class="cs_tile_cnt">(<t t-esc="catCount(c.id)"/>)</span></div>
+                                </div>
+                            </t>
+                        </div>
                     </t>
 
-                    <t t-if="!isPlainView">
+                    <t t-if="!isPlainView and !isHomeView">
                         <div t-if="!shownOffers.length" class="text-muted p-5 text-center">
                             პროდუქტები ვერ მოიძებნა.
                         </div>
@@ -260,7 +251,7 @@
                                 <tr><th>მარაგი</th><td t-foreach="compareOffers" t-as="o" t-key="o.key" class="text-center"><t t-esc="o.qty"/><span t-if="o.preorder and o.qty &lt;= 0"> · Pre-order</span></td></tr>
                                 <tr><th/>
                                     <td t-foreach="compareOffers" t-as="o" t-key="o.key" class="text-center">
-                                        <button class="btn btn-primary btn-sm" t-on-click="() => this.addToCart(o)">კალათაში</button>
+                                        <button class="btn btn-primary btn-sm" t-on-click="() => this.addOrChoose(o)"><t t-esc="o.multi ? 'არჩევა' : 'კალათაში'"/></button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -277,27 +268,74 @@
                 <div class="cs_modal" t-on-click.stop="() => {}">
                     <button class="cs_modal_close" t-on-click="() => this.closeDetail()">✕</button>
                     <div class="cs_modal_body">
-                        <div class="cs_modal_img">
-                            <img t-if="state.detail.image_big"
-                                 t-att-src="'data:image/png;base64,' + state.detail.image_big" alt=""/>
-                            <span t-else="" class="cs_noimg">🦷</span>
+                        <div class="cs_gallery">
+                            <div class="cs_thumbs" t-if="state.detail.media.length > 1">
+                                <t t-foreach="state.detail.media" t-as="m" t-key="m_index">
+                                    <div class="cs_thumb" t-att-class="{ cs_thumb_on: state.detail.mediaIdx === m_index }"
+                                         t-on-click="() => this.setMedia(m_index)">
+                                        <img t-if="m.thumb" t-att-src="m.thumb" alt=""/>
+                                        <span t-else="" class="cs_thumb_play">▶</span>
+                                    </div>
+                                </t>
+                            </div>
+                            <div class="cs_modal_img">
+                                <t t-if="detailMedia">
+                                    <img t-if="detailMedia.type === 'image'" t-att-src="detailMedia.url" alt=""/>
+                                    <t t-else="">
+                                        <iframe t-if="videoEmbed(detailMedia.url).iframe"
+                                                t-att-src="videoEmbed(detailMedia.url).iframe"
+                                                allowfullscreen="1" frameborder="0"/>
+                                        <video t-else="" controls="1" t-att-src="detailMedia.url"/>
+                                    </t>
+                                    <t t-if="state.detail.media.length > 1">
+                                        <button type="button" class="cs_gal_nav cs_gal_prev" t-on-click="() => this.mediaGo(-1)">‹</button>
+                                        <button type="button" class="cs_gal_nav cs_gal_next" t-on-click="() => this.mediaGo(1)">›</button>
+                                    </t>
+                                </t>
+                                <img t-elif="state.detail.image" t-att-src="'data:image/png;base64,' + state.detail.image" alt=""/>
+                                <span t-else="" class="cs_noimg">🦷</span>
+                            </div>
                         </div>
                         <div class="cs_modal_info">
                             <h3 t-esc="state.detail.name"/>
+                            <div t-if="state.detail.reviews" class="cs_rev_line">
+                                <span class="cs_rev_stars" t-esc="stars(state.detail.reviews.avg)"/>
+                                <b t-esc="state.detail.reviews.count ? state.detail.reviews.avg.toFixed(1) : '—'"/>
+                                · <t t-esc="state.detail.reviews.count"/> შეფასება
+                                · <t t-esc="state.detail.reviews.sold"/> შეძენილი
+                                <t t-if="state.detail.reviews.returns.length"> · ↩ <t t-esc="state.detail.reviews.returns.length"/> დაბრუნება</t>
+                            </div>
                             <div class="text-muted mb-1" t-esc="state.detail.vendor_name"/>
                             <div t-if="state.detail.brand" class="cs_card_brand mb-1" t-esc="state.detail.brand"/>
-                            <div class="cs_modal_price"><t t-esc="state.detail.price.toFixed(2)"/> ₾</div>
+                            <div class="cs_modal_price"><t t-esc="detailPrice.toFixed(2)"/> ₾</div>
+                            <t t-foreach="state.detail.options" t-as="opt" t-key="opt.id">
+                                <div class="cs_opt">
+                                    <div class="cs_opt_name"><t t-esc="opt.name"/>:</div>
+                                    <div class="cs_opt_vals">
+                                        <button t-foreach="opt.values" t-as="val" t-key="val.id" type="button"
+                                                class="cs_opt_btn"
+                                                t-att-class="{ cs_opt_on: state.detail.selected[opt.id] === val.id,
+                                                               cs_opt_out: optionStock(opt.id, val.id) &lt;= 0 }"
+                                                t-on-click="() => this.pickOption(opt.id, val.id)">
+                                            <span t-esc="val.name"/>
+                                            <small class="cs_opt_qty"><t t-if="optionStock(opt.id, val.id) &gt; 0"><t t-esc="optionStock(opt.id, val.id)"/> ც.</t><t t-else="">ამოიწურა</t></small>
+                                        </button>
+                                    </div>
+                                </div>
+                            </t>
                             <div t-if="state.detail.desc" class="cs_modal_desc" t-out="state.detail.desc"/>
-                            <div class="cs_stock">
-                                <t t-esc="state.detail.qty_available"/> მარაგში
-                                <span t-if="state.detail.preorder and state.detail.qty_available &lt;= 0"
+                            <div class="cs_stock" t-att-class="{ cs_stock_out: detailQty &lt;= 0 }">
+                                <t t-if="detailQty &gt; 0">მომწოდებლის საწყობში დარჩენილია: <b t-esc="detailQty"/> ერთეული</t>
+                                <t t-else="">მომწოდებლის საწყობში ამ ვარიანტის მარაგი: 0</t>
+                                <span t-if="state.detail.preorder and detailQty &lt;= 0"
                                       class="cs_badge_pre_inline">Pre-order — შეკვეთა მაინც შესაძლებელია</span>
                             </div>
                             <div class="d-flex align-items-center gap-2 mt-3">
                                 <input type="number" min="1" class="form-control cs_dqty"
                                        t-att-value="state.detail.addQty"
                                        t-on-change="(ev) => this.setDetailQty(ev)"/>
-                                <button class="btn btn-primary" t-on-click="() => this.addDetailToCart()">კალათაში</button>
+                                <button class="btn btn-primary" t-att-disabled="!detailOrderable"
+                                        t-on-click="() => this.addDetailToCart()">კალათაში</button>
                             </div>
                             <div t-if="state.detail.delay" class="text-muted small mt-2">
                                 მიწოდების ვადა: <t t-esc="state.detail.delay"/> დღე
@@ -319,6 +357,93 @@
                                     </t>
                                 </div>
                             </t>
+                        </div>
+                    </div>
+                    <!-- ===== reviews / sales / returns ===== -->
+                    <div class="cs_reviews" t-if="state.detail.reviews">
+                        <div class="cs_rev_head">
+                            <div class="cs_rev_score">
+                                <div class="cs_rev_big"><t t-esc="state.detail.reviews.count ? state.detail.reviews.avg.toFixed(1) : '—'"/></div>
+                                <div class="cs_rev_stars" t-esc="stars(state.detail.reviews.avg)"/>
+                                <div class="text-muted small"><t t-esc="state.detail.reviews.count"/> შეფასება</div>
+                            </div>
+                            <div class="cs_rev_bars">
+                                <div t-foreach="['5','4','3','2','1']" t-as="s" t-key="s" class="cs_rev_bar">
+                                    <span><t t-esc="s"/>★</span>
+                                    <div class="cs_rev_track"><div class="cs_rev_fill"
+                                        t-att-style="'width:' + (state.detail.reviews.count ? 100 * state.detail.reviews.breakdown[s] / state.detail.reviews.count : 0) + '%'"/></div>
+                                    <span class="text-muted"><t t-esc="state.detail.reviews.breakdown[s]"/></span>
+                                </div>
+                            </div>
+                            <div class="cs_rev_facts">
+                                <div><b t-esc="state.detail.reviews.sold"/> შეძენილი ერთეული</div>
+                                <div><b t-esc="state.detail.reviews.orders"/> შეკვეთა</div>
+                                <div><b t-esc="state.detail.reviews.count"/> შეფასება</div>
+                                <div>დაბრუნება: <b t-esc="state.detail.reviews.returns.length"/></div>
+                            </div>
+                        </div>
+
+                        <!-- write / edit my review -->
+                        <div t-if="state.detail.reviews.can_review" class="cs_rev_form">
+                            <div class="fw-semibold mb-1"><t t-esc="state.detail.reviews.mine ? 'ჩემი შეფასების შეცვლა' : 'შეაფასე პროდუქტი'"/></div>
+                            <div class="cs_rev_pick">
+                                <span t-foreach="[1,2,3,4,5]" t-as="n" t-key="n" class="cs_star_pick"
+                                      t-att-class="{ cs_star_on: n &lt;= state.detail.draft.rating }"
+                                      t-on-click="() => this.setStars(n)">★</span>
+                            </div>
+                            <textarea class="form-control mb-2" rows="2" placeholder="კომენტარი..."
+                                      t-att-value="state.detail.draft.text"
+                                      t-on-input="(ev) => state.detail.draft.text = ev.target.value"/>
+                            <div class="cs_rev_imgs">
+                                <div t-foreach="state.detail.draft.images" t-as="im" t-key="im_index" class="cs_rev_img">
+                                    <img t-att-src="im.preview" alt=""/>
+                                    <button type="button" t-on-click="() => this.dropReviewImage(im_index)">✕</button>
+                                </div>
+                            </div>
+                            <label class="btn btn-sm btn-light me-2">📷 მიღებული პროდუქტის ფოტო
+                                <input type="file" accept="image/*" multiple="multiple" class="d-none"
+                                       t-on-change="(ev) => this.onReviewImages(ev)"/>
+                            </label>
+                            <button class="btn btn-sm btn-primary" t-on-click="() => this.saveReview()">შენახვა</button>
+                        </div>
+                        <div t-else="" class="text-muted small mt-2">
+                            შეფასება შეუძლია ექიმს ან ადმინისტრატორს, როცა პროდუქტი კლინიკამ უკვე მიიღო.
+                        </div>
+
+                        <!-- reviews list -->
+                        <div class="cs_rev_list">
+                            <div t-if="!state.detail.reviews.reviews.length" class="text-muted p-2">ჯერ არავის შეუფასებია.</div>
+                            <div t-foreach="state.detail.reviews.reviews" t-as="r" t-key="r.id" class="cs_rev_item">
+                                <div class="d-flex align-items-center gap-2">
+                                    <b t-esc="r.author"/>
+                                    <span class="cs_rev_stars" t-esc="stars(r.rating)"/>
+                                    <span class="text-muted small ms-auto" t-esc="r.date"/>
+                                    <button t-if="r.own" class="btn btn-sm btn-link text-danger p-0"
+                                            t-on-click="() => this.deleteReview(r)">🗑</button>
+                                </div>
+                                <div t-if="r.order" class="text-muted small">შეკვეთა <t t-esc="r.order"/></div>
+                                <div t-if="r.text" class="mt-1" t-esc="r.text"/>
+                                <div t-if="r.images.length" class="cs_rev_imgs mt-1">
+                                    <img t-foreach="r.images" t-as="im" t-key="im_index" t-att-src="im.thumb" alt=""
+                                         class="cs_rev_thumb" t-on-click="() => this.openReviewPhoto(r.images, im_index)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- returns of the orders that contained this product -->
+                        <div t-if="state.detail.reviews.returns.length" class="cs_rev_returns">
+                            <div class="fw-semibold mb-1">↩ დაბრუნებები</div>
+                            <div t-foreach="state.detail.reviews.returns" t-as="rt" t-key="rt.id" class="cs_rev_item">
+                                <div class="d-flex gap-2">
+                                    <b t-esc="rt.order"/>
+                                    <span class="badge text-bg-light" t-esc="rt.state_label"/>
+                                    <span class="text-muted small ms-auto" t-esc="rt.date"/>
+                                </div>
+                                <div t-esc="rt.reason"/>
+                                <div t-if="rt.note" class="text-muted small">მომწოდებელი: <t t-esc="rt.note"/></div>
+                                <img t-if="rt.image" t-att-src="rt.image" class="cs_rev_thumb mt-1" alt=""
+                                     t-on-click="() => this.openReviewPhoto([{url: rt.image}], 0)"/>
+                            </div>
                         </div>
                     </div>
                 </div>

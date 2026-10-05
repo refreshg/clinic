@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="clinic_patient_card.ImageClick" t-inherit="web.ImageField" t-inherit-mode="primary">
+        <xpath expr="//div[hasclass('position-relative')]" position="attributes">
+            <attribute name="t-ref">root</attribute>
+            <attribute name="t-on-click">onRootClick</attribute>
+            <attribute name="t-att-style">!props.readonly and !props.record.data[props.name] ? 'cursor:pointer' : ''</attribute>
+        </xpath>
+    </t>
+
+</templates>

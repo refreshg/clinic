@@ -1292,6 +1292,7 @@ msgstr "ორსული"
 
 #. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__parent_appointment_id
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_appointment_form
 msgid "Previous Visit"
 msgstr "წინა ვიზიტი"
 
@@ -1543,6 +1544,7 @@ msgstr "მწეველი"
 
 #. module: clinic_patient_card
 #: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_appointment_form
+#: model:ir.model.fields,field_description:calendar.field_calendar_event__start
 msgid "Start"
 msgstr "დაწყება"
 
@@ -1700,3 +1702,159 @@ msgstr ""
 #: code:addons/clinic_patient_card/static/src/shop/clinic_supply_shop.xml:0
 msgid "🛒 Cart ("
 msgstr ""
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:calendar.field_calendar_event__duration
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_appointment_form
+msgid "Duration"
+msgstr "ხანგრძლივობა"
+
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:calendar.view_calendar_event_form
+msgid "<span> hours</span>"
+msgstr "<span> საათი</span>"
+
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:calendar.view_calendar_event_form
+msgid "<span invisible=\"allday\" style=\"white-space: pre;\"> or </span>"
+msgstr "<span invisible=\"allday\" style=\"white-space: pre;\"> ან </span>"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:calendar.field_calendar_event__allday
+msgid "All Day"
+msgstr "მთელი დღე"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,help:calendar.field_calendar_event__start
+msgid "Start date of an event, without time for full days events"
+msgstr "ვიზიტის დაწყების თარიღი და დრო (მთელი დღის ჩანაწერზე — დროის გარეშე)"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__direction_id
+msgid "Direction"
+msgstr "მიმართულება"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__family_link_id
+msgid "Family Member Link"
+msgstr "ოჯახის წევრი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__diagnosis
+msgid "Comment"
+msgstr "კომენტარი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__assistant_id
+msgid "Assistant / Resident"
+msgstr "ასისტენტი / რეზიდენტი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,help:clinic_patient_card.field_calendar_event__assistant_id
+msgid "Assisting doctor or resident for this visit."
+msgstr "ამ ვიზიტის ასისტენტი ექიმი ან რეზიდენტი."
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__curator_id
+msgid "Curator"
+msgstr "კურატორი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,help:clinic_patient_card.field_calendar_event__curator_id
+msgid "Curator of this visit (კურატორი); same user list as the assistant."
+msgstr "ამ ვიზიტის კურატორი; არჩევა იმავე სიიდან, რაც ასისტენტისთვის."
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__observer_ids
+msgid "Observers"
+msgstr "დამკვირვებლები"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,help:clinic_patient_card.field_calendar_event__observer_ids
+msgid "Staff members observing this visit (Dentos: დამკვირვებელი)."
+msgstr "თანამშრომლები, რომლებიც ამ ვიზიტს აკვირდებიან."
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__referral_user_id
+msgid "Referred by (employee)"
+msgstr "გამომგზავნი თანამშრომელი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,help:clinic_patient_card.field_calendar_event__referral_user_id
+msgid "Set when a staff member referred the patient."
+msgstr "ივსება, როცა პაციენტი კლინიკის თანამშრომელმა გამოგზავნა."
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__amount_paid
+msgid "Paid Amount"
+msgstr "გადახდილი თანხა"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__amount_cash
+msgid "Cash Part"
+msgstr "ნაღდით"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__amount_terminal
+msgid "Terminal Part"
+msgstr "ტერმინალით"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__was_rescheduled
+msgid "Rescheduled"
+msgstr "გადატანილია"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,help:clinic_patient_card.field_calendar_event__was_rescheduled
+msgid "The start time was moved after the visit had been booked."
+msgstr "ვიზიტის დაწყების დრო დაჯავშნის შემდეგ შეიცვალა."
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__duration_edited
+msgid "Duration Corrected"
+msgstr "ხანგრძლივობა შესწორებულია"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,help:clinic_patient_card.field_calendar_event__duration_edited
+msgid "The duration was changed manually after the visit had been booked."
+msgstr "ხანგრძლივობა დაჯავშნის შემდეგ ხელით შეიცვალა."
+
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_appointment_form
+msgid "Date · Procedures"
+msgstr "თარიღი · პროცედურები"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_treatment_plan__doctor_line_ids
+msgid "Doctors"
+msgstr "ექიმები"
+
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_treatment_plan_form
+msgid "Add doctor"
+msgstr "ექიმის დამატება"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_treatment_plan_doctor__role
+msgid "Profession"
+msgstr "პროფესია"
+
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_treatment_plan_form
+msgid "Profession…"
+msgstr "პროფესია…"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_treatment_plan_doctor__doctor_id
+msgid "Doctor"
+msgstr "ექიმი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_treatment_plan_doctor__name
+msgid "Printed name"
+msgstr "დასაბეჭდი სახელი"
+
+#. module: clinic_patient_card
+#: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_treatment_plan_form
+msgid "Name as printed…"
+msgstr "დასაბეჭდი სახელი…"
