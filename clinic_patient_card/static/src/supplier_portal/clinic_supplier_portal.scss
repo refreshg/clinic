@@ -96,6 +96,7 @@
             background: rgba(0, 0, 0, .55); color: #fff; font-size: 11px; border-radius: 0 0 0 6px;
         }
     }
+    .csp_stock { width: 100%; td { padding: 3px 6px 3px 0; } td:last-child { width: 110px; } }
     .csp_opt_name { max-width: 150px; }
     .csp_preview {
         flex: 0 0 180px;
@@ -132,3 +133,9 @@
     background: #8d3030; border-radius: 4px; padding: 2px 6px;
 }
 .clinic_sp .csp_card:has(.csp_badge_hidden) .csp_img { opacity: .45; }
+
+// "შეწყვეტა" (cancel) next to the strong Confirm: red on white, a much lighter red
+.o_form_view .clinic_cancel_btn {
+    background-color: #fff; border: 1px solid #f1b9b9; color: #d9534f; font-weight: 500;
+    &:hover, &:focus { background-color: #fdf0f0; border-color: #e89a9a; color: #c9302c; }
+}

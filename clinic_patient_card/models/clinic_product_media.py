@@ -56,6 +56,20 @@ class ProductTemplate(models.Model):
                 "name": line.attribute_id.name,
                 "values": ", ".join(line.value_ids.mapped("name")),
             } for line in tmpl.attribute_line_ids]
+            vendor = self._clinic_current_vendor()
+            loc = vendor and vendor._clinic_supplier_stock_loc()
+            qty = {}
+            if loc:
+                for q in self.env["stock.quant"].sudo().search([
+                        ("product_id", "in", tmpl.product_variant_ids.ids),
+                        ("location_id", "child_of", loc.id)]):
+                    qty[q.product_id.id] = qty.get(q.product_id.id, 0.0) + q.quantity
+            row["variants"] = [{
+                "id": v.id,
+                "name": ", ".join(v.product_template_attribute_value_ids.mapped("name"))
+                or v.display_name,
+                "qty": qty.get(v.id, 0.0),
+            } for v in tmpl.product_variant_ids]
         return res
 
     @api.model
@@ -76,7 +90,36 @@ class ProductTemplate(models.Model):
                     })
         if vals.get("options") is not None:
             tmpl._clinic_apply_options(vals["options"])
+        if vals.get("stock"):
+            tmpl._clinic_set_supplier_stock(vals["stock"])
         return tmpl_id
+
+    def _clinic_set_supplier_stock(self, stock):
+        """stock: {variant_id: quantity} — the supplier's own warehouse is set to exactly
+        these numbers through a standard inventory adjustment (leaves a stock.move)."""
+        self.ensure_one()
+        vendor = self._clinic_current_vendor()
+        loc = vendor and vendor._clinic_supplier_stock_loc()
+        if not loc:
+            raise UserError(_("Your warehouse location is not set up yet."))
+        Quant = self.env["stock.quant"].sudo()
+        for vid, qty in stock.items():
+            prod = self.product_variant_ids.filtered(lambda p: p.id == int(vid))
+            if not prod:
+                continue
+            qty = max(float(qty or 0), 0.0)
+            cur = sum(Quant.search([("product_id", "=", prod.id),
+                                    ("location_id", "=", loc.id)]).mapped("quantity"))
+            if abs(cur - qty) < 1e-9:
+                continue
+            quant = Quant.search([("product_id", "=", prod.id), ("location_id", "=", loc.id)], limit=1)
+            quant = quant.with_context(inventory_mode=True)
+            if quant:
+                quant.inventory_quantity = qty
+            else:
+                quant = Quant.with_context(inventory_mode=True).create({
+                    "product_id": prod.id, "location_id": loc.id, "inventory_quantity": qty})
+            quant.action_apply_inventory()
 
     def _clinic_apply_options(self, options):
         """options: [{name, values: "red, blue"}]; the template's attribute lines
@@ -88,7 +131,8 @@ class ProductTemplate(models.Model):
         for opt in options:
             name = (opt.get("name") or "").strip()
             raw = opt.get("values") or ""
-            values = raw if isinstance(raw, list) else re.split(r"[,\n;]", raw)
+            # a comma, semicolon, slash, vertical bar or a new line separates the values
+            values = raw if isinstance(raw, list) else re.split(r"[,;/|\n]", raw)
             values = [v.strip() for v in values if v and v.strip()]
             values = list(dict.fromkeys(values))
             if not name or not values:

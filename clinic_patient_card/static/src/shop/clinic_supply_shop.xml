@@ -130,10 +130,19 @@
                     <div t-if="state.banners.length" class="cs_banner_wrap mb-3">
                       <div class="cs_banner_grid">
                         <t t-foreach="state.banners" t-as="bn" t-key="bn.id">
-                            <div class="cs_banner" t-att-class="{ cs_banner_link: bn.link }"
+                            <div class="cs_banner" t-att-class="'cs_bsz_' + bn.size + (bn.link ? ' cs_banner_link' : '')"
+                                 t-att-style="bn.height ? '--cs_bh:' + bn.height + 'px' : ''"
                                  t-att-title="bn.link || ''"
                                  t-on-click="() => this.openBanner(bn)">
-                                <img t-att-src="'data:image/png;base64,' + bn.image" alt=""/>
+                                <t t-if="bn.video">
+                                    <iframe t-if="bannerVideo(bn.video).iframe" class="cs_banner_video"
+                                            t-att-src="bannerVideo(bn.video).iframe"
+                                            allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen="1"
+                                            frameborder="0"/>
+                                    <video t-else="" class="cs_banner_video" autoplay="1" muted="1" loop="1"
+                                           playsinline="1" t-att-src="bn.video"/>
+                                </t>
+                                <img t-elif="bn.image" t-att-src="'data:image/png;base64,' + bn.image" alt=""/>
                                 <div t-if="bn.show_text" class="cs_banner_txt">
                                     <div class="cs_banner_title" t-esc="bn.name"/>
                                     <div t-if="bn.note" class="cs_banner_note" t-esc="bn.note"/>
@@ -210,8 +219,10 @@
                                 <div class="fw-semibold" t-esc="l.name"/>
                                 <div class="text-muted small" t-esc="l.vendor_name"/>
                             </div>
-                            <input type="number" min="1" class="form-control form-control-sm cs_qty"
+                            <input type="number" min="1" t-att-max="l.preorder ? undefined : l.max"
+                                   class="form-control form-control-sm cs_qty"
                                    t-att-value="l.qty" t-on-change="(ev) => this.setQty(l.key, ev)"/>
+                            <div t-if="l.max !== undefined and !l.preorder" class="cs_cart_max text-muted small">მაქს. <t t-esc="l.max"/></div>
                             <div class="cs_line_sub" t-esc="(l.price * l.qty).toFixed(2)"/>
                             <button class="btn btn-sm btn-link text-danger" t-on-click="() => this.removeLine(l.key)">✕</button>
                         </div>

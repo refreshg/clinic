@@ -56,7 +56,7 @@ export class ClinicSupplierPortal extends Component {
             image: false,
             image_preview: false,
             media: [], media_remove: [], video_draft: "",
-            options: [],
+            options: [], variants: [],
         };
     }
     editProduct(p) {
@@ -75,6 +75,7 @@ export class ClinicSupplierPortal extends Component {
             media: (p.media || []).map((m) => ({ ...m })),
             media_remove: [], video_draft: "",
             options: (p.options || []).map((o) => ({ ...o })),
+            variants: (p.variants || []).map((v) => ({ ...v, newQty: v.qty })),
         };
     }
     // ---- gallery (several pictures + video links) and options (colour, size…) ----
@@ -174,6 +175,12 @@ export class ClinicSupplierPortal extends Component {
             add: e.media.filter((m) => !m.id).map((m) => ({ image: m.image, video_url: m.video_url })),
             remove: e.media_remove,
         };
+        // stock per variant (only the ones that changed)
+        const stock = {};
+        for (const v of e.variants || []) {
+            if (Number(v.newQty) !== Number(v.qty)) { stock[v.id] = Number(v.newQty) || 0; }
+        }
+        if (Object.keys(stock).length) { vals.stock = stock; }
         vals.options = e.options.filter((o) => (o.name || "").trim() && (o.values || "").trim());
         await this.orm.call("product.template", "clinic_supplier_save_product", [vals]);
         this.state.editing = null;

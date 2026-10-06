@@ -474,7 +474,7 @@ export class ClinicSupplyShop extends Component {
         return [b[i], b[(i + 1) % b.length]];
     }
     openBanner(bn) {
-        if (bn.link) {
+        if (bn.link && !bn.video) {
             window.open(bn.link, "_blank");
         }
     }
@@ -490,7 +490,7 @@ export class ClinicSupplyShop extends Component {
         const key = offer.key || `${offer.product_id}_${offer.vendor_id}`;
         const c = this.state.cart[key];
         if (c) {
-            c.qty += qty;
+            c.qty = this._clampQty(c, c.qty + qty);
         } else {
             this.state.cart[key] = {
                 product_id: offer.product_id,
@@ -499,6 +499,9 @@ export class ClinicSupplyShop extends Component {
                 vendor_name: offer.vendor_name,
                 price: offer.price,
                 qty: qty,
+                // the supplier's stock of this exact variant (undefined = not limited)
+                max: offer.max,
+                preorder: !!offer.preorder,
             };
         }
         this.state.cartOpen = true;
@@ -664,6 +667,19 @@ export class ClinicSupplyShop extends Component {
     setMedia(i) {
         this.state.detail.mediaIdx = i;
     }
+    /** banner video: the same links, started muted and looping (browsers only autoplay muted) */
+    bannerVideo(url) {
+        const v = this.videoEmbed(url);
+        const idm = /embed\/([\w-]{6,})/.exec(v.iframe || "");
+        if (v.iframe && idm) {
+            return { iframe: v.iframe + "?autoplay=1&mute=1&loop=1&playlist=" + idm[1]
+                + "&controls=1&rel=0&playsinline=1" };
+        }
+        if (v.iframe) {
+            return { iframe: v.iframe + "?autoplay=1&muted=1&loop=1" };
+        }
+        return v;
+    }
     /** YouTube / Vimeo link -> embeddable url; anything else is treated as a video file */
     videoEmbed(url) {
         let m = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/.exec(url || "");
@@ -695,15 +711,28 @@ export class ClinicSupplyShop extends Component {
         // the chosen variant is what goes into the cart (own key, name and price)
         const offer = v ? {
             ...d, key: `${v.id}_${d.vendor_id}`, product_id: v.id,
-            name: v.name, price: v.price,
+            name: v.name, price: v.price, max: v.qty, preorder: d.preorder,
         } : d;
         this.addToCart(offer, d.addQty);
         this.closeDetail();
     }
+    /** a line with a known stock may not exceed it (unless pre-order is allowed) */
+    _clampQty(line, qty) {
+        if (line.max !== undefined && line.max !== null && !line.preorder && qty > line.max) {
+            this.notification.add(
+                _t("მომწოდებელს ამ ვარიანტზე მხოლოდ ") + line.max + _t(" ერთეული აქვს"),
+                { type: "warning" });
+            return Math.max(line.max, 1);
+        }
+        return qty;
+    }
     setQty(key, ev) {
         const v = parseFloat(ev.target.value);
-        if (this.state.cart[key]) {
-            this.state.cart[key].qty = isNaN(v) || v < 1 ? 1 : v;
+        const line = this.state.cart[key];
+        if (line) {
+            line.qty = this._clampQty(line, isNaN(v) || v < 1 ? 1 : v);
+            // show the clamped number in the input too
+            ev.target.value = line.qty;
         }
         this._persist();
     }
@@ -731,10 +760,21 @@ export class ClinicSupplyShop extends Component {
             qty: l.qty,
             price: l.price,
         }));
-        if (!cart.length) {
+        if (!cart.length || this._sending) {
             return;
         }
-        const poIds = await this.orm.call("purchase.order", "clinic_create_rfqs", [cart]);
+        // one click = one order: a second click while the first is running is ignored
+        this._sending = true;
+        let poIds;
+        try {
+            poIds = await this.orm.call("purchase.order", "clinic_create_rfqs", [cart]);
+        } catch (e) {
+            // the server refused (stock changed meanwhile) — the cart stays as it is
+            this._sending = false;
+            return;
+        } finally {
+            this._sending = false;
+        }
         this.state.cart = {};
         this.state.cartOpen = false;
         this._persist();

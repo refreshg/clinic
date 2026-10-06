@@ -344,16 +344,25 @@
 
 .clinic_shop .cs_banner_grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    // banners of DIFFERENT sizes (user's collage): per group of five —
+    // small + wide, then two medium, then one full-width
+    grid-template-columns: repeat(6, 1fr);
     gap: 12px;
     @media (max-width: 900px) { grid-template-columns: 1fr; }
-    // pattern of the reference: two half-width banners, then one full-width, repeat
-    .cs_banner:nth-child(3n) { grid-column: 1 / -1; }
+    .cs_banner { grid-column: span 3; max-height: none; --cs_bh: 270px; height: var(--cs_bh);
+        img { height: var(--cs_bh); width: 100%; object-fit: cover; } }
+    .cs_banner .cs_banner_video { width: 100%; height: var(--cs_bh); border: 0; display: block; background: #000; }
+    // "automatic" = the pattern by position; the other widths are chosen per banner
+    // in Configuration -> Shop Banners (the height field overrides --cs_bh)
+    .cs_banner.cs_bsz_auto:nth-child(5n + 1) { grid-column: span 2; --cs_bh: 230px; }
+    .cs_banner.cs_bsz_auto:nth-child(5n + 2) { grid-column: span 4; --cs_bh: 230px; }
+    .cs_banner.cs_bsz_auto:nth-child(5n) { grid-column: span 6; --cs_bh: 340px; }
+    .cs_banner.cs_bsz_third { grid-column: span 2; --cs_bh: 230px; }
+    .cs_banner.cs_bsz_half { grid-column: span 3; --cs_bh: 270px; }
+    .cs_banner.cs_bsz_two_thirds { grid-column: span 4; --cs_bh: 230px; }
+    .cs_banner.cs_bsz_full { grid-column: span 6; --cs_bh: 340px; }
+    .cs_banner[style*="--cs_bh"] { height: var(--cs_bh); img { height: var(--cs_bh); } }
     .cs_banner {
-        // the whole picture, undistorted (the ad text is part of the image)
-        max-height: none;
-        height: auto;
-        img { height: auto; width: 100%; object-fit: contain; }
         &.cs_banner_link { cursor: pointer; }
         &.cs_banner_link:hover { filter: brightness(1.05); }
         .cs_banner_txt {

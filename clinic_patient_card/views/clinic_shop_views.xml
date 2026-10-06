@@ -32,11 +32,66 @@
               sequence="17" groups="clinic_patient_card.group_clinic_supplier"/>
 
     <!-- Clinic orders reach the supplier as their own sales orders to fulfil. -->
+    <record id="view_clinic_supplier_orders_list" model="ir.ui.view">
+        <field name="name">sale.order.list.clinic.supplier</field>
+        <field name="model">sale.order</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list default_order="id desc"
+                  decoration-warning="state in ('draft', 'sent')"
+                  decoration-muted="state == 'cancel'">
+                <field name="name" string="Order"/>
+                <field name="date_order" string="Date"/>
+                <field name="user_id" string="Ordered by" widget="many2one_avatar_user"/>
+                <field name="clinic_items" string="What was ordered"/>
+                <field name="clinic_total_qty" string="Qty"/>
+                <field name="amount_total" string="Total" sum="Total"/>
+                <field name="state" string="Status" widget="badge"
+                       decoration-warning="state in ('draft', 'sent')"
+                       decoration-success="state == 'sale'"
+                       decoration-danger="state == 'cancel'"/>
+                <field name="clinic_delivery_status" string="Delivery" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_clinic_supplier_orders_search" model="ir.ui.view">
+        <field name="name">sale.order.search.clinic.supplier</field>
+        <field name="model">sale.order</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Order"/>
+                <field name="user_id" string="Ordered by"/>
+                <field name="order_line" string="Product"
+                       filter_domain="[('order_line.product_id', 'ilike', self)]"/>
+                <filter name="to_confirm" string="⏳ To confirm"
+                        domain="[('state', 'in', ('draft', 'sent'))]"/>
+                <filter name="confirmed" string="Confirmed" domain="[('state', '=', 'sale')]"/>
+                <filter name="cancelled" string="Cancelled" domain="[('state', '=', 'cancel')]"/>
+                <separator/>
+                <filter name="last_30" string="Last 30 days"
+                        domain="[('date_order', '&gt;=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <group>
+                    <filter name="by_status" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="by_user" string="Ordered by" context="{'group_by': 'user_id'}"/>
+                    <filter name="by_month" string="Month" context="{'group_by': 'date_order:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="action_clinic_supplier_orders" model="ir.actions.act_window">
         <field name="name">My Orders</field>
         <field name="res_model">sale.order</field>
         <field name="view_mode">list,form</field>
         <field name="domain">[('is_clinic_order', '=', True)]</field>
+        <field name="search_view_id" ref="view_clinic_supplier_orders_search"/>
+        <!-- the supplier does not create orders — the clinic does -->
+        <field name="context">{'search_default_to_confirm': 1, 'create': False}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_clinic_supplier_orders_list')}),
+            (0, 0, {'view_mode': 'form'})]"/>
     </record>
     <menuitem id="menu_clinic_supplier_orders" name="My Orders"
               parent="menu_clinic_root" action="action_clinic_supplier_orders"
@@ -171,6 +226,9 @@
                 <field name="name"/>
                 <field name="note"/>
                 <field name="link_url" optional="show"/>
+                <field name="video_url" optional="show"/>
+                <field name="size"/>
+                <field name="height" optional="show"/>
                 <field name="active" widget="boolean_toggle"/>
             </list>
         </field>
@@ -185,7 +243,10 @@
                         <field name="name"/>
                         <field name="note"/>
                         <field name="link_url" placeholder="https://..."/>
+                        <field name="video_url" placeholder="https://www.youtube.com/shorts/..."/>
                         <field name="show_text"/>
+                        <field name="size"/>
+                        <field name="height"/>
                         <field name="active" widget="boolean_toggle"/>
                     </group>
                     <group>

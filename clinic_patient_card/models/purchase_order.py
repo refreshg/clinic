@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class PurchaseOrder(models.Model):
@@ -188,6 +189,22 @@ class PurchaseOrder(models.Model):
                 continue
             by_vendor.setdefault(vendor, []).append(line)
 
+        # options (colour / size…) have their own stock in the supplier's warehouse:
+        # an ordinary variant may not be ordered beyond it (pre-order products may)
+        for vendor_id, lines in by_vendor.items():
+            vloc = self.env["res.partner"].browse(int(vendor_id))._clinic_supplier_stock_loc()
+            for line in lines:
+                prod = self.env["product.product"].browse(int(line["product_id"]))
+                tmpl = prod.product_tmpl_id
+                if not prod.exists() or not tmpl.attribute_line_ids or tmpl.clinic_preorder:
+                    continue
+                have = sum(self.env["stock.quant"].sudo().search([
+                    ("product_id", "=", prod.id), ("location_id", "child_of", vloc.id)]).mapped("quantity")) if vloc else 0.0
+                if (line.get("qty") or 1.0) > have:
+                    raise UserError(_(
+                        "%(name)s: the supplier has only %(have)s in stock (you asked for %(want)s).",
+                        name=prod.display_name, have=have, want=line.get("qty") or 1.0))
+
         po_ids = []
         for vendor_id, lines in by_vendor.items():
             order_lines = []
@@ -234,12 +251,20 @@ class PurchaseOrder(models.Model):
             }))
         if not so_lines:
             return self.env["sale.order"]
+        # The salesperson is the CLINIC user who placed the order. It must never stay
+        # empty: the standard "Personal Orders" rule shows every order WITHOUT a
+        # salesperson to every salesman, and a supplier implies that group — all
+        # suppliers would see each other's mirror orders (found 2026-10-06).
+        placer = self.env.user
+        if placer.has_group("clinic_patient_card.group_clinic_supplier"):
+            placer = self.create_uid
         so = self.env["sale.order"].sudo().create({
             "partner_id": clinic_partner.id,
             "order_line": so_lines,
             "is_clinic_order": True,
             "clinic_supplier_id": self.partner_id.id,
             "clinic_purchase_id": self.id,
+            "user_id": placer.id,
         })
         self.clinic_sale_id = so.id
         return so

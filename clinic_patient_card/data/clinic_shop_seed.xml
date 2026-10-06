@@ -27,4 +27,6 @@
     </data>
     <!-- pin the seven tiles + starter pictures (idempotent, never overwrites a photo) -->
     <function model="product.category" name="_clinic_seed_shop_categories"/>
+    <!-- D-39: orders without a salesperson are visible to every supplier -->
+    <function model="sale.order" name="_clinic_fix_unassigned_orders"/>
 </odoo>

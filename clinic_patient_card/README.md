@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-05, commit: f9cde26 -->
+<!-- last-synced: 2026-10-06, commit: ac54c92 (+ uncommitted work) -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -59,6 +59,10 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
 - **Cron jobs** (active by default): low-stock alert (daily), dispensary call reminders
   (daily, T-14d), weekly booking report to administrators, daily reset of yesterday's
   pregnancy answers (a woman is asked again at every visit day).
+- **Supply shop**: the category tree is seeded from `models/clinic_shop_tree.py` on every upgrade
+  (Configuration → Categories holds the pictures); banners: Configuration → Shop Banners (picture
+  or YouTube / Vimeo link, width, height, drag the handle to reorder); a supplier edits gallery,
+  options (colour / size — values separated by comma or `/`) and stock per variant in "My Shop".
 - **Radiology account**: add a user to the group "Clinic Radiologist" — they see only
   Radiology → Patients / X-ray uploads and upload pictures for a patient (click the empty
   picture "+" to pick one or many files). Doctors see them in the patient card, Medical tab.

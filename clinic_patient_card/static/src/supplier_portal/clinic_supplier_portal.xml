@@ -138,12 +138,25 @@
                                 <div class="d-flex gap-1 mb-1">
                                     <input type="text" class="form-control csp_opt_name" placeholder="Name (e.g. Colour)"
                                            t-att-value="o.name" t-on-input="(ev) => o.name = ev.target.value"/>
-                                    <input type="text" class="form-control" placeholder="Values, comma-separated (red, blue)"
+                                    <input type="text" class="form-control" placeholder="Values separated by comma or / (S, M, L)"
                                            t-att-value="o.values" t-on-input="(ev) => o.values = ev.target.value"/>
                                     <button type="button" class="btn btn-light" t-on-click="() => this.removeOption(o_index)">✕</button>
                                 </div>
                             </t>
                             <button type="button" class="btn btn-sm btn-light" t-on-click="() => this.addOption()">+ Option</button>
+
+                            <t t-if="state.editing.variants.length">
+                                <label class="mt-3">Stock in your warehouse (per variant)</label>
+                                <table class="csp_stock">
+                                    <tr t-foreach="state.editing.variants" t-as="v" t-key="v.id">
+                                        <td t-esc="v.name"/>
+                                        <td><input type="number" min="0" class="form-control form-control-sm"
+                                                   t-att-value="v.newQty"
+                                                   t-on-input="(ev) => v.newQty = ev.target.value"/></td>
+                                    </tr>
+                                </table>
+                                <div class="text-muted small">Saved together with the product. Options changed above get their rows after you save once.</div>
+                            </t>
                         </div>
                         <div class="csp_preview">
                             <img t-if="state.editing.image_preview" t-att-src="state.editing.image_preview" alt=""/>

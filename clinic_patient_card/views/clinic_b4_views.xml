@@ -72,23 +72,23 @@
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
                 <field name="is_clinic_order" invisible="1"/>
-                <button name="action_clinic_status_availability" type="object"
+                <button name="action_clinic_status_availability" type="object" class="btn-primary"
                         string="Availability Confirmed"
                         invisible="not is_clinic_order or state != 'sale' or clinic_delivery_status"
                         groups="clinic_patient_card.group_clinic_supplier"/>
-                <button name="action_clinic_status_preparing" type="object"
+                <button name="action_clinic_status_preparing" type="object" class="btn-primary"
                         string="Preparing"
                         invisible="not is_clinic_order or clinic_delivery_status != 'availability'"
                         groups="clinic_patient_card.group_clinic_supplier"/>
-                <button name="action_clinic_status_ready" type="object"
+                <button name="action_clinic_status_ready" type="object" class="btn-primary"
                         string="Ready to Ship"
                         invisible="not is_clinic_order or clinic_delivery_status != 'preparing'"
                         groups="clinic_patient_card.group_clinic_supplier"/>
-                <button name="action_clinic_status_in_transit" type="object"
+                <button name="action_clinic_status_in_transit" type="object" class="btn-primary"
                         string="In Transit"
                         invisible="not is_clinic_order or clinic_delivery_status != 'ready'"
                         groups="clinic_patient_card.group_clinic_supplier"/>
-                <button name="action_clinic_status_delivered" type="object"
+                <button name="action_clinic_status_delivered" type="object" class="btn-primary"
                         string="Delivered"
                         invisible="not is_clinic_order or clinic_delivery_status != 'in_transit'"
                         groups="clinic_patient_card.group_clinic_supplier"/>
@@ -212,5 +212,44 @@
     <menuitem id="menu_clinic_stock_dashboard" name="📊 Dashboard"
               parent="menu_clinic_stock" action="action_clinic_stock_dashboard" sequence="1"
               groups="clinic_patient_card.group_clinic_admin"/>
+
+    <!-- ============ Supplier SO: only what a supplier needs ============
+         The supplier confirms (or rejects) the clinic's order and moves it through the
+         delivery steps; mailing a quotation, the print / portal preview and the pricing
+         terms are not theirs to use (user, 2026-10-06). -->
+    <record id="view_sale_order_form_clinic_supplier_clean" model="ir.ui.view">
+        <field name="name">sale.order.form.clinic.supplier.clean</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@id='quotation_send_primary']" position="attributes">
+                <attribute name="groups">!clinic_patient_card.group_clinic_supplier</attribute>
+            </xpath>
+            <xpath expr="//button[@id='quotation_send']" position="attributes">
+                <attribute name="groups">!clinic_patient_card.group_clinic_supplier</attribute>
+            </xpath>
+            <xpath expr="//button[@name='sale.action_report_saleorder']" position="attributes">
+                <attribute name="groups">!clinic_patient_card.group_clinic_supplier</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_preview_sale_order']" position="attributes">
+                <attribute name="groups">!clinic_patient_card.group_clinic_supplier</attribute>
+            </xpath>
+            <!-- invoices are not made by hand: no "Create Invoice" for the supplier -->
+            <xpath expr="//button[@id='create_invoice']" position="attributes">
+                <attribute name="groups">!clinic_patient_card.group_clinic_supplier</attribute>
+            </xpath>
+            <xpath expr="//button[@id='create_invoice_percentage']" position="attributes">
+                <attribute name="groups">!clinic_patient_card.group_clinic_supplier</attribute>
+            </xpath>
+            <!-- Confirm = the strong purple button; cancelling ("შეწყვეტა") red on white, light -->
+            <xpath expr="//button[@name='action_confirm'][not(@id)]" position="attributes">
+                <attribute name="class">btn-primary</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_cancel']" position="attributes">
+                <attribute name="class">clinic_cancel_btn</attribute>
+            </xpath>
+        </field>
+    </record>
 
 </odoo>

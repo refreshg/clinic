@@ -208,6 +208,34 @@ class SaleOrder(models.Model):
                     "doctor": self.env.user.name,
                 })
 
+    clinic_items = fields.Char(
+        string="Ordered", compute="_compute_clinic_items",
+        help="What the clinic ordered: product (colour, size) × quantity.")
+    clinic_total_qty = fields.Float(string="Qty", compute="_compute_clinic_items")
+
+    @api.depends("order_line.product_id", "order_line.product_uom_qty", "order_line.display_type")
+    def _compute_clinic_items(self):
+        for so in self:
+            lines = so.order_line.filtered(lambda l: not l.display_type and l.product_id)
+            so.clinic_items = "; ".join(
+                "%s × %g" % (l.product_id.display_name, l.product_uom_qty) for l in lines)
+            so.clinic_total_qty = sum(lines.mapped("product_uom_qty"))
+
+    @api.model
+    def _clinic_fix_unassigned_orders(self):
+        """Give every clinic order that has no salesperson one (the clinic user who
+        created its purchase order / the order itself): see D-39 — an empty
+        salesperson made suppliers see each other's orders."""
+        orders = self.sudo().search([("user_id", "=", False)])
+        supplier_group = self.env.ref("clinic_patient_card.group_clinic_supplier")
+        admin = self.env.ref("base.user_admin", raise_if_not_found=False)
+        for so in orders:
+            owner = (so.clinic_purchase_id.create_uid if so.clinic_purchase_id else so.create_uid)
+            if not owner or supplier_group in owner.all_group_ids or owner.share:
+                owner = admin or self.env.user
+            so.user_id = owner
+        return len(orders)
+
     def action_confirm(self):
         res = super().action_confirm()
         for order in self:
