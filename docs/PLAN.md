@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-05, commit: f9cde26 -->
+<!-- last-synced: 2026-10-06, commit: ac54c92 (+ uncommitted work) -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -90,6 +90,17 @@ templates + per-day lines (Community has no planning app) — D-29.
 - [ ] U open: staff arrival / departure ("მოსვლა / წასვლა") on log-in — waiting for the user's choice (auto at log-in vs. manual button); the standard hr_attendance systray exists but has never been used (0 rows)
 - [ ] U open: periodontal chart (6 points per tooth) — explained to the user, not approved yet
 
+## Milestone V — Supply shop v3: category tree, home page, product window, reviews, supplier order screen (2026-10-05/06, requested by the user)
+- [x] V1 category tree (20 tops, ~226 nodes) + pinned tiles + tree menu + home button (D-40)
+- [x] V2 home page: banners (video, width, height, drag order) + sponsored + new (D-41)
+- [x] V3 product window: gallery / video, options with the supplier's stock per variant, qty guard in cart and RFQ (D-38)
+- [x] V4 reviews with photos, sold / rating / return numbers, order-rating photos (D-38)
+- [x] V5 supplier panel: gallery, options, stock per variant; supplier "My Orders" screen and clean order form (D-42)
+- [x] V6 security fix: suppliers saw each other's orders (D-39)
+- [ ] V browser check by the user, step by step (in progress): supplier steps 1-12 done (login, panel, stock, My Orders, confirm); step 13 — delivery steps Availability → Preparing → Ready → In Transit (stock leaves here) → Delivered — NOT yet walked through; then the clinic side: receipt, rating with photos, return
+- [ ] V open: duplicate test orders S00070/71/72 + P00053/54/51 (user to say cancel / keep); old demo "gloves" products (8.00) still in the shop
+- [ ] V open: open (unshipped) orders do not reserve stock; automatic supplier-side invoice (when: at shipping or at receipt?) undecided
+
 ## Small chores (any time)
 - [ ] Clinic to confirm: insurer + city lists (written from memory), "primary/unique" definitions, what "non-resident" means (PRD §9)
 - [ ] Real photos for demo supply products (user drops files into scratchpad)
@@ -97,6 +108,6 @@ templates + per-day lines (Community has no planning app) — D-29.
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-10-05: milestone U — tooth chart (2 layouts), X-ray gallery + exam-result + allergy documents, radiologist user, curator, one-day pregnancy answer, doctor double-booking (D-34..D-37); committed locally as f9cde26 + version bump, deployed live (v19.0.63.0); nothing pushed.
-Next: user browser-checks milestone U (U) and schedule screens S1-S3; decides staff arrival/departure on log-in and the periodontal chart; then M2 ka.po regen (first unblocked).
+Last session 2026-10-06: milestone V — supply shop v3 (category tree, home page + video banners, product window with options / stock / reviews, supplier My Orders), supplier privacy fix (D-38..D-42); committed up to ac54c92 and pushed to origin/main, later edits (banner video / width / height, supplier order screen, cart + RFQ stock guard, double-click guard, salesperson fix) deployed live but NOT committed. Earlier: Last session 2026-10-05: milestone U — tooth chart (2 layouts), X-ray gallery + exam-result + allergy documents, radiologist user, curator, one-day pregnancy answer, doctor double-booking (D-34..D-37); committed locally as f9cde26 + version bump, deployed live (v19.0.63.0); nothing pushed.
+Next (2026-10-06): finish the supplier-side walk-through (step 13 delivery steps) and the clinic-side receipt / rating / return; decide the duplicate test orders and the invoice timing; then commit + push. Earlier next: user browser-checks milestone U (U) and schedule screens S1-S3; decides staff arrival/departure on log-in and the periodontal chart; then M2 ka.po regen (first unblocked).
 Watch out: the tooth chart layout choice is per browser; design-2 overlays are approximations; the treatment-plan doctor lines (D-33) came from the parallel chat; worked hours = raw clock time; public holidays not modelled; admin must NOT carry group_clinic_doctor; patient-primary/unique PNGs still untracked (user to say delete or keep).

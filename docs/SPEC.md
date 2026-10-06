@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-05, commit: f9cde26 -->
+<!-- last-synced: 2026-10-06, commit: ac54c92 (+ uncommitted work) -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -34,6 +34,7 @@ builds a prefilled internal transfer from the cabinet that has stock.
 **`clinic.request.reject.wizard`** (Transient) — request_id✓, reason✓(required); a request
 cannot be rejected without a comment (reviewer item 88).
 
+**`clinic.product.media`** (D-38) — gallery item of a product: tmpl_id✓(cascade), sequence, image / image_1024 / image_128, video_url (YouTube / Vimeo / file; picture OR video required). **`clinic.shop.review`** (+ **`.image`**, D-38) — stars (rating 1-5), text, photos, author, optional order; unique per (user, product). `product.template.clinic_media_ids`; `purchase.order.clinic_rating_image_ids` (photos of the received goods, mirrored into the reviews). `clinic.shop.banner` also has video_url, size (auto/third/half/two_thirds/full), height (px) (D-41); image optional when a video is given.
 **`clinic.shop.banner`** (batch #2 B3) — storefront promo banner. name✓, image✓(≤1600×500),
 note, link_url (opens in a new tab on click), show_text (untick when the artwork carries its
 own text), sequence, active. Two fixed slots side-by-side; 3+ banners rotate as a pair every
@@ -142,7 +143,7 @@ doctor specialty for slot search/autofill); both on the "Clinic" tab + `clinic_d
 **`res.company`**: clinic_workday_mon..sun(Bool), clinic_work_start/_end(Float, widget
 float_time), clinic_block_room_overlap(Bool, default True); "Clinic Schedule" tab; helper
 `_clinic_workdays()`.
-**`product.category`**: image_128 (storefront tile photo) + clinic_shop_visible (default on —
+**`product.category`** (D-40): clinic_shop_pinned (tile / menu node stays while empty) + `_clinic_seed_shop_categories` (tree in `models/clinic_shop_tree.py`); image_128 (storefront tile photo) + clinic_shop_visible (default on —
 untick to keep the category tile/chips out of the shop even while it holds products).
 **`stock.location`**: clinic_supplier_id (D-19 — which supplier owns this location; children
 created under a supplier location inherit it, keeping the scoping rules airtight).
@@ -291,6 +292,10 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | B28 | „🔄 დაბრუნება" on the PO | ≤48h after receipt, no open return | reason(+photo) → supplier review → approve (auto reverse picking stock→vendor) / reject (comment required) → return-transit → closed | custom pipeline over std picking (D-18) |
 | B29 | manager rates a received order | clinic PO received | ★1-5 product + vendor + note; vendor averages in shop cards/comparison/dashboard | custom (item 28) |
 | B30 | 📊 Stock Dashboard | admin | one clinic_dashboard_data RPC renders 11 monitoring blocks | custom OWL over std data (items 102-114) |
+| B50 | shop product window opens | clinic user | `clinic_shop_detail`: gallery + options + variants with the vendor's price and OWN stock; cart carries the chosen variant, qty clamped to its stock (pre-order excepted); `clinic_create_rfqs` refuses an oversize variant line (D-38) | custom over std attributes / variants |
+| B51 | clinic reviews a product | admin / doctor, product RECEIVED by the clinic | `clinic_shop_review_save` (stars, text, photos); the order rating mirrors into a review on each product of the order; numbers: sold, orders, average, breakdown, returns (D-38) | custom model |
+| B52 | clinic places an order | — | the mirror sale.order gets `user_id` = the placing clinic user; `_clinic_fix_unassigned_orders` repaired old rows (D-39) | custom fix over the std "Personal Orders" rule |
+| B53 | supplier opens My Orders / an order | supplier group | list: ordered items, ordered by, status, filter To confirm; buttons Send / Print / Preview / Create Invoice hidden (D-42) | view inheritance |
 | B31 | supplier toggles 👁/🚫 on a product | own product | clinic_shop_published soft-hide — offers skipped by clinic_shop_data, vendor line kept | custom flag (batch #2) |
 | B32 | Place Order from a request | vendor lacks a supplierinfo on the product | the line is auto-created (last price) — ordering FROM a vendor makes them a vendor OF the product; without it the supplier's own order crashed on the unreadable product | custom glue (v19.0.53.21) |
 | B33 | supplier warehouse chain | D-19 | count (std quant Apply) → In Transit ships to the transit shelf → clinic receipt drains transit (property_stock_supplier) → returns land back in their warehouse; shop/pre-order qty = SUPPLIER's own stock | std locations/quants/pickings + thin glue (D-19) |
@@ -516,6 +521,11 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 - 2026-10-05: the old `odontogram_html` block and the doctor-only "Open Oral Chart" placeholder button are gone from the patient card — the tooth chart widget (D-35) replaced them; PLAN M4 is superseded.
 - 2026-10-05: the Financial tab moved to the OUTER tab bar next to Notes (the nested notebook was removed).
 - 2026-10-05: "Referral source" stays hidden on the booking form (only its referral_user_id modifier needs it) — a visible variant was built and removed on request.
+
+- 2026-10-06: SECURITY — suppliers could read every other supplier's mirror sale orders (the mirror had no salesperson and the std "Personal Orders" rule exposes such orders to every salesman); fixed in D-39, verified by RPC (visible orders 32 → 18, all own).
+- 2026-10-06: the home page of the shop no longer shows the best-sellers strip; sponsored / new strips + banners only (user).
+- 2026-10-06: a banner can be a video; options typed with `/` are split like commas (the first user test typed "S / M / L" and got one value).
+- 2026-10-06: "Create Invoice", "Send", "Print", "Preview" are hidden for the supplier on the sale form; the supplier-side invoice is not created automatically yet (open decision).
 
 ## Tests
 Decision (2026-09-03, user): **no automated suite** — verification = live JSON-RPC scenarios +
