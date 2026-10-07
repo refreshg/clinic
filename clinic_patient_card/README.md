@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-06, commit: ac54c92 (+ uncommitted work) -->
+<!-- last-synced: 2026-10-07, commit: 0e91ff5 (+ uncommitted work) -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -57,8 +57,13 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
   complaints seeded (clinic.complaint). Procedures dropdown = service products
   flagged "Clinic Procedure".
 - **Cron jobs** (active by default): low-stock alert (daily), dispensary call reminders
-  (daily, T-14d), weekly booking report to administrators, daily reset of yesterday's
-  pregnancy answers (a woman is asked again at every visit day).
+  (daily, T-14d), weekly booking report to administrators, daily reset of stale health
+  answers (pregnancy: every visit day; allergy: after 6 months — the list stays).
+- **Regular patient threshold**: Settings → Technical → System Parameters →
+  `clinic.regular_patient_visits` (completed visits, 5 for now — the clinic has not decided);
+  upgrade the module after changing it to recount (First Visit / Repeat / Regular are computed).
+- **Prescription e-mail** (visit page ✉): needs an outgoing mail server (Settings → Technical →
+  Outgoing Mail Servers) and the patient's e-mail on the card — neither is set up yet.
 - **Supply shop**: the category tree is seeded from `models/clinic_shop_tree.py` on every upgrade
   (Configuration → Categories holds the pictures); banners: Configuration → Shop Banners (picture
   or YouTube / Vimeo link, width, height, drag the handle to reorder); a supplier edits gallery,
@@ -82,17 +87,23 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
   transmission until EHR lands.
 - Visit billing takes the FULL amount (cash+card must equal the total); partial
   payments are not supported yet.
-- Visit page tabs "გახარჯული მასალები" and "EHR სინქრონიზაცია" are placeholders.
-- E-mail sending: none yet — what/when is undecided (docs/PRD.md §9). SMS likewise
-  deferred (no provider chosen; batch #2).
+- Visit page tabs "გახარჯული მასალები" and "EHR სინქრონიზაცია" are placeholders (doctor-only).
+- Treatment plan on the card (D-47): a visit row links to a plan row only with the SAME tooth and the
+  SAME procedure product; a different procedure on the same tooth stays a separate row.
+- Periodontal chart (D-48) v1: grid + summary only — no lines over the tooth drawing, no PDF, no
+  recession classifications yet; gingival margin sign convention (positive = recession) to be confirmed.
+- Treatment-plan translation (ka / en / ru) is postponed — needs a translation service (open question).
+- E-mail sending: none automatic — what/when is undecided (docs/PRD.md §9); only the manual
+  prescription e-mail exists, and no SMTP server is configured. SMS likewise deferred (no provider chosen; batch #2).
 - Soft-UI patient-card page is read-only (tooth painting not persisted yet — PLAN M3);
   it opens from the visit form's 🪪 button — the partner-form buttons were removed (v55.9).
 - Tooth chart (D-35): the diseases / treatments are approximated drawings, the layout choice
-  ("ვიზუალი 1 / 2") is stored per browser, milk teeth are still plain buttons; the pictures
+  ("ვიზუალი 1 / 2") is stored per browser, milk teeth are plain buttons shown only for children
+  under 14 (visit page); the pictures
   follow ICD-10 / procedure names (editable: ICD-10 list column, product field).
 - `i18n/ka.po` is stale for the 28.08.26 batch strings (PLAN M2).
 - No automated tests by decision D-11 — verify live (RPC + browser).
-- Payment (visit page): card-type list is a starting point (Configuration → Card Types); only SAME-DAY unpaid retail sales join a visit's total. Allergy / pregnancy answers are mandatory (pregnancy women-only, cleared after every visit). Treatment-plan PDF prices follow the company currency (USD here) — change the currency last; the PDF engine needs the body wrapped in `div.article` or Georgian text is garbled.
+- Payment (visit page): card-type list is a starting point (Configuration → Card Types); only SAME-DAY unpaid retail sales join a visit's total. Allergy / pregnancy answers are mandatory (pregnancy women-only, valid one day; allergy valid 6 months). Treatment-plan PDF prices follow the company currency (USD here) — change the currency last; the PDF engine needs the body wrapped in `div.article` or Georgian text is garbled.
 - Staff schedule (S1) + worked hours (S2): shift lists are from the user's mock-ups, assistants must be added as employees with Clinic Role; check-in/out is the standard Odoo attendance; worked hours are raw clock time (no lunch deduction), lateness = more than 5 min after the shift start; the booking guard (S3) refuses bookings outside a doctor's scheduled shift on days where their schedule is filled in (empty day = clinic hours only); the Planning board shows each doctor's shift colour. Closed weekdays follow Settings → Companies → Clinic Schedule; public holidays are not modelled.
 - Form-100 / EHR sync not implemented (templates/target unknown).
 - Insurer list (`data/clinic_insurers_seed.xml`) and city list (`data/clinic_cities_seed.xml`) are unconfirmed — written from memory.

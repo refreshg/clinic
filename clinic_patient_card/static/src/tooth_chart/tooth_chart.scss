@@ -31,3 +31,17 @@
     .tc_dot_implant { background: #8a94a6; } .tc_dot_veneer { background: #8fd6cf; }
     .tc_dot_extracted { background: #c0392b; }
 }
+
+/* card: the table of tooth procedure rows under the chart (same rows as the chart) */
+.tc_table_wrap {
+    .tc_table th { font-weight: 600; color: #4b5563; }
+    .tc_st { font-weight: 600; max-width: 170px; }
+    .tc_st_planned { color: #2f80ed; }
+    .tc_st_in_progress { color: #e07b20; }
+    .tc_st_done { color: #1f8a4c; }
+    .tc_st_postponed { color: #6b7280; }
+    .badge.tc_st_planned { background: #e3eefc; }
+    .badge.tc_st_in_progress { background: #fdeedd; }
+    .badge.tc_st_done { background: #e2f4ea; }
+    .badge.tc_st_postponed { background: #eef0f2; }
+}

@@ -133,6 +133,8 @@ export class ClinicVisitPage extends Component {
                 return !!d.prescriptions.length;
             case "allergy":
                 return !!d.allergies.length;
+            case "clinic_exam_results":
+                return !!((d.sections[key] || "").trim() || (d.exam_docs || []).length);
             default:
                 return !!(d.sections[key] || "").trim();
         }
@@ -247,8 +249,32 @@ export class ClinicVisitPage extends Component {
         await this.load();
         this.openSection("allergy");
     }
+    // ---- prescription sheet: print (PDF in a new tab), download, e-mail ----
+    printRx() {
+        window.open(`/report/pdf/clinic_patient_card.report_clinic_prescription/${this.visitId}`, "_blank");
+    }
+    async pdfRx() {
+        const act = await this.orm.call("calendar.event", "action_prescription_pdf", [[this.visitId]]);
+        await this.action.doAction(act);
+    }
+    async mailRx() {
+        const act = await this.orm.call("calendar.event", "action_prescription_send", [[this.visitId]]);
+        await this.action.doAction(act);
+    }
     /** allergy documents: pick one or several files, each becomes a patient document */
-    async uploadAllergyDocs(ev) {
+    uploadAllergyDocs(ev) {
+        return this.uploadDocs(ev, "allergy_doc", "allergy");
+    }
+    /** examination results: same, one or several files */
+    uploadExamDocs(ev) {
+        return this.uploadDocs(ev, "exam_result", "clinic_exam_results");
+    }
+    async removeExamDoc(doc) {
+        await this.orm.unlink("clinic.patient.document", [doc.id]);
+        await this.load();
+        this.openSection("clinic_exam_results");
+    }
+    async uploadDocs(ev, docType, section) {
         const files = [...ev.target.files];
         ev.target.value = "";
         if (!files.length) {
@@ -265,7 +291,7 @@ export class ClinicVisitPage extends Component {
             for (const f of files) {
                 await this.orm.create("clinic.patient.document", [{
                     partner_id: this.state.data.patient.id,
-                    doc_type: "allergy_doc",
+                    doc_type: docType,
                     name: f.name.replace(/\.[^.]+$/, ""),
                     filename: f.name,
                     attachment: await b64(f),
@@ -274,8 +300,13 @@ export class ClinicVisitPage extends Component {
         } finally {
             this.state.saving = false;
         }
+        // keep a text section's unsaved draft across the reload
+        const draft = this.state.sectionDraft;
         await this.load();
-        this.openSection("allergy");
+        this.openSection(section);
+        if (this.sectionMeta(section).kind === "text") {
+            this.state.sectionDraft = draft;
+        }
     }
     async removeAllergyDoc(doc) {
         await this.orm.unlink("clinic.patient.document", [doc.id]);

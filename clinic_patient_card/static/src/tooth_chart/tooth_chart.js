@@ -104,6 +104,7 @@ export class ClinicToothChart extends Component {
         if (s.diagnosis) { parts.push(s.diagnosis); }
         if (s.treat_label) { parts.push(s.treat_label); }
         if (s.procedure) { parts.push(s.procedure); }
+        if (s.status_label) { parts.push(s.status_label); }
         return parts.join(" · ");
     }
 
@@ -115,16 +116,25 @@ export class ClinicToothChart extends Component {
     }
 }
 
-// Patient card: click a tooth -> same "diagnosis + procedure" add as the visit page.
+// Patient card: click a tooth (or "+ add" under the chart) -> a treatment-PLAN
+// row (diagnosis + procedure); its status then follows the visits (D-47).
 export class ClinicToothAddDialog extends Component {
     static template = "clinic_patient_card.ToothAddDialog";
     static components = { Dialog };
-    static props = { partnerId: Number, tooth: Number, close: Function, onDone: Function };
+    static props = {
+        partnerId: Number, tooth: { type: Number, optional: true },
+        close: Function, onDone: Function,
+    };
 
     setup() {
         this.orm = useService("orm");
         this.notification = useService("notification");
-        this.state = useState({ icd: [], products: [], icd10Id: 0, productId: 0, saving: false });
+        // permanent teeth in FDI order for the "+ add" picker
+        this.teeth = TEETH.map((t) => t.f).sort((a, b) => a - b);
+        this.state = useState({
+            icd: [], products: [], icd10Id: 0, productId: 0, saving: false,
+            tooth: this.props.tooth || 0,
+        });
         onWillStart(async () => {
             this.state.icd = await this.orm.searchRead("clinic.icd10", [], ["code", "name"], { order: "code" });
             this.state.products = await this.orm.searchRead(
@@ -135,6 +145,10 @@ export class ClinicToothAddDialog extends Component {
 
     async add() {
         const prod = this.state.products.find((p) => p.id === Number(this.state.productId));
+        if (!Number(this.state.tooth)) {
+            this.notification.add(_t("აირჩიე კბილი"), { type: "warning" });
+            return;
+        }
         if (!prod) {
             this.notification.add(_t("აირჩიე პროცედურა"), { type: "warning" });
             return;
@@ -144,8 +158,9 @@ export class ClinicToothAddDialog extends Component {
             await this.orm.create("clinic.procedure.history", [{
                 partner_id: this.props.partnerId,
                 procedure_id: prod.id,
+                name: prod.name,
                 icd10_id: Number(this.state.icd10Id) || false,
-                tooth: String(this.props.tooth),
+                tooth: String(this.state.tooth),
                 status: "planned",
                 qty: 1,
                 price_unit: prod.lst_price,
@@ -158,24 +173,45 @@ export class ClinicToothAddDialog extends Component {
     }
 }
 
-// Patient-card widget: <widget name="clinic_tooth_chart"/> on the partner form.
+// Patient-card widget: <widget name="clinic_tooth_chart"/> on the partner form —
+// the chart AND, under it, the treatment-plan table of the same rows: a tooth
+// clicked on the chart shows up in the table, a row added in the table redraws
+// the chart, and the status follows what the doctor does on the visits (D-47).
 export class ClinicToothChartWidget extends Component {
     static template = "clinic_patient_card.ToothChartWidget";
     static components = { ClinicToothChart };
     static props = { ...standardWidgetProps };
     setup() {
         this.dialog = useService("dialog");
-        this.state = useState({ ver: 0 });
+        this.orm = useService("orm");
+        this.state = useState({ ver: 0, rows: [] });
+        onWillStart(() => this.loadRows());
     }
     get partnerId() {
         return this.props.record.resId || false;
     }
-    pick(fdi) {
+    async loadRows() {
+        if (!this.partnerId) { return; }
+        const res = await this.orm.call("res.partner", "clinic_tooth_rows", [[this.partnerId]]);
+        this.state.rows = res.rows;
+    }
+    async refresh() {
+        await this.loadRows();
+        this.state.ver++;   // the chart reloads its pictures
+    }
+    openAdd(fdi) {
         if (!this.partnerId) { return; }
         this.dialog.add(ClinicToothAddDialog, {
-            partnerId: this.partnerId, tooth: fdi,
-            onDone: () => { this.state.ver++; },
+            partnerId: this.partnerId, tooth: fdi || 0,
+            onDone: () => this.refresh(),
         });
+    }
+    pick(fdi) {
+        this.openAdd(fdi);
+    }
+    async remove(row) {
+        await this.orm.call("res.partner", "clinic_tooth_row_delete", [[this.partnerId], row.id]);
+        await this.refresh();
     }
 }
 registry.category("view_widgets").add("clinic_tooth_chart", {

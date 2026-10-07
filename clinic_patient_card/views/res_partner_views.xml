@@ -35,6 +35,27 @@
             <xpath expr="//sheet" position="inside">
                 <div class="o_clinic_soft"/>
             </xpath>
+            <!-- pregnant / allergic warning, same as on the booking popup -->
+            <xpath expr="//sheet" position="before">
+                <field name="health_pregnancy_alert" invisible="1"/>
+                <field name="health_allergy_alert" invisible="1"/>
+                <div class="d-flex flex-wrap gap-4 px-3 pt-2 align-items-center o_clinic_health_warn"
+                     invisible="not is_patient or (not health_pregnancy_alert and not health_allergy_alert)">
+                    <div class="d-flex align-items-center gap-2 text-danger fw-bold"
+                         invisible="not health_pregnancy_alert">
+                        <img src="/clinic_patient_card/static/src/img/pregnant.svg"
+                             alt="ორსული" style="width:40px;height:40px;"/>
+                        <span>პაციენტი ორსულია</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 text-danger fw-bold"
+                         invisible="not health_allergy_alert">
+                        <img src="/clinic_patient_card/static/src/img/allergy.svg"
+                             alt="ალერგია" style="width:40px;height:40px;"/>
+                        <span>ალერგია: <field name="health_allergy_info" readonly="1" nolabel="1"
+                                            class="d-inline fw-bold"/></span>
+                    </div>
+                </div>
+            </xpath>
             <!-- Reviewer item 39 is handled globally: the form status
                  indicator (breadcrumb) renders labelled Save/Discard buttons
                  on every form, only while there is something to save — see
@@ -44,6 +65,10 @@
                  drop it so only the Patient Card page opens by default. -->
             <xpath expr="//page[@name='contact_addresses']" position="attributes">
                 <attribute name="autofocus"/>
+            </xpath>
+            <!-- the standard "Notes" tab is not used on a patient (user 2026-10-07) -->
+            <xpath expr="//page[@name='internal_notes']" position="attributes">
+                <attribute name="invisible">is_patient</attribute>
             </xpath>
 
             <!-- "Contacts" tab for a patient = the people around them: guardian /
@@ -198,7 +223,7 @@
                     </div>
 
                     <!-- 1.9 Quick actions (placeholder buttons for now) -->
-                    <div class="d-flex flex-wrap gap-1 mb-3" name="quick_actions">
+                    <div class="d-flex flex-wrap gap-1 mb-3 o_clinic_quick_btns" name="quick_actions">
                         <button name="action_clinic_todo" type="object"
                                 string="Add Note" class="btn-secondary"/>
                         <button name="action_clinic_todo" type="object"
@@ -249,6 +274,10 @@
                                        required="is_patient"/>
                                 <field name="allergy_answer" string="ალერგია"
                                        invisible="not is_patient" required="is_patient"/>
+                                <!-- upload the allergy test right here, whatever the answer -->
+                                <field name="allergy_doc_count" invisible="1"/>
+                                <widget name="clinic_allergy_upload" colspan="2"
+                                        invisible="not is_patient or not allergy_answer"/>
                                 <field name="pregnancy_answer" string="ორსულობა"
                                        invisible="not is_patient or gender != 'female'"
                                        required="is_patient and gender == 'female'"/>
@@ -267,6 +296,24 @@
                                     <field name="test_done"/>
                                     <field name="test_result"/>
                                     <field name="note" optional="hide"/>
+                                </list>
+                            </field>
+                        </group>
+                        <!-- allergy test document: shown as soon as the allergy question is
+                             answered (yes OR no); the same documents as the doctor's Medical
+                             tab and the visit page (user 2026-10-07) -->
+                        <group string="ალერგიული სინჯის საბუთი"
+                               invisible="not is_patient or not allergy_answer">
+                            <field name="allergy_doc_card_ids" colspan="2" nolabel="1"
+                                   context="{'default_doc_type': 'allergy_doc'}">
+                                <list editable="bottom">
+                                    <field name="doc_type" column_invisible="1"/>
+                                    <field name="attachment" filename="filename" widget="binary"
+                                           string="ფაილი"/>
+                                    <field name="filename" column_invisible="1"/>
+                                    <field name="name" string="დასახელება"/>
+                                    <field name="create_date" string="ატვირთვის დრო" readonly="1"/>
+                                    <field name="uploaded_by_id" string="ვინ ატვირთა"/>
                                 </list>
                             </field>
                         </group>
@@ -494,7 +541,11 @@
                         </group>
                         <field name="dental_other_notes" colspan="2"/>
                         <separator string="Dental Chart (FDI)" colspan="2"/>
+                        <!-- chart + the table of the SAME procedure rows (added on the chart,
+                             in the table or on the visit page — all three stay in sync) -->
                         <widget name="clinic_tooth_chart" colspan="2"/>
+                        <!-- old manual per-tooth statuses: kept (still drawn as a low-priority fallback) -->
+                        <separator string="ხელით მითითებული სტატუსები (ძველი)" colspan="2"/>
                         <field name="tooth_ids" colspan="2" nolabel="1">
                             <list editable="bottom">
                                 <field name="tooth_number"/>
@@ -502,6 +553,9 @@
                                 <field name="note"/>
                             </list>
                         </field>
+                        <!-- D-48: periodontal chart (Bern-style), one record per examination -->
+                        <separator string="პაროდონტოლოგიური სქემა" colspan="2"/>
+                        <widget name="clinic_perio_chart" colspan="2"/>
                     </group>
                 </page>
 
@@ -523,7 +577,8 @@
                                 <field name="amount_paid" optional="show"/>
                                 <button name="action_open_visit_page"
                                         type="object" string="🧾 გვერდი"
-                                        class="btn-link"/>
+                                        class="btn-link"
+                                        invisible="clinic_state not in ('arrived', 'in_progress', 'done', 'paid')"/>
                             </list>
                         </field>
                     </group>
@@ -646,8 +701,8 @@
             <form string="პაციენტის რეგისტრაციის ფორმა">
                 <sheet>
                     <!-- First-visit registration from the booking: only first
-                         name, last name, mobile (+ insurance). The rest —
-                         personal no., birth date, referral source (required),
+                         name, last name, mobile (+ insurance, optional birth
+                         date with the age). The rest — personal no., referral source (required),
                          gender, foreign data, health — is filled on the
                          patient card when the patient arrives. -->
                     <div class="alert alert-light d-flex align-items-center gap-2 mb-3"
@@ -664,6 +719,9 @@
                                    string="გვარი"/>
                             <field name="name_latin" string="სახელი და გვარი (ლათინურად)"
                                    invisible="not is_foreign" required="is_foreign"/>
+                            <!-- optional here; the age is counted at once -->
+                            <field name="birthdate" string="დაბადების თარიღი"/>
+                            <field name="age" string="ასაკი" invisible="not birthdate"/>
                         </group>
                         <group>
                             <field name="phone" required="1"

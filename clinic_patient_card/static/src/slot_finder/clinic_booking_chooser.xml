@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="clinic_patient_card.BookingChooser">
+    <Dialog title="'ვის ვწერთ?'" size="'xl'" footer="false">
+        <div class="d-flex gap-4 p-3">
+            <button type="button" class="btn btn-outline-primary flex-fill fs-2"
+                    style="padding: 4rem 1rem;"
+                    t-on-click="() => this.pick('repeat')">
+                👤 არსებული პაციენტი
+                <div class="fs-5 text-muted mt-2">განმეორებითი ვიზიტი</div>
+            </button>
+            <button type="button" class="btn btn-primary flex-fill fs-2"
+                    style="padding: 4rem 1rem;"
+                    t-on-click="() => this.pick('first')">
+                ➕ ახალი პაციენტი
+                <div class="fs-5 mt-2">პირველადი ვიზიტი</div>
+            </button>
+        </div>
+    </Dialog>
+</t>
+
+</templates>

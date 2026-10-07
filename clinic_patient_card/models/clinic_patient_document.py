@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ClinicPatientDocument(models.Model):
@@ -38,6 +38,12 @@ class ClinicPatientDocument(models.Model):
     note = fields.Char(string="Note")
     # Examination result typed by hand (a file may be attached instead / as well)
     result_text = fields.Text(string="Result (typed)")
+
+    @api.onchange("filename")
+    def _onchange_filename_title(self):
+        """One-step upload: the title defaults to the file's name."""
+        if self.filename and not self.name:
+            self.name = self.filename.rsplit(".", 1)[0]
 
     def action_add_next(self):
         """Saved picture -> a fresh empty page for the SAME patient (next picture)."""

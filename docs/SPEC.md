@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-06, commit: ac54c92 (+ uncommitted work) -->
+<!-- last-synced: 2026-10-07, commit: 0e91ff5 (+ uncommitted work) -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -257,7 +257,19 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | res.partner | `allergy_answer` / `pregnancy_answer` yes/no (pregnancy only for gender = female), `_clinic_missing_health_answers`, `_clinic_health_warning`; `is_pregnant` follows the answer; both answers are required on the card and checked at "მოსული" and at start (`_check_patient_data_complete`) and before adding a procedure (`clinic.procedure.history.create` → `_check_patient_health_answers`) |
 | patient card layout | order: address → tabs; Patient Card tab = booking button, quick buttons (by role), identity block (+ allergy list), former Basic block (flat), Contact info, Financial sub-tab (admin); Medical (doctor only) + History moved to the OUTER tab bar after Notes; Contacts tab shows guardian + family members (editable) instead of child contacts; "Partner Assignment" (geo) tab hidden; quick-action buttons: reminder / invoice / payment admin-only, oral chart / EHR doctor-only |
 | quick registration | name, surname, mobile, insurance + foreign toggle; `name_latin` required when `is_foreign` |
-| clinic.treatment.plan (+ .line) (new) | printable "TREATMENT PLAN": patient_name (typed), optional patient_id, date, 3 doctor names, free-text lines (visit / department / tooth / procedure / unit price / price), note, schedule, 2 totals, payment note; lines auto-pulled from the patient's `planned` procedures (`procedure_history_id` prevents duplicates); QWeb PDF with logo + contact icons (data URIs), repeating header via paperformat, fixed header + "Approved by" block; Clinic menu "მკურნალობის გეგმა"; ACL admin + doctor rwcu |
+| clinic.treatment.plan (+ .line) (new) | printable "TREATMENT PLAN": patient_name (typed), optional patient_id, date, doctor lines `clinic.treatment.plan.doctor` (profession + doctor + printed name, removable, "Add doctor"; D-33) + chief_doctor, free-text lines (visit / department / tooth / procedure / unit price / price), note, schedule, 2 totals, payment note; lines auto-pulled from the patient's `planned` procedures (`procedure_history_id` prevents duplicates); QWeb PDF with logo + contact icons (data URIs), repeating header via paperformat, fixed header + "Approved by" block; Clinic menu "მკურნალობის გეგმა"; ACL admin + doctor rwcu |
+
+### 2026-10-07 additions (uncommitted on top of 0e91ff5)
+| area | additions |
+|---|---|
+| clinic.treatment.plan.doctor (new, D-33) | plan_id✓(cascade), sequence, role (compute from the doctor's Clinic Direction, editable), doctor_id (Clinic Doctor group), name (printed, follows the doctor, editable); plan default = 2 empty lines Implantologist / Prosthodontist; legacy `implantologist` / `prosthodontist` Char moved in by `_clinic_migrate_doctor_lines` (idempotent) |
+| calendar.event | `clinic_visit_kind` (first / repeat, hidden on the form, set by the board chooser — D-43); `_clinic_treated_now_domain` (arrived / in progress AND started < 12 h ago); `_check_visit_page_open` (page only from arrived on); write refuses `clinic_state = cancelled` once in progress / done / paid; `action_done` turns only `planned` lines done (in-progress lines stay — D-47); visit-page payload: `patient.child` (age < 14), `exam_docs`, full allergy columns; prescription sheet: `_clinic_report_prescriptions`, `action_prescription_pdf`, `action_prescription_send` (models/clinic_visit_medical.py) |
+| res.partner | `is_first_visit` / `is_repeat` / `is_regular` = stored computes over `clinic_done_visits` (0 / 1+ / N+, N = param `clinic.regular_patient_visits`, temp 5 — D-45); `allergy_answered_on` + 6-month expiry (D-44); `health_pregnancy_alert` / `health_allergy_alert` / `health_allergy_info` (form banner); `allergy_doc_card_ids` (2nd o2m on the allergy documents) + `allergy_doc_count`; tooth table RPCs `clinic_tooth_rows` / `clinic_tooth_row_delete`; `perio_chart_ids` |
+| clinic.procedure.history | `plan_line_id` / `visit_line_ids` (visit row ↔ treatment-plan row, D-47); `_clinic_link_plan`, `_clinic_sync_plan_status`, `_clinic_visit_locked` (sudo read of the visit state) |
+| clinic.patient.document | `_onchange_filename_title` (title from the file name) |
+| clinic.perio.chart (new, D-48) | partner_id✓, date, doctor_id, appointment_id, `data` (Json per FDI tooth), note; stored summary teeth_present / mean_pd / mean_cal / bop_pct / plaque_pct / deep_sites |
+| reports | `report_clinic_prescription` (clinic header like the treatment plan, the plan's paperformat) + `mail_template_clinic_prescription` (PDF attached, to the patient) |
+| widgets / JS | board chooser `clinic_booking_chooser` (existing / new patient), `clinic_image_click` (empty image "+" opens the file chooser, product form), `clinic_allergy_upload` (card button), `clinic_perio_chart` (Medical tab), tooth chart widget = chart + plan table |
 
 ## Business logic (trigger → condition → action; Standard coverage per row)
 | # | trigger | condition | action | std coverage |
@@ -296,6 +308,14 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | B51 | clinic reviews a product | admin / doctor, product RECEIVED by the clinic | `clinic_shop_review_save` (stars, text, photos); the order rating mirrors into a review on each product of the order; numbers: sold, orders, average, breakdown, returns (D-38) | custom model |
 | B52 | clinic places an order | — | the mirror sale.order gets `user_id` = the placing clinic user; `_clinic_fix_unassigned_orders` repaired old rows (D-39) | custom fix over the std "Personal Orders" rule |
 | B53 | supplier opens My Orders / an order | supplier group | list: ordered items, ordered by, status, filter To confirm; buttons Send / Print / Preview / Create Invoice hidden (D-42) | view inheritance |
+| B54 | board slot click / + New Appointment | clinic user | chooser "existing / new patient": existing → booking form (kind repeat); new → quick registration (optional birth date + age) → booking form with the patient (kind first); cancel = no booking (D-43) | custom OWL dialog over std forms |
+| B55 | a clinic visit becomes done / paid (or not) | is_patient | First Visit / Repeat / Regular recounted from completed visits (D-45) | stored compute |
+| B56 | allergy answered | — | stamp `allergy_answered_on`; daily cron clears answers > 6 months (skips patients treated now), the doctor is asked again; list + red warning kept (D-44) | custom over std cron |
+| B57 | visit page / board icon / history button | state < arrived | page refused (button hidden, server UserError) | custom guard |
+| B58 | cancel a visit | in progress / done / paid | refused (button hidden, write guard) | custom guard |
+| B59 | tooth row added on the card (chart click / + add) | — | planned plan row; a visit row with the same tooth + procedure links to it; status follows the visit rows (planned → in progress → done); rows of closed visits read-only (D-46/D-47) | custom over clinic.procedure.history |
+| B60 | prescription print / PDF / e-mail on the visit page | ≥1 prescription | std report action / `/report/pdf` tab / std mail composer with the PDF (no SMTP server yet → recorded only) | std report + mail composer |
+| B61 | periodontal exam saved | doctor | json stored, summary recomputed (D-48) | custom model |
 | B31 | supplier toggles 👁/🚫 on a product | own product | clinic_shop_published soft-hide — offers skipped by clinic_shop_data, vendor line kept | custom flag (batch #2) |
 | B32 | Place Order from a request | vendor lacks a supplierinfo on the product | the line is auto-created (last price) — ordering FROM a vendor makes them a vendor OF the product; without it the supplier's own order crashed on the unreadable product | custom glue (v19.0.53.21) |
 | B33 | supplier warehouse chain | D-19 | count (std quant Apply) → In Transit ships to the transit shelf → clinic receipt drains transit (property_stock_supplier) → returns land back in their warehouse; shop/pre-order qty = SUPPLIER's own stock | std locations/quants/pickings + thin glue (D-19) |
@@ -373,6 +393,13 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | manager dashboard | std dashboards (spreadsheet is Enterprise) | no | OWL client action over one RPC (batch #2 plan) |
 | supplier warehouse | stock locations/quants/pickings/transit + property_stock_supplier | yes (engine 100% std) | thin glue: owner tag on locations, scoped menus, ship-at-transit hook, Move wizard (D-19) |
 | supplier product access | per-supplier read scoping | no (foreign refs crash pages) | READ open to internal users, WRITE scoped (D-20) |
+| treatment-plan doctors list | none (plain Char fields) | no | small line model `clinic.treatment.plan.doctor` (D-33) |
+| first / repeat / regular patient | none | no | stored computes over completed visits (D-45) |
+| booking "existing or new patient" | std calendar quick-create | no | OWL chooser before the std form (D-43) |
+| treatment-plan status from visits | none | no | plan_line_id link + derived status (D-47) |
+| prescription print / mail | std QWeb report + mail composer | yes | reused; only the sheet template + buttons are custom (B60) |
+| periodontal chart | none in Community | no | `clinic.perio.chart` + OWL grid (D-48) |
+| one-click image / allergy upload | std image / binary widgets (hover pencil, 2-step list) | partial | small widgets `clinic_image_click`, `clinic_allergy_upload` (no D-entry yet) |
 
 ## Views / UI
 | view / action | xml id | key points |
@@ -408,6 +435,10 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | Company form inherit | "Clinic Schedule" tab | workdays, hours, room-overlap toggle |
 | Users form inherit | "Clinic" tab | default_room_id |
 | Menus | Clinic root: staff=Planning/Configuration/Supply Shop; supplier=My Shop/My Inventory/My Orders | gated by groups |
+| Booking form (2026-10-07) | visit form inherit | "existing / new patient" chooser (xl dialog) before it; new-patient button hidden once the chooser decided; visit-page button only from arrived; Cancel only before treatment; status bar + workflow buttons in the legend colours (light tint, next step full colour; Start keeps std primary); quick buttons light Odoo-purple tint |
+| Planning board colours | `clinic_planning.scss` | cards painted with the status-legend palette (one `$cp_state_colors` map) |
+| Patient form (2026-10-07) | partner form inherit | red pregnancy / allergy banner; Notes tab hidden for patients; gender: only the picked card shows; allergy-test upload button + list under the allergy answer; inactive tabs light purple; Medical tab: tooth chart + plan table (auto status), old manual statuses below, periodontal chart |
+| Visit page (2026-10-07) | `clinic_visit_page` | health banner on every tab; materials / EHR tabs doctor-only; milk teeth only for a child < 14; exam-result files upload; allergy table with all card columns; prescription 🖨 / ⬇ PDF / ✉ |
 
 ## Security
 - Groups (`security/clinic_groups.xml`): `group_clinic_admin` (implies partner_manager,
@@ -424,6 +455,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 - `/clinic/patients/export`: HTTP route, `auth='user'`, 404 unless the user is in the admin or doctor group.
 - `clinic.patient.allergy`: user read; doctor rwcu; admin rwcu (added 2026-09-30 so the
   registration form can save allergies).
+- `clinic.treatment.plan.doctor`: admin + doctor rwcu. `clinic.perio.chart`: doctor rwcu, admin read (D-48).
 - Supplier product/template rules are WRITE-scoped only since v19.0.53.22 (D-20): reading
   any product never crashes their pages; My Inventory is a separately scoped action.
   Supplier location rule: edit own subtree only. Server actions behind supplier menus
@@ -442,7 +474,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 - Dev access: JSON-RPC (`/jsonrpc`, password auth). JSON-2 available but unused.
 
 ## Migration / data
-- `data/ir_sequence.xml` (patient_ref), `data/clinic_cron.xml` (3 crons above + `cron_clinic_reset_pregnancy`, daily — forgets yesterday's pregnancy answers, D-37).
+- `data/ir_sequence.xml` (patient_ref), `data/clinic_cron.xml` (3 crons above + `cron_clinic_reset_pregnancy`, daily — forgets yesterday's pregnancy answers (D-37) and 6-month-old allergy answers (D-44)); since 2026-10-07 it also holds the param `clinic.regular_patient_visits` (noupdate, 5) and the idempotent upgrade functions `_clinic_stamp_allergy_answers`, `_clinic_recompute_visit_flags`, `_clinic_link_existing_plans`; `views/clinic_treatment_plan_views.xml` calls `_clinic_migrate_doctor_lines`.
 - Upgrade = `-u clinic_patient_card` in-place; no data migrations needed so far; ctx override
   on `contacts.action_contacts` re-asserted on every upgrade.
 - Demo data (patients/doctors/suppliers/products) was seeded via RPC, NOT in module data.
@@ -526,6 +558,10 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 - 2026-10-06: the home page of the shop no longer shows the best-sellers strip; sponsored / new strips + banners only (user).
 - 2026-10-06: a banner can be a video; options typed with `/` are split like commas (the first user test typed "S / M / L" and got one value).
 - 2026-10-06: "Create Invoice", "Send", "Print", "Preview" are hidden for the supplier on the sale form; the supplier-side invoice is not created automatically yet (open decision).
+- 2026-10-07: First Visit / Repeat / Regular are no longer manual checkboxes — computed from completed visits (D-45); the chooser's answer (D-43) no longer writes the card.
+- 2026-10-07: closing a visit no longer forces every procedure line to done — "in progress" lines stay (D-47).
+- 2026-10-07: "being treated now" = arrived / in progress AND started within 12 h; old visits left open had kept yesterday's pregnancy answer alive and blocked "Arrived".
+- 2026-10-07: the visit page opens only from "Arrived" on; a visit in progress / done / paid can't be cancelled.
 
 ## Tests
 Decision (2026-09-03, user): **no automated suite** — verification = live JSON-RPC scenarios +

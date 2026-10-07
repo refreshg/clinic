@@ -77,3 +77,5 @@ access_clinic_shop_review_user,clinic.shop.review.user,model_clinic_shop_review,
 access_clinic_shop_review_admin,clinic.shop.review.admin,model_clinic_shop_review,clinic_patient_card.group_clinic_admin,1,1,1,1
 access_clinic_shop_review_image_user,clinic.shop.review.image.user,model_clinic_shop_review_image,base.group_user,1,0,0,0
 access_clinic_shop_review_image_admin,clinic.shop.review.image.admin,model_clinic_shop_review_image,clinic_patient_card.group_clinic_admin,1,1,1,1
+access_clinic_perio_chart_doctor,clinic.perio.chart.doctor,model_clinic_perio_chart,clinic_patient_card.group_clinic_doctor,1,1,1,1
+access_clinic_perio_chart_admin,clinic.perio.chart.admin,model_clinic_perio_chart,clinic_patient_card.group_clinic_admin,1,0,0,0

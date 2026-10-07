@@ -30,3 +30,4 @@ from . import clinic_tooth
 
 from . import clinic_product_media
 from . import clinic_shop_review
+from . import clinic_perio_chart

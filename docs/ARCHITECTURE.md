@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-06, commit: ac54c92 (+ uncommitted work) -->
+<!-- last-synced: 2026-10-07, commit: 0e91ff5 (+ uncommitted work) -->
 # Architecture — clinic_patient_card
 
 ## Components
@@ -21,9 +21,9 @@
 | Patient export | `controllers/patient_export.py` + Patients control-panel buttons (`static/src/patient_status/`) | GET `/clinic/patients/export?status=primary|unique` → .xlsx (xlsxwriter) built from `clinic_patient_status` (D-27) |
 | Staff schedule | `models/clinic_schedule.py` + `static/src/schedule/` (OWL, tag `clinic_schedule`) | shift templates, per-day lines on std `hr.employee`, doctor/assistant/admin tabs, day/week/month, grid + matrix looks, admin popover editing (D-29) |
 | Board schedule overlay | `calendar.event.clinic_board_staff` + `static/src/planning/` (`staffZones`, `chipLabel`) | per-doctor shift chip, colour band and hatched off-time on the Planning board; blocks click/drag outside the shift (D-29) |
-| Treatment plan | `models/clinic_treatment_plan.py` + `report/clinic_treatment_plan_report.xml` | printable plan with auto-pulled planned procedures; QWeb PDF with repeating header (D-32) |
+| Treatment plan | `models/clinic_treatment_plan.py` + `report/clinic_treatment_plan_report.xml` | printable plan with auto-pulled planned procedures and removable doctor lines; QWeb PDF with repeating header (D-32, D-33) |
 | Payment & card types | `calendar.event.clinic_visit_register_payment` + `models/clinic_card_type.py` + visit page billing tab | method / card type / same-day retail in the amount due (D-30) |
-| Health answers | `res.partner` allergy / pregnancy answers + `calendar.event` guards | mandatory at arrival; pregnancy asked per visit; red sign on the visit form (D-31) |
+| Health answers | `res.partner` allergy / pregnancy answers + `calendar.event` guards | mandatory at arrival; pregnancy valid one day, allergy six months; red banner on the visit form, patient form and visit page (D-31, D-37, D-44) |
 | Worked hours | `clinic_hours_data` (models/clinic_schedule.py) + `static/src/hours/` + `controllers/hours_export.py` | plan (schedule) vs fact (std `hr.attendance`) per employee for day/week/month/year, chart, Excel (D-29) |
 | Live alerts | `static/src/clinic_arrived_service.js` | bus subscriber + WebAudio chimes for 6 channels |
 | Supply Shop v2.1 | `static/src/shop/` + `models/purchase_order.py` + `models/clinic_shop.py` | clinic buys: banner slots+links, category sections (any-depth subcats), strips, wishlist, ⇄ compare tray, repeat order, localStorage cart persistence → cart → 1 RFQ/vendor + mirror SO |
@@ -35,10 +35,14 @@
 | Visit working page | `static/src/visit_page/` (OWL, tag `clinic_visit_page`) | Dentos-style per-visit workspace: medical sections, FDI→ICD-10→procedures, billing; one aggregate RPC (calendar.event.clinic_visit_page_data) + plain ORM writes |
 | Patient dashboards | `static/src/patient_dashboard/`, `static/src/patient_card_page/` | read-only visual pages over res.partner (Health-Care style; Soft-UI handoff) |
 | Security | `security/clinic_groups.xml`, `ir.model.access.csv` | 3 roles, ACLs, record rules (doctor scoping GLOBAL rule, supplier own-records) |
-| Jobs | `data/clinic_cron.xml` | low-stock daily, dispensary reminders daily, booking report weekly, pregnancy-answer reset daily (D-37) |
+| Jobs | `data/clinic_cron.xml` | low-stock daily, dispensary reminders daily, booking report weekly, stale health answers daily (pregnancy 1 day, allergy 6 months; D-37, D-44) |
 | Supply shop v3 | `static/src/shop/`, `models/clinic_product_media.py`, `clinic_shop_review.py`, `clinic_shop_tree.py` | home page + category tree + product window (gallery, options, own stock per variant, reviews); supplier panel edits gallery / options / stock; mirror SO now carries the placing user (D-38..D-41) |
-| Tooth chart | `static/src/tooth_chart/` + `models/clinic_tooth.py` | one SVG component (2 layouts) on the visit page and the patient card; state from `res.partner.clinic_tooth_states()` over the procedure lines (D-35) |
-| Pictures / documents | `models/clinic_patient_document.py`, `static/src/xray_upload/`, `views/clinic_xray_views.xml` | X-ray gallery with chatter comments + lightbox, exam results, allergy documents, radiologist upload menu (D-36) |
+| Tooth chart | `static/src/tooth_chart/` + `models/clinic_tooth.py` | one SVG component (2 layouts) on the visit page and the patient card; state from `res.partner.clinic_tooth_states()` over the procedure lines (D-35); on the card + the treatment-plan table whose status follows the visit rows linked by `plan_line_id` (D-46, D-47) |
+| Pictures / documents | `models/clinic_patient_document.py`, `static/src/xray_upload/`, `views/clinic_xray_views.xml` | X-ray gallery with chatter comments + lightbox, exam results, allergy documents (card upload button `clinic_allergy_upload`, visit-page uploads), radiologist upload menu, product image click-to-upload (D-36) |
+| Booking chooser | `static/src/slot_finder/clinic_booking_chooser.*` | "existing / new patient" dialog before the booking form; sets `clinic_visit_kind` (D-43) |
+| Patient flags | `res.partner._compute_visit_flags` | First Visit / Repeat / Regular from completed visits (D-45) |
+| Prescription sheet | `models/clinic_visit_medical.py` + `report/clinic_prescription_report.xml` | QWeb PDF with the clinic header, print / download / std mail composer from the visit page |
+| Periodontal chart | `models/clinic_perio_chart.py` + `static/src/perio_chart/` (view widget) | one record per exam, json measurements, stored summary; editor grid on the Medical tab (D-48) |
 
 ## Data flow
 ```mermaid
@@ -57,7 +61,10 @@ flowchart LR
     SP[Supplier portal] --> PT
     SP --> SO
     PCP[Patient card page / dashboard] --> RP
+    BC[Booking chooser] --> CE
+    PCW[Perio chart widget] --> PC[clinic.perio.chart]
   end
+  PH -- plan_line_id --> PH
   CE -- bus: arrived/dispensary --> CH[chime service → staff toasts]
   SO -- bus: sale request --> CH
   PO -- bus: new order --> CH
@@ -70,7 +77,8 @@ flowchart LR
 ```
 | flow | trigger | path |
 |---|---|---|
-| Booking | slot click/drag on board | OWL → popup form (UTC defaults) → create guards (schedule/overlap) → grid reload onClose |
+| Booking | slot click/drag on board | OWL → chooser (existing / new patient → quick registration) → popup form (UTC defaults) → create guards (schedule/overlap) → grid reload onClose |
+| Treatment plan on teeth | card chart / table → plan row; visit adds the same tooth + procedure | visit row links to the plan row → plan status planned → in progress → done (D-47) |
 | Visit cycle | header buttons | booked→…→paid; arrive fires bus+activity to dentist; done pushes history to patient |
 | Payment | Register Payment | wizard → std invoice + amounts on visit |
 | Procurement | Shop checkout | PO(sent)/vendor + mirror SO → supplier confirms SO → PO auto-confirms → clinic toast; goods via PO receipt (SO lines skip delivery) |
@@ -82,8 +90,10 @@ flowchart LR
   (button_validate hook — request state + deficit-arrival notify).
 - View inherits: `base.view_partner_form`, `calendar.view_calendar_event_form`, company & users
   forms; ctx override on `contacts.action_contacts`.
-- OWL: 6 client actions in `registry.category("actions")`; 1 service (`clinic_arrived_service`);
-  1 view widget (`clinic_slot_finder_btn`); 1 core-template extension (FormStatusIndicator).
+- OWL: client actions in `registry.category("actions")`; 1 service (`clinic_arrived_service`);
+  view widgets (`clinic_slot_finder_btn`, `clinic_new_patient_btn`, `clinic_tooth_chart`, `clinic_allergy_upload`,
+  `clinic_perio_chart`); field widgets (`clinic_image_upload`, `clinic_image_click`, `clinic_gender_icons`);
+  1 core-template extension (FormStatusIndicator).
 - Hooks: `post_init_hook _post_init_grant_admin`; RPC entry points: `clinic_create_rfqs`,
   `clinic_board_config`, `clinic_dentists`, `clinic_free_slots`, `clinic_supplier_*`.
 - No controllers, no external APIs (EHR/Form-100 pending — PRD §9).

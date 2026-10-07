@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="clinic_patient_card.PerioChart">
+    <div class="clinic_perio" t-if="partnerId">
+        <!-- ===== history of the examinations ===== -->
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <button type="button" class="btn btn-sm btn-primary" t-on-click="newChart"
+                    t-if="!state.edit">+ ახალი გაზომვა</button>
+        </div>
+        <table class="table table-sm pc_hist" t-if="state.charts.length">
+            <thead><tr>
+                <th>თარიღი</th><th>ექიმი</th><th>კბილი</th>
+                <th>საშ. ზონდირების სიღრმე</th><th>საშ. მიმაგრების დონე</th>
+                <th>სისხლდენა</th><th>ნადები</th><th>ადგილი ≥ 4 მმ</th><th/>
+            </tr></thead>
+            <tbody>
+                <tr t-foreach="state.charts" t-as="c" t-key="c.id"
+                    t-att-class="state.edit and state.edit.id === c.id ? 'pc_cur' : ''">
+                    <td><a href="#" t-on-click.prevent="() => this.openChart(c)" t-esc="c.date"/></td>
+                    <td t-esc="c.doctor_id and c.doctor_id[1]"/>
+                    <td t-esc="c.teeth_present"/>
+                    <td t-esc="c.mean_pd.toFixed(1) + ' მმ'"/>
+                    <td t-esc="c.mean_cal.toFixed(1) + ' მმ'"/>
+                    <td t-esc="c.bop_pct + '%'"/>
+                    <td t-esc="c.plaque_pct + '%'"/>
+                    <td t-esc="c.deep_sites"/>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-link p-0 me-2" t-on-click="() => this.openChart(c)">გახსნა</button>
+                        <button type="button" class="btn btn-link text-danger p-0" t-on-click="() => this.remove(c)">🗑</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div t-elif="!state.edit" class="text-muted">გაზომვა ჯერ არ არის.</div>
+
+        <!-- ===== editor ===== -->
+        <div class="pc_editor" t-if="state.edit">
+            <div class="d-flex flex-wrap align-items-end gap-3 mb-2">
+                <div>
+                    <label class="form-label mb-0 small">თარიღი</label>
+                    <input type="date" class="form-control form-control-sm" t-model="state.edit.date"/>
+                </div>
+                <div class="pc_sum">
+                    <span>კბილი: <b t-esc="summary.teeth"/></span>
+                    <span>საშ. ზონდირების სიღრმე: <b t-esc="summary.pd"/> მმ</span>
+                    <span>საშ. მიმაგრების დონე: <b t-esc="summary.cal"/> მმ</span>
+                    <span>სისხლდენა: <b t-esc="summary.bop"/>%</span>
+                    <span>ნადები: <b t-esc="summary.plaque"/>%</span>
+                    <span>ადგილი ≥ 4 მმ: <b t-esc="summary.deep"/></span>
+                </div>
+            </div>
+            <div class="small text-muted mb-2">
+                კბილის ნომერზე დაჭერა = კბილი აკლია. ღრძილის კიდე (GM): მმ, დადებითი = რეცესია, უარყოფითი = ღრძილის ჭარბი ზრდა.
+                მიმაგრების დონე (CAL) = ზონდირების სიღრმე + ღრძილის კიდე. სიღრმე 4–5 მმ — ნარინჯისფერი, 6+ მმ — წითელი.
+            </div>
+
+            <t t-foreach="jaws" t-as="jaw" t-key="jaw.key">
+                <div class="pc_jawlbl" t-esc="jaw.label"/>
+                <div class="pc_scroll">
+                    <table class="pc_tbl">
+                        <thead>
+                            <tr>
+                                <th class="pc_lbl"/>
+                                <th t-foreach="jaw.teeth" t-as="f" t-key="f" colspan="3"
+                                    t-att-class="'pc_th ' + (tooth(f).m ? 'pc_missing' : '') + (tooth(f).i ? ' pc_impl' : '')">
+                                    <button type="button" class="pc_num" t-on-click="() => this.toggleMissing(f)"
+                                            t-att-title="tooth(f).m ? 'კბილი აკლია — დააჭირე დასაბრუნებლად' : 'დააჭირე: კბილი აკლია'"
+                                            t-esc="f"/>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="pc_lbl">იმპლანტი</td>
+                                <td t-foreach="jaw.teeth" t-as="f" t-key="f" colspan="3"
+                                    t-att-class="tooth(f).m ? 'pc_off' : ''">
+                                    <input type="checkbox" t-att-checked="tooth(f).i" t-att-disabled="tooth(f).m"
+                                           t-on-change="() => this.toggleImplant(f)"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="pc_lbl">მოძრაობა</td>
+                                <td t-foreach="jaw.teeth" t-as="f" t-key="f" colspan="3"
+                                    t-att-class="tooth(f).m ? 'pc_off' : ''">
+                                    <select class="pc_sel" t-att-disabled="tooth(f).m"
+                                            t-on-change="(ev) => this.setMob(f, ev)">
+                                        <option t-foreach="[0, 1, 2, 3]" t-as="v" t-key="v" t-att-value="v"
+                                                t-att-selected="tooth(f).mob === v" t-esc="v"/>
+                                    </select>
+                                </td>
+                            </tr>
+                            <t t-foreach="jaw.sides" t-as="s" t-key="s.k">
+                                <tr class="pc_sidehead">
+                                    <td t-att-colspan="1 + jaw.teeth.length * 3" t-esc="s.label"/>
+                                </tr>
+                                <tr>
+                                    <td class="pc_lbl">ფურკაცია</td>
+                                    <td t-foreach="jaw.teeth" t-as="f" t-key="f" colspan="3"
+                                        t-att-class="tooth(f).m ? 'pc_off' : ''">
+                                        <select t-if="isMolar(f)" class="pc_sel" t-att-disabled="tooth(f).m"
+                                                t-on-change="(ev) => this.setFurc(f, s.k, ev)">
+                                            <option t-foreach="[0, 1, 2, 3]" t-as="v" t-key="v" t-att-value="v"
+                                                    t-att-selected="tooth(f)[s.k].f === v" t-esc="v"/>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="pc_lbl">სისხლდენა</td>
+                                    <t t-foreach="jaw.teeth" t-as="f" t-key="f">
+                                        <td t-foreach="sites" t-as="i" t-key="i" t-att-class="'pc_site ' + (tooth(f).m ? 'pc_off' : '')">
+                                            <button type="button" t-att-disabled="tooth(f).m"
+                                                    t-att-class="'pc_dot pc_bop ' + (tooth(f)[s.k].bop[i] ? 'on' : '')"
+                                                    t-on-click="() => this.toggleFlag(f, s.k, 'bop', i)"/>
+                                        </td>
+                                    </t>
+                                </tr>
+                                <tr>
+                                    <td class="pc_lbl">ნადები</td>
+                                    <t t-foreach="jaw.teeth" t-as="f" t-key="f">
+                                        <td t-foreach="sites" t-as="i" t-key="i" t-att-class="'pc_site ' + (tooth(f).m ? 'pc_off' : '')">
+                                            <button type="button" t-att-disabled="tooth(f).m"
+                                                    t-att-class="'pc_dot pc_pl ' + (tooth(f)[s.k].pl[i] ? 'on' : '')"
+                                                    t-on-click="() => this.toggleFlag(f, s.k, 'pl', i)"/>
+                                        </td>
+                                    </t>
+                                </tr>
+                                <tr>
+                                    <td class="pc_lbl">ღრძილის კიდე</td>
+                                    <t t-foreach="jaw.teeth" t-as="f" t-key="f">
+                                        <td t-foreach="sites" t-as="i" t-key="i" t-att-class="'pc_site ' + (tooth(f).m ? 'pc_off' : '')">
+                                            <input type="number" class="pc_in" step="1" t-att-disabled="tooth(f).m"
+                                                   t-att-value="val(tooth(f)[s.k].gm[i])"
+                                                   t-on-change="(ev) => this.setNum(f, s.k, 'gm', i, ev)"/>
+                                        </td>
+                                    </t>
+                                </tr>
+                                <tr>
+                                    <td class="pc_lbl">ზონდირების სიღრმე</td>
+                                    <t t-foreach="jaw.teeth" t-as="f" t-key="f">
+                                        <td t-foreach="sites" t-as="i" t-key="i" t-att-class="'pc_site ' + (tooth(f).m ? 'pc_off' : '')">
+                                            <input type="number" min="0" step="1" t-att-disabled="tooth(f).m"
+                                                   t-att-class="'pc_in ' + pdClass(f, s.k, i)"
+                                                   t-att-value="val(tooth(f)[s.k].pd[i])"
+                                                   t-on-change="(ev) => this.setNum(f, s.k, 'pd', i, ev)"/>
+                                        </td>
+                                    </t>
+                                </tr>
+                                <tr class="pc_calrow">
+                                    <td class="pc_lbl">მიმაგრების დონე</td>
+                                    <t t-foreach="jaw.teeth" t-as="f" t-key="f">
+                                        <td t-foreach="sites" t-as="i" t-key="i" t-att-class="'pc_site pc_cal ' + (tooth(f).m ? 'pc_off' : '')"
+                                            t-esc="tooth(f).m ? '' : cal(f, s.k, i)"/>
+                                    </t>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+
+            <div class="mt-2">
+                <label class="form-label mb-0 small">შენიშვნა</label>
+                <textarea class="form-control" rows="2" t-model="state.edit.note"/>
+            </div>
+            <div class="d-flex gap-2 mt-2">
+                <button type="button" class="btn btn-primary" t-att-disabled="state.saving" t-on-click="save">შენახვა</button>
+                <button type="button" class="btn btn-secondary" t-on-click="close">დახურვა</button>
+            </div>
+        </div>
+    </div>
+    <div t-else="" class="text-muted">ჯერ შეინახე პაციენტის ბარათი.</div>
+</t>
+
+</templates>

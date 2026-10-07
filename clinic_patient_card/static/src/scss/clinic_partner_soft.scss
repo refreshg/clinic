@@ -128,19 +128,23 @@ div.o_clinic_soft { display: none !important; }
         flex-wrap: wrap;
         margin-bottom: 12px;
 
+        /* inactive tabs: the same light Odoo-purple tint as the quick buttons
+           (planning scss, $cp_soft_purple #71639e) — user 2026-10-07 */
         .nav-item .nav-link {
-            border: 0 !important;
+            border: 1px solid #cdc8dd !important;
             border-radius: 999px;
             padding: 6px 16px;
-            color: #4b5563;
+            color: #564b79;
             font-weight: 600;
-            background: transparent;
+            background: linear-gradient(135deg, #f4f3f7 0%, #e0ddea 100%);
 
             &:hover {
-                background: #e2e6ea;
+                background: linear-gradient(135deg, #e9e7f0 0%, #cbc6dc 100%);
+                color: #4b4169;
             }
             &.active {
                 background: #714b67;
+                border-color: #714b67 !important;
                 color: #fff;
                 box-shadow: 0 2px 6px rgba(113, 75, 103, .35);
             }

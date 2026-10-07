@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-06, commit: ac54c92 (+ uncommitted work) -->
+<!-- last-synced: 2026-10-07, commit: 0e91ff5 (+ uncommitted work) -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -88,7 +88,7 @@ templates + per-day lines (Community has no planning app) — D-29.
 - [x] U4 booking form: Curator field; pregnancy answer valid one day + nightly cron (D-37); Financial tab moved to the outer tab bar
 - [ ] U browser check by the user (both tooth-chart layouts on the card and the visit page, the add dialog, radiology login + multi-upload, lightbox, comments dialog, exam results, allergy documents, curator, pregnancy asked on a repeat visit)
 - [ ] U open: staff arrival / departure ("მოსვლა / წასვლა") on log-in — waiting for the user's choice (auto at log-in vs. manual button); the standard hr_attendance systray exists but has never been used (0 rows)
-- [ ] U open: periodontal chart (6 points per tooth) — explained to the user, not approved yet
+- [x] U open: periodontal chart — approved 2026-10-07, first version built (milestone W, D-48)
 
 ## Milestone V — Supply shop v3: category tree, home page, product window, reviews, supplier order screen (2026-10-05/06, requested by the user)
 - [x] V1 category tree (20 tops, ~226 nodes) + pinned tiles + tree menu + home button (D-40)
@@ -101,6 +101,20 @@ templates + per-day lines (Community has no planning app) — D-29.
 - [ ] V open: duplicate test orders S00070/71/72 + P00053/54/51 (user to say cancel / keep); old demo "gloves" products (8.00) still in the shop
 - [ ] V open: open (unshipped) orders do not reserve stock; automatic supplier-side invoice (when: at shipping or at receipt?) undecided
 
+## Milestone W — Booking flow, health answers, tooth plan, perio chart, prescriptions (2026-10-07, requested by the user in the browser tests)
+- [x] W1 booking: "existing / new patient" chooser before the form (D-43); quick registration with optional birth date + age; treatment-plan doctor lines + "Add doctor" (D-33)
+- [x] W2 First Visit / Repeat / Regular computed from completed visits (D-45); allergy answer valid 6 months (D-44); "treated now" = started within 12 h (fixes the stuck pregnancy answer)
+- [x] W3 health banner on the patient form and on every visit-page tab; allergy-test upload on the card (+ shared with the Medical tab and the visit page); full allergy columns on the visit page; exam-result files on the visit page
+- [x] W4 visit page only from "Arrived"; no cancel after treatment started; materials / EHR tabs doctor-only; milk teeth only for children < 14
+- [x] W5 status colours = legend everywhere (board cards, status bar, workflow buttons: next step full colour, others a light tint; Start std primary); light Odoo-purple quick buttons and card tabs; gender shows only the picked card; Notes tab hidden for patients; product image "+" opens the file chooser
+- [x] W6 card tooth chart + plan table, status from the visits, partial treatment stays "in progress" across visits (D-46/D-47)
+- [x] W7 prescription: print / PDF / e-mail with the clinic header (B60)
+- [x] W8 periodontal chart v1 on the Medical tab (D-48)
+- [ ] W browser check by the user (chooser + quick registration, card flags, allergy expiry test on P000152, tooth plan across two visits, perio grid, prescription PDF look)
+- [ ] W next: perio chart v2 — lines over the tooth drawing, PDF, recession classifications, opening from the visit page
+- [ ] W open (clinic): regular-patient threshold (param = 5 for now); outgoing mail server + patient e-mails; treatment-plan translation ka / en / ru (Claude API recommended — key, cost, privacy) — postponed by the user
+- [ ] W open (user): Elene Janezashvili's visits #341 (arrived 10-06) and #335 (in progress 10-05) are still open — close or cancel
+
 ## Small chores (any time)
 - [ ] Clinic to confirm: insurer + city lists (written from memory), "primary/unique" definitions, what "non-resident" means (PRD §9)
 - [ ] Real photos for demo supply products (user drops files into scratchpad)
@@ -108,6 +122,6 @@ templates + per-day lines (Community has no planning app) — D-29.
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-10-06: milestone V — supply shop v3 (category tree, home page + video banners, product window with options / stock / reviews, supplier My Orders), supplier privacy fix (D-38..D-42); committed up to ac54c92 and pushed to origin/main, later edits (banner video / width / height, supplier order screen, cart + RFQ stock guard, double-click guard, salesperson fix) deployed live but NOT committed. Earlier: Last session 2026-10-05: milestone U — tooth chart (2 layouts), X-ray gallery + exam-result + allergy documents, radiologist user, curator, one-day pregnancy answer, doctor double-booking (D-34..D-37); committed locally as f9cde26 + version bump, deployed live (v19.0.63.0); nothing pushed.
-Next (2026-10-06): finish the supplier-side walk-through (step 13 delivery steps) and the clinic-side receipt / rating / return; decide the duplicate test orders and the invoice timing; then commit + push. Earlier next: user browser-checks milestone U (U) and schedule screens S1-S3; decides staff arrival/departure on log-in and the periodontal chart; then M2 ka.po regen (first unblocked).
-Watch out: the tooth chart layout choice is per browser; design-2 overlays are approximations; the treatment-plan doctor lines (D-33) came from the parallel chat; worked hours = raw clock time; public holidays not modelled; admin must NOT carry group_clinic_doctor; patient-primary/unique PNGs still untracked (user to say delete or keep).
+Last session 2026-10-07: milestone W (see above), all deployed live on 19.0.64 and NOT committed (D-43..D-48 in DECISIONS). Earlier: Last session 2026-10-06: milestone V — supply shop v3 (category tree, home page + video banners with size / order, product window with options + own stock per variant + reviews, supplier My Orders screen, cart / RFQ stock guard) and a supplier-privacy fix (D-38..D-42); committed and pushed up to 0e91ff5; version bumped to 19.0.64.0 (this bump + handoff note not yet committed).
+Next (2026-10-07): user browser-checks milestone W; commit the session; perio chart v2 when asked. Earlier next: the manual walk-through step 13 — supplier delivery steps Availability → Preparing → Ready → In Transit (stock leaves) → Delivered on S00072, then the clinic side (receipt, rating with photos, return); decide the duplicate test orders, invoice timing and stock reservation; then M2 ka.po regen.
+Watch out: upgrades ran with --i18n-overwrite (module translations re-read from ka.po); the calendar "hours" / "or" terms are translated through cross-module entries in our ka.po; the perio GM sign convention (positive = recession) still needs a doctor's confirmation; duplicate test orders S00070/71/72 + P00051/53/54 and old demo "gloves" (8.00) are in the shop; patient-primary/unique PNGs and docs/Design preview are untracked on purpose; the tooth-chart layout choice is per browser; admin must NOT carry group_clinic_doctor.

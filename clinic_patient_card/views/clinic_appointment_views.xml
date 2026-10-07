@@ -23,20 +23,21 @@
 
             <xpath expr="//header" position="inside">
                 <button name="action_confirm" type="object" string="Confirm"
-                        groups="clinic_patient_card.group_clinic_admin" class="btn-primary"
+                        groups="clinic_patient_card.group_clinic_admin" class="btn-secondary"
                         invisible="not id or not is_clinic or clinic_state not in ('requested','booked')"/>
                 <button name="action_arrive" type="object" string="Arrived"
-                        groups="clinic_patient_card.group_clinic_admin" class="btn-primary"
+                        groups="clinic_patient_card.group_clinic_admin" class="btn-secondary"
                         invisible="not id or not is_clinic or clinic_state not in ('booked','confirmed')"/>
                 <button name="action_start" type="object" string="Start"
                         groups="clinic_patient_card.group_clinic_doctor" class="btn-primary"
                         invisible="not id or not is_clinic or clinic_state != 'arrived'"/>
                 <button name="action_done" type="object" string="Done"
-                        groups="clinic_patient_card.group_clinic_doctor" class="btn-primary"
+                        groups="clinic_patient_card.group_clinic_doctor" class="btn-secondary"
                         invisible="not id or not is_clinic or clinic_state != 'in_progress'"/>
+                <!-- only before the treatment starts (user 2026-10-07) -->
                 <button name="action_cancel" type="object" string="Cancel"
                         groups="clinic_patient_card.group_clinic_admin"
-                        invisible="not id or not is_clinic or clinic_state in ('paid','cancelled','no_show')"/>
+                        invisible="not id or not is_clinic or clinic_state not in ('requested','booked','confirmed','arrived')"/>
                 <button name="action_no_show" type="object" string="No-Show"
                         groups="clinic_patient_card.group_clinic_admin"
                         invisible="not id or not is_clinic or clinic_state not in ('booked','confirmed','arrived')"/>
@@ -47,7 +48,7 @@
                         groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor"
                         invisible="not id or not is_clinic or clinic_state not in ('done','paid')"/>
                 <button name="action_book" type="object" string="Confirm to Calendar"
-                        class="btn-primary"
+                        class="btn-secondary"
                         groups="clinic_patient_card.group_clinic_admin"
                         invisible="not id or not is_clinic or clinic_state != 'requested'"/>
                 <button name="action_to_reserve" type="object" string="To Reserve"
@@ -138,20 +139,22 @@
                 <div name="clinic_body" class="o_clinic_visit_body" invisible="not is_clinic">
                     <!-- Quick jumps to the patient (reviewer: proper buttons
                          instead of the tiny m2o arrow) -->
-                    <div class="d-flex gap-2 mb-2">
+                    <div class="d-flex gap-2 mb-2 o_clinic_quick_btns">
                         <!-- widgets, NOT buttons: buttons auto-save the form -->
+                        <!-- not needed once the chooser decided (D-43) -->
                         <widget name="clinic_new_patient_btn"
                                 groups="clinic_patient_card.group_clinic_admin"
-                                invisible="clinic_state in ('done', 'paid')"/>
+                                invisible="clinic_state in ('done', 'paid') or clinic_visit_kind"/>
                         <widget name="clinic_slot_finder_btn"
                                 invisible="clinic_state in ('done', 'paid')"/>
                         <button name="action_open_patient" type="object"
                                 string="👤 პაციენტის ანკეტა" class="btn-secondary"
                                 invisible="not patient_id"/>
                         <!-- D3: the Dentos-style visit working page -->
+                        <!-- only once reception marked the patient Arrived -->
                         <button name="action_open_visit_page" type="object"
                                 string="🧾 ვიზიტის გვერდი" class="btn-secondary"
-                                invisible="not patient_id"/>
+                                invisible="not patient_id or clinic_state not in ('arrived', 'in_progress', 'done', 'paid')"/>
                         <!-- D2: consent sheets (Dentos "თანხმობის ფურცელი") -->
                         <field name="consent_signed" invisible="1"/>
                         <button name="action_open_consents" type="object"
@@ -185,6 +188,8 @@
                             <field name="is_clinic" invisible="1"/>
                             <field name="family_member_domain_ids" invisible="1"/>
                             <field name="direction_id"/>
+                            <!-- D-43: set by the board chooser; shown on the patient card only -->
+                            <field name="clinic_visit_kind" invisible="1"/>
                             <field name="appointment_type_id"
                                    invisible="clinic_state in ('done', 'paid')"/>
                             <field name="family_link_id"

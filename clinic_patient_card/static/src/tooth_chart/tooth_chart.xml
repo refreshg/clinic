@@ -18,10 +18,57 @@
 
     <t t-name="clinic_patient_card.ToothChartWidget">
         <ClinicToothChart partnerId="partnerId" version="state.ver" onSelect="(n) => this.pick(n)"/>
+        <div class="tc_table_wrap mt-3" t-if="partnerId">
+            <table class="table table-sm align-middle tc_table">
+                <thead>
+                    <tr>
+                        <th>კბილი (FDI)</th>
+                        <th>დიაგნოზი</th>
+                        <th>პროცედურა</th>
+                        <th>სტატუსი</th>
+                        <th>თარიღი</th>
+                        <th>ექიმი</th>
+                        <th/>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="state.rows" t-as="row" t-key="row.id">
+                        <td class="fw-bold" t-esc="row.tooth"/>
+                        <td t-esc="row.diagnosis"/>
+                        <td>
+                            <t t-esc="row.procedure"/>
+                            <span t-if="row.visit" class="text-muted small" title="ვიზიტის გვერდიდან"> · ვიზიტი</span>
+                        </td>
+                        <td>
+                            <!-- automatic: follows what the doctor does on the visits (D-47) -->
+                            <span t-att-class="'badge tc_st tc_st_' + row.status" t-esc="row.status_label"/>
+                            <span t-if="row.visits" class="text-muted small"> · ვიზიტები: <t t-esc="row.visits"/></span>
+                        </td>
+                        <td t-esc="row.date"/>
+                        <td t-esc="row.doctor"/>
+                        <td class="text-end">
+                            <button t-if="!row.locked" type="button" class="btn btn-link text-danger p-0"
+                                    title="წაშლა" t-on-click="() => this.remove(row)">🗑</button>
+                        </td>
+                    </tr>
+                    <tr t-if="!state.rows.length">
+                        <td colspan="7" class="text-muted">კბილზე ჩანაწერი ჯერ არ არის — დააჭირე კბილს სქემაზე ან „დამატებას“.</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-sm btn-secondary" t-on-click="() => this.openAdd(0)">+ დამატება</button>
+        </div>
     </t>
 
     <t t-name="clinic_patient_card.ToothAddDialog">
-        <Dialog title="'კბილი ' + props.tooth" size="'md'">
+        <Dialog title="props.tooth ? 'კბილი ' + props.tooth : 'კბილის ჩანაწერი'" size="'md'">
+            <div class="mb-3" t-if="!props.tooth">
+                <label class="form-label">კბილი (FDI)</label>
+                <select class="form-select" t-model.number="state.tooth">
+                    <option value="0">აირჩიეთ კბილი</option>
+                    <option t-foreach="teeth" t-as="f" t-key="f" t-att-value="f" t-esc="f"/>
+                </select>
+            </div>
             <div class="mb-3">
                 <label class="form-label">ICD-10 დიაგნოზი</label>
                 <select class="form-select" t-model.number="state.icd10Id">
@@ -40,6 +87,7 @@
                     </option>
                 </select>
             </div>
+
             <t t-set-slot="footer">
                 <button class="btn btn-primary" t-att-disabled="state.saving" t-on-click="add">დამატება</button>
                 <button class="btn btn-secondary" t-on-click="props.close">გაუქმება</button>

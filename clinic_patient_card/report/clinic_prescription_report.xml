@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Prescription / recommendation sheet of a visit (visit page: print, PDF,
+         e-mail), with the clinic's header like the treatment plan. -->
+    <record id="action_report_clinic_prescription" model="ir.actions.report">
+        <field name="name">Prescription</field>
+        <field name="model">calendar.event</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">clinic_patient_card.report_clinic_prescription</field>
+        <field name="report_file">clinic_patient_card.report_clinic_prescription</field>
+        <field name="print_report_name">'Prescription - %s' % (object.patient_id.name or '')</field>
+        <!-- big top margin: the clinic header repeats on every page -->
+        <field name="paperformat_id" ref="paperformat_clinic_treatment_plan"/>
+    </record>
+
+    <template id="report_clinic_prescription">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <!-- the clinic's own header (logo + contacts), the same as the treatment
+                     plan's, repeated on every page -->
+                <t t-set="a" t-value="o.env['clinic.treatment.plan']._report_assets()"/>
+                <div class="header" style="font-family: Arial, 'DejaVu Sans', sans-serif; font-size:13px; color:#111;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr>
+                            <td style="width:42%; vertical-align:top;">
+                                <img t-att-src="a['logo']" style="height:128px;"/>
+                            </td>
+                            <td style="vertical-align:middle; line-height:26px;">
+                                <div><img t-att-src="a['icon_location']" style="width:17px;height:17px;vertical-align:middle;"/> 12 Pavle Aslanidi Street, Tbilisi, Georgia</div>
+                                <div><img t-att-src="a['icon_phone']" style="width:17px;height:17px;vertical-align:middle;"/> 032 224 21 24</div>
+                                <div><img t-att-src="a['icon_mail']" style="width:17px;height:17px;vertical-align:middle;"/> info@metrevelidental.com</div>
+                                <div><img t-att-src="a['icon_web']" style="width:17px;height:17px;vertical-align:middle;"/> <span style="color:#1a55c4; text-decoration:underline;">www.metrevelidental.com</span></div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- "article" + data-oe-* keeps Georgian intact in the PDF -->
+                <div class="article" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id">
+                <t t-set="rx_labels" t-value="{'e_recipe': 'ელ. რეცეპტი', 'prescription': 'დანიშნულება', 'recommendation': 'რეკომენდაცია'}"/>
+                <t t-set="th" t-value="'border:1px solid #111; padding:8px 6px; text-align:left; vertical-align:middle; background:#0d5c74; color:#fff;'"/>
+                <t t-set="td" t-value="'border:1px solid #111; padding:8px 6px; text-align:left; vertical-align:top;'"/>
+                <div class="page" style="font-family: Arial, 'DejaVu Sans', sans-serif; font-size:13px; color:#111;">
+                    <h2 style="text-align:center; color:#0d5c74; font-weight:bold; margin:6px 0 20px;">დანიშნულება / რეკომენდაცია</h2>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:16px; font-size:14px; line-height:1.6;">
+                        <tr>
+                            <td style="width:55%;"><b style="color:#0d5c74;">პაციენტი:</b> <span t-out="o.patient_id.name"/></td>
+                            <td><b style="color:#0d5c74;">თარიღი:</b> <span t-if="o.start" t-out="o.start.strftime('%d/%m/%Y')"/></td>
+                        </tr>
+                        <tr>
+                            <td><b style="color:#0d5c74;">პირადი ნომერი:</b> <span t-out="o.patient_id.vat or ''"/></td>
+                            <td><b style="color:#0d5c74;">ექიმი:</b> <span t-out="o.dentist_id.name or ''"/></td>
+                        </tr>
+                        <tr t-if="o.patient_id.birthdate">
+                            <td><b style="color:#0d5c74;">დაბადების თარიღი:</b> <span t-out="o.patient_id.birthdate.strftime('%d/%m/%Y')"/></td>
+                            <td/>
+                        </tr>
+                    </table>
+                    <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+                        <thead>
+                            <tr>
+                                <th t-att-style="th + 'width:16%;'">ტიპი</th>
+                                <th t-att-style="th + 'width:24%;'">მედიკამენტი</th>
+                                <th t-att-style="th + 'width:20%;'">მიღების პერიოდი</th>
+                                <th t-att-style="th + 'width:10%;'">რაოდ.</th>
+                                <th t-att-style="th + 'width:30%;'">მიღების წესი</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o._clinic_report_prescriptions()" t-as="rx" style="page-break-inside:avoid;">
+                                <td t-att-style="td" t-out="rx_labels.get(rx.rec_type, rx.rec_type)"/>
+                                <td t-att-style="td"><b t-out="rx.medicament"/></td>
+                                <td t-att-style="td" t-out="rx.period or ''"/>
+                                <td t-att-style="td" t-out="('%g' % rx.qty) if rx.qty else ''"/>
+                                <td t-att-style="td + 'white-space:pre-line;'" t-out="rx.directions or ''"/>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top:50px; font-size:14px; page-break-inside:avoid;">
+                        <b>ექიმის ხელმოწერა:</b> ______________________
+                        <div style="margin-top:4px;" t-out="o.dentist_id.name or ''"/>
+                    </div>
+                </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- e-mail to the patient with the sheet attached (standard composer) -->
+    <record id="mail_template_clinic_prescription" model="mail.template">
+        <field name="name">Clinic: prescription to the patient</field>
+        <field name="model_id" ref="calendar.model_calendar_event"/>
+        <field name="subject">დანიშნულება — {{ object.patient_id.name or '' }}</field>
+        <field name="partner_to">{{ object.patient_id.id }}</field>
+        <field name="report_template_ids" eval="[(4, ref('action_report_clinic_prescription'))]"/>
+        <field name="body_html" type="html">
+<div>
+    <p>მოგესალმებით, <t t-out="object.patient_id.name or ''"/>!</p>
+    <p>გიგზავნით თქვენი ვიზიტის დანიშნულებას / რეკომენდაციას (PDF თანდართულია).</p>
+    <p>პატივისცემით,<br/><t t-out="object.dentist_id.name or ''"/><br/><t t-out="user.company_id.name or ''"/></p>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+</odoo>

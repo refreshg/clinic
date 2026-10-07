@@ -627,30 +627,32 @@
 }
 
 /* ============================================================
-   D4 — Dentos full-colour status cards: the WHOLE card takes the
-   state colour (blue = booked/confirmed, green = arrived/active,
-   dark = done/paid, red = cancelled/no-show), white text.
-   Geometry untouched.
+   D4 — full-colour status cards: the WHOLE card takes its state
+   colour, white text. The colours are the sidebar status legend's
+   (same as the booking form's status buttons/bar) — one palette
+   everywhere (user 2026-10-07). Geometry untouched.
    ============================================================ */
+$cp_state_colors: (
+    requested: #c58f00, booked: #98a2b3, confirmed: #2f80ed, arrived: #00acc1,
+    in_progress: #f2994a, done: #27ae60, paid: #7e57c2, cancelled: #eb5757,
+    no_show: #8d3030, resch: #b9770a,
+);
 .clinic_planning {
     .cp_event {
-        /* base: Dentos "waiting" blue */
-        background: #4650c9 !important;
-        border-color: #3c45b1 !important;
+        background: #98a2b3 !important;   /* = booked */
+        border-color: darken(#98a2b3, 10%) !important;
         border-left-width: 1px !important;
 
-        .cp_ev_time, .cp_ev_meta, .cp_ev_note { color: rgba(255, 255, 255, .85); }
+        .cp_ev_time, .cp_ev_meta, .cp_ev_note { color: rgba(255, 255, 255, .9); }
         .cp_ev_patmain { color: #fff; }
         .cp_status { display: none; }   /* Dentos cards carry text only */
 
-        &:has(.cp_st_requested) { background: #c58f00 !important; border-color: #a87a00 !important; }
-        &:has(.cp_st_arrived),
-        &:has(.cp_st_in_progress) { background: #2e9e44 !important; border-color: #268a3a !important; }
-        &:has(.cp_st_done),
-        &:has(.cp_st_paid) { background: #3d4548 !important; border-color: #333a3d !important; }
-        &:has(.cp_st_cancelled),
-        &:has(.cp_st_no_show) { background: #c0392b !important; border-color: #a53125 !important; }
-        &:has(.cp_st_resch) { background: #b9770a !important; border-color: #9c6408 !important; }
+        @each $state, $c in $cp_state_colors {
+            &:has(.cp_st_#{$state}) {
+                background: $c !important;
+                border-color: darken($c, 10%) !important;
+            }
+        }
 
         /* hover controls: open-page arrow + consent badge */
         .cp_openpage {
@@ -672,6 +674,73 @@
     .cp_dispensary { outline-color: #ffe08a !important; }
 }
 
+
+/* Visit form (clinic visits only): the status bar's current step takes the
+   board legend colour; every workflow button wears the colour of the state it
+   leads to — a LIGHT tint of it, and only the NEXT step in the sequence gets
+   the full colour (user 2026-10-07). */
+/* "Start" (action_start) keeps its own standard primary colour (user) */
+$cp_state_buttons: (
+    action_book: booked, action_confirm: confirmed, action_arrive: arrived,
+    action_done: done, action_cancel: cancelled,
+    action_no_show: no_show, action_to_reserve: requested,
+);
+/* current state -> (next button, its colour) */
+$cp_next_step: (
+    requested: (action_book, booked),
+    booked: (action_confirm, confirmed),
+    confirmed: (action_arrive, arrived),
+    in_progress: (action_done, done),
+);
+.o_form_view:has(.o_clinic_visit_body) {
+    .o_statusbar_status {
+        @each $state, $c in $cp_state_colors {
+            .o_arrow_button_current[data-value="#{$state}"] {
+                --o-statusbar-background-active: #{$c};
+                --o-statusbar-border-active: #{darken($c, 10%)};
+                color: #fff !important;
+            }
+        }
+    }
+    .o_statusbar_buttons {
+        @each $btn, $state in $cp_state_buttons {
+            $c: map-get($cp_state_colors, $state);
+            button[name="#{$btn}"] {
+                background-color: mix(#fff, $c, 55%) !important;
+                border-color: mix(#fff, $c, 35%) !important;
+                color: darken($c, 22%) !important;
+                &:hover { background-color: mix(#fff, $c, 40%) !important; }
+            }
+        }
+    }
+    @each $state, $next in $cp_next_step {
+        $c: map-get($cp_state_colors, nth($next, 2));
+        &:has(.o_arrow_button_current[data-value="#{$state}"]) .o_statusbar_buttons button[name="#{nth($next, 1)}"] {
+            background-color: $c !important;
+            border-color: darken($c, 10%) !important;
+            color: #fff !important;
+            &:hover { background-color: darken($c, 8%) !important; }
+        }
+    }
+}
+
+/* Quick-jump buttons (booking form row, patient card quick actions, visit page
+   "patient card" / "visit form"): a very light tint of the Odoo purple with a
+   soft tonal gradient — one look everywhere (user 2026-10-07). */
+$cp_soft_purple: #71639e;
+.o_clinic_quick_btns .btn:not(.btn-outline-success),
+.clinic_visit_page .cvp_tabs button.cvp_patientbtn,
+.clinic_visit_page .cvp_tabs button.cvp_visitform {
+    background: linear-gradient(135deg, mix(#fff, $cp_soft_purple, 92%) 0%,
+                                        mix(#fff, $cp_soft_purple, 78%) 100%) !important;
+    border: 1px solid mix(#fff, $cp_soft_purple, 65%) !important;
+    color: darken($cp_soft_purple, 12%) !important;
+    &:hover {
+        background: linear-gradient(135deg, mix(#fff, $cp_soft_purple, 82%) 0%,
+                                            mix(#fff, $cp_soft_purple, 64%) 100%) !important;
+        color: darken($cp_soft_purple, 20%) !important;
+    }
+}
 
 /* Dentos booking popup: the dialog's save button reads as the big green
    "ვიზიტის დანიშვნა" action; discard stays quiet next to it. */

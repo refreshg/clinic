@@ -1,0 +1,49 @@
+/* Periodontal chart (D-48) — the editor grid on the patient card's Medical tab */
+.clinic_perio {
+    .pc_hist td, .pc_hist th { vertical-align: middle; }
+    .pc_hist tr.pc_cur { background: #f2f0f8; }
+    .pc_sum {
+        display: flex; flex-wrap: wrap; gap: 6px 16px;
+        background: #f4f3f7; border: 1px solid #cdc8dd; border-radius: 10px;
+        padding: 6px 12px; color: #4b4169;
+    }
+    .pc_jawlbl { font-weight: 700; color: #4b4169; margin: 14px 0 4px; }
+    .pc_scroll { overflow-x: auto; }
+    .pc_tbl {
+        border-collapse: collapse; font-size: 11px;
+        td, th { border: 1px solid #e3e1ea; padding: 1px; text-align: center; }
+        .pc_lbl {
+            text-align: left; white-space: nowrap; padding: 2px 6px; min-width: 128px;
+            background: #faf9fc; color: #4b5563; font-weight: 600;
+        }
+        .pc_th { background: #f4f3f7; }
+        .pc_num {
+            border: 0; background: transparent; font-weight: 700; color: #4b4169;
+            width: 100%; padding: 3px 0;
+        }
+        .pc_missing { background: #e5e7eb; .pc_num { color: #9ca3af; text-decoration: line-through; } }
+        .pc_impl .pc_num { color: #2f80ed; }
+        .pc_off { background: #f1f2f4; }
+        .pc_sidehead td {
+            text-align: left; background: #ece9f5; color: #4b4169; font-weight: 700; padding: 3px 6px;
+        }
+        .pc_site { width: 24px; }
+        .pc_in {
+            width: 24px; height: 20px; padding: 0; border: 1px solid #d6d3e0; border-radius: 3px;
+            text-align: center; font-size: 11px; -moz-appearance: textfield;
+            &::-webkit-outer-spin-button, &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+            &.pc_warn { background: #fdeedd; border-color: #f2994a; }
+            &.pc_bad { background: #fde2e1; border-color: #e5534b; color: #b3261e; font-weight: 700; }
+            &:disabled { background: transparent; border-color: transparent; }
+        }
+        .pc_sel { font-size: 11px; padding: 0 2px; border: 1px solid #d6d3e0; border-radius: 3px; }
+        .pc_dot {
+            width: 14px; height: 14px; border-radius: 50%; padding: 0;
+            border: 1px solid #c9c5d6; background: #fff;
+            &.pc_bop.on { background: #e5534b; border-color: #e5534b; }
+            &.pc_pl.on { background: #2f80ed; border-color: #2f80ed; }
+            &:disabled { visibility: hidden; }
+        }
+        .pc_calrow td.pc_cal { color: #6b7280; font-weight: 600; }
+    }
+}

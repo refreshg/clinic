@@ -4,6 +4,7 @@ import { Component, useState, onMounted, onWillStart, onWillUnmount } from "@odo
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { deserializeDateTime, serializeDateTime } from "@web/core/l10n/dates";
+import { openBookingChooser } from "../slot_finder/clinic_booking_chooser";
 
 const { DateTime } = luxon;
 
@@ -30,6 +31,7 @@ export class ClinicPlanning extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
+        this.dialog = useService("dialog");
         this.COLORS = COLORS;
         this.DOW = DOW;
         this.state = useState({
@@ -375,6 +377,10 @@ export class ClinicPlanning extends Component {
         const ph = this.patientPhone(ev);
         return ph ? bits + "\n📞 " + ph : bits;
     }
+    // the visit page exists only once reception marked the patient Arrived
+    hasVisitPage(ev) {
+        return ["arrived", "in_progress", "done", "paid"].includes(ev.clinic_state);
+    }
     openVisitPage(ev) {
         this.action.doAction({
             type: "ir.actions.client",
@@ -598,10 +604,8 @@ export class ClinicPlanning extends Component {
         }, { onClose: () => this.safeLoad() });
     }
     newAppointment() {
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            res_model: "calendar.event",
-            views: [[false, "form"]],
+        // D-43: "existing or new patient?" first
+        openBookingChooser(this, {
             target: "current",
             context: { default_is_clinic: true },
         });
@@ -827,11 +831,9 @@ export class ClinicPlanning extends Component {
             return; // never ship broken defaults to the form
         }
         // dialog on top of the board — the calendar stays visible behind,
-        // and the grid refreshes as soon as the dialog closes
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            res_model: "calendar.event",
-            views: [[false, "form"]],
+        // and the grid refreshes as soon as the dialog closes; D-43: the
+        // "existing or new patient?" chooser comes first
+        openBookingChooser(this, {
             target: "new",
             context: {
                 default_is_clinic: true,
@@ -840,7 +842,8 @@ export class ClinicPlanning extends Component {
                 default_start: start,
                 default_stop: stop,
             },
-        }, { onClose: () => this.safeLoad() });
+            onClose: () => this.safeLoad(),
+        });
     }
 
     // Transient click feedback inside a column: a ripple at the pointer plus a

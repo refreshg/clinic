@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
 
+from dateutil.relativedelta import relativedelta
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -203,10 +205,33 @@ class ResPartner(models.Model):
     referral_source_other = fields.Char(string="Referral Source (Other)")
     is_foreign = fields.Boolean(string="Foreign Patient")
     nationality_country_id = fields.Many2one("res.country", string="Nationality")
-    # Patient differentiation flags (management).
-    is_first_visit = fields.Boolean(string="First Visit", default=True)
-    is_repeat = fields.Boolean(string="Repeat Patient")
-    is_regular = fields.Boolean(string="Regular Patient")
+    # Patient differentiation flags (D-45): counted from the COMPLETED visits,
+    # never ticked by hand — 0 = first visit, 1+ = repeat, N+ = regular
+    # (N = system parameter clinic.regular_patient_visits; clinic still to decide).
+    is_first_visit = fields.Boolean(
+        string="First Visit", compute="_compute_visit_flags", store=True)
+    is_repeat = fields.Boolean(
+        string="Repeat Patient", compute="_compute_visit_flags", store=True)
+    is_regular = fields.Boolean(
+        string="Regular Patient", compute="_compute_visit_flags", store=True)
+
+    @api.depends("is_patient", "clinic_done_visits")
+    def _compute_visit_flags(self):
+        threshold = int(self.env["ir.config_parameter"].sudo().get_param(
+            "clinic.regular_patient_visits", "5") or 5)
+        for p in self:
+            done = p.clinic_done_visits if p.is_patient else -1
+            p.is_first_visit = done == 0
+            p.is_repeat = done >= 1
+            p.is_regular = done >= threshold
+
+    @api.model
+    def _clinic_recompute_visit_flags(self):
+        """D-45 (upgrade / threshold change): recount every patient's flags."""
+        patients = self.sudo().with_context(active_test=False).search([("is_patient", "=", True)])
+        for name in ("is_first_visit", "is_repeat", "is_regular"):
+            self.env.add_to_compute(self._fields[name], patients)
+        patients._recompute_recordset()
     # Guardian for minors.
     is_minor = fields.Boolean(string="Minor", compute="_compute_is_minor", store=True)
     guardian_id = fields.Many2one("res.partner", string="Guardian / Parent")
@@ -248,6 +273,24 @@ class ResPartner(models.Model):
     # the day the pregnancy answer was given: an answer is valid for THAT day's
     # visit only, so every new visit day asks again (even if nothing cleared it)
     pregnancy_answered_on = fields.Date(string="Pregnancy answered on", copy=False)
+    # D-44: an allergy answer is valid for 6 months, then the patient is asked again
+    allergy_answered_on = fields.Date(string="Allergies answered on", copy=False)
+    # red warning on the patient form (same as on the booking popup)
+    health_pregnancy_alert = fields.Boolean(compute="_compute_health_alerts")
+    health_allergy_alert = fields.Boolean(compute="_compute_health_alerts")
+    health_allergy_info = fields.Char(compute="_compute_health_alerts")
+
+    @api.depends("gender", "pregnancy_answer", "allergy_answer",
+                 "allergy_ids.name", "allergy_ids.reaction")
+    def _compute_health_alerts(self):
+        for p in self:
+            p.health_pregnancy_alert = p.gender == "female" and p.pregnancy_answer == "yes"
+            # an expired answer (D-44) keeps the warning while allergies are on file
+            allergic = p.allergy_answer == "yes" or (not p.allergy_answer and bool(p.allergy_ids))
+            p.health_allergy_alert = allergic
+            p.health_allergy_info = allergic and (", ".join(
+                a.name + (" — " + a.reaction if a.reaction else "")
+                for a in p.allergy_ids) or "რაზე — არ არის მითითებული")
     smoker = fields.Boolean(string="Smoker")
     alcohol = fields.Boolean(string="Alcohol")
     family_history = fields.Text(string="Family History")
@@ -355,6 +398,18 @@ class ResPartner(models.Model):
         "clinic.patient.document", "partner_id", string="Allergy documents",
         domain=[("doc_type", "=", "allergy_doc")],
     )
+    # the SAME documents under the allergy answer on the main card tab (admin +
+    # doctor) — a second field because one form cannot hold one x2many twice
+    allergy_doc_card_ids = fields.One2many(
+        "clinic.patient.document", "partner_id", string="Allergy test documents",
+        domain=[("doc_type", "=", "allergy_doc")],
+    )
+    allergy_doc_count = fields.Integer(compute="_compute_allergy_doc_count")
+
+    @api.depends("allergy_doc_ids")
+    def _compute_allergy_doc_count(self):
+        for p in self:
+            p.allergy_doc_count = len(p.allergy_doc_ids)
     # Medical tab: examination results (a file and/or typed text), doctor side
     exam_result_ids = fields.One2many(
         "clinic.patient.document", "partner_id", string="Examination results",
@@ -503,7 +558,9 @@ class ResPartner(models.Model):
         The doctor may not start a procedure while any is missing."""
         self.ensure_one()
         missing = []
-        if not self.allergy_answer:
+        if not self.allergy_answer or (
+                self.allergy_answered_on
+                and self.allergy_answered_on < self._clinic_allergy_cutoff()):
             missing.append(_("Allergies (yes/no)"))
         if self.gender == "female" and (
                 not self.pregnancy_answer
@@ -538,10 +595,18 @@ class ResPartner(models.Model):
 
     @api.model
     def _clinic_sync_pregnancy(self, vals):
+        """Stamp the day of the health answers (pregnancy: 1 day, allergy: 6 months)."""
+        today = fields.Date.context_today(self)
         if "pregnancy_answer" in vals:
             vals["is_pregnant"] = vals["pregnancy_answer"] == "yes"
-            vals["pregnancy_answered_on"] = (
-                fields.Date.context_today(self) if vals["pregnancy_answer"] else False)
+            vals["pregnancy_answered_on"] = today if vals["pregnancy_answer"] else False
+        if "allergy_answer" in vals:
+            vals["allergy_answered_on"] = today if vals["allergy_answer"] else False
+
+    @api.model
+    def _clinic_allergy_cutoff(self):
+        """Allergy answers given before this day are stale (D-44: 6 months)."""
+        return fields.Date.context_today(self) - relativedelta(months=6)
 
     @api.model
     def _cron_reset_stale_pregnancy(self):
@@ -552,11 +617,24 @@ class ResPartner(models.Model):
             ("pregnancy_answer", "!=", False),
             "|", ("pregnancy_answered_on", "=", False),
             ("pregnancy_answered_on", "<", today)])
-        busy = set(self.env["calendar.event"].sudo().search([
-            ("is_clinic", "=", True),
-            ("clinic_state", "in", ("arrived", "in_progress"))]).mapped("patient_id").ids)
+        Event = self.env["calendar.event"].sudo()
+        busy = set(Event.search(Event._clinic_treated_now_domain()).mapped("patient_id").ids)
         stale.filtered(lambda p: p.id not in busy).write({"pregnancy_answer": False})
-        return len(stale)
+        # D-44: allergy answers older than 6 months are asked again (same daily cron;
+        # the allergy list itself is kept)
+        old_allergy = self.sudo().search([
+            ("allergy_answer", "!=", False),
+            ("allergy_answered_on", "!=", False),
+            ("allergy_answered_on", "<", self._clinic_allergy_cutoff())])
+        old_allergy.filtered(lambda p: p.id not in busy).write({"allergy_answer": False})
+        return len(stale) + len(old_allergy)
+
+    @api.model
+    def _clinic_stamp_allergy_answers(self):
+        """D-44 (upgrade): answers given before the stamp existed count from today."""
+        self.sudo().search([
+            ("allergy_answer", "!=", False), ("allergy_answered_on", "=", False),
+        ]).write({"allergy_answered_on": fields.Date.context_today(self)})
 
     def write(self, vals):
         self._clinic_sync_pregnancy(vals)

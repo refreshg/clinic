@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="clinic_patient_card.AllergyUpload">
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-primary" t-on-click="choose"
+                title="ალერგიული სინჯის / საბუთის ატვირთვა">
+            📎 სინჯის ატვირთვა
+        </button>
+        <span t-if="count" class="text-muted small">ატვირთულია: <t t-esc="count"/></span>
+        <input type="file" class="d-none" multiple="multiple" t-ref="fileInput"
+               accept="image/*,application/pdf" t-on-change="onFiles"/>
+    </div>
+</t>
+
+</templates>

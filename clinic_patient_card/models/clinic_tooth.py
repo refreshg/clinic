@@ -11,6 +11,7 @@ The 14 diseases / 8 treatments are the clinic's design sheet.
 import re
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 CONDITIONS = [
     ("caries", "კარიესი"),
@@ -136,8 +137,10 @@ class ResPartner(models.Model):
         out = {}
 
         def slot(fdi):
-            return out.setdefault(fdi, {"cond": False, "treat": False,
+            return out.setdefault(fdi, {"cond": False, "treat": False, "status": False,
                                         "diagnosis": "", "procedure": ""})
+        status_label = dict(self.env["clinic.procedure.history"]._fields["status"]
+                            ._description_selection(self.env))
 
         # manual statuses first (lowest priority)
         for row in self.env["clinic.patient.tooth"].sudo().search([("partner_id", "=", self.id)]):
@@ -153,6 +156,7 @@ class ResPartner(models.Model):
             for token in set(TOOTH_RE.findall(ln.tooth or "")):
                 fdi = int(token)
                 s = slot(fdi)
+                s["status"] = ln.status  # the latest line's status (planned / in progress / done)
                 name = ln.procedure_id.name or ln.name or ""
                 if ln.status in ("planned", "in_progress", "postponed"):
                     cond = ln.icd10_id._tooth_condition_key() if ln.icd10_id else False
@@ -183,5 +187,132 @@ class ResPartner(models.Model):
                 "cond_label": cond_label.get(cond, ""),
                 "treat_label": treat_label.get(treat, ""),
                 "diagnosis": s["diagnosis"], "procedure": s["procedure"],
+                "status_label": status_label.get(s["status"], "") if s["status"] else "",
             }
         return res
+
+    def clinic_tooth_rows(self):
+        """The table under the card's tooth chart (D-46/D-47) = the patient's
+        TREATMENT PLAN rows (tooth rows without a visit) plus the visit rows that
+        are not part of any plan row. The status is never typed here: a plan row
+        follows the visit rows linked to it (planned -> in progress -> done)."""
+        self.ensure_one()
+        History = self.env["clinic.procedure.history"]
+        status_label = dict(History._fields["status"]._description_selection(self.env))
+        lines = History.search([
+            ("partner_id", "=", self.id), ("tooth", "!=", False),
+            ("status", "!=", "cancelled"), ("plan_line_id", "=", False)], order="id desc")
+        rows = []
+        for ln in lines:
+            visits = ln.visit_line_ids.filtered(lambda v: v.status != "cancelled")
+            date = ln.procedure_date or ln.planned_date or ln.create_date.date()
+            rows.append({
+                "id": ln.id,
+                "tooth": ln.tooth,
+                "diagnosis": ln.icd10_id.display_name or "",
+                "procedure": ln.procedure_id.name or ln.name or "",
+                "status": ln.status,
+                "status_label": status_label.get(ln.status, ""),
+                "date": fields.Date.to_string(date),
+                "doctor": (ln.doctor_id or visits[-1:].doctor_id).name or "",
+                "visit": bool(ln.appointment_id),
+                "visits": len(visits),
+                # a visit row of a closed visit, or a plan row already worked on
+                "locked": ln._clinic_visit_locked() or bool(visits),
+            })
+        return {"rows": rows}
+
+    def clinic_tooth_row_delete(self, line_id):
+        self.ensure_one()
+        line = self.env["clinic.procedure.history"].browse(line_id).exists()
+        if not line or line.partner_id != self:
+            return True
+        if line._clinic_visit_locked() or line.visit_line_ids:
+            raise UserError(_("This procedure belongs to a closed visit and cannot be changed here."))
+        line.unlink()
+        return True
+
+
+class ClinicProcedureHistory(models.Model):
+    _inherit = "clinic.procedure.history"
+
+    def _clinic_visit_locked(self):
+        """A row of a done / paid visit is billed: read-only in the card table.
+        sudo: a doctor may not read another doctor's visit (calendar.event rule),
+        but the card still has to know whether that visit is closed."""
+        self.ensure_one()
+        return self.sudo().appointment_id.clinic_state in ("done", "paid")
+
+    # D-47: a visit row of the same tooth + procedure carries out a PLAN row
+    # (a tooth row without a visit, written on the card's chart / table)
+    plan_line_id = fields.Many2one(
+        "clinic.procedure.history", string="From the treatment plan",
+        ondelete="set null", index=True, copy=False)
+    visit_line_ids = fields.One2many(
+        "clinic.procedure.history", "plan_line_id", string="Done on visits")
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        lines = super().create(vals_list)
+        lines._clinic_link_plan()
+        return lines
+
+    def write(self, vals):
+        old_plans = self.plan_line_id
+        res = super().write(vals)
+        if {"tooth", "procedure_id", "appointment_id"} & set(vals):
+            self.filtered(lambda l: not l.plan_line_id)._clinic_link_plan()
+        if {"status", "plan_line_id", "tooth", "procedure_id"} & set(vals):
+            (old_plans | self.plan_line_id)._clinic_sync_plan_status()
+        return res
+
+    def unlink(self):
+        plans = self.plan_line_id
+        res = super().unlink()
+        plans.exists()._clinic_sync_plan_status()
+        return res
+
+    def _clinic_link_plan(self):
+        """Visit rows: find the open plan row of the same patient, tooth and
+        procedure (oldest first) and attach to it."""
+        for line in self.filtered(lambda l: l.appointment_id and l.tooth and l.procedure_id
+                                  and not l.plan_line_id and l.partner_id):
+            plan = self.sudo().search([
+                ("partner_id", "=", line.partner_id.id), ("appointment_id", "=", False),
+                ("tooth", "=", line.tooth), ("procedure_id", "=", line.procedure_id.id),
+                ("plan_line_id", "=", False), ("status", "in", ("planned", "in_progress")),
+                ("id", "<", line.id),   # the plan is written before the visit work
+            ], order="id", limit=1)
+            if plan:
+                super(ClinicProcedureHistory, line).write({"plan_line_id": plan.id})
+                plan._clinic_sync_plan_status()
+
+    def _clinic_sync_plan_status(self):
+        """A plan row's status follows its visit rows: one done -> done; any
+        other (still on a visit, or left 'in progress' to continue) -> in
+        progress; none -> planned."""
+        for plan in self.sudo():
+            visits = plan.visit_line_ids.filtered(lambda v: v.status != "cancelled")
+            done = visits.filtered(lambda v: v.status == "done")
+            if done:
+                dates = [d for d in done.mapped("procedure_date") if d]
+                vals = {
+                    "status": "done",
+                    "procedure_date": max(dates) if dates else fields.Date.context_today(plan),
+                    "doctor_id": (done[-1:].doctor_id or plan.doctor_id).id,
+                }
+            elif visits:
+                vals = {"status": "in_progress", "procedure_date": False}
+            else:
+                vals = {"status": "planned", "procedure_date": False}
+            if (plan.status, plan.procedure_date, plan.doctor_id.id) != (
+                    vals["status"], vals["procedure_date"], vals.get("doctor_id", plan.doctor_id.id)):
+                super(ClinicProcedureHistory, plan).write(vals)
+
+    @api.model
+    def _clinic_link_existing_plans(self):
+        """D-47 (upgrade, idempotent): attach the visit rows already on file."""
+        self.sudo().search([
+            ("appointment_id", "!=", False), ("tooth", "!=", False),
+            ("procedure_id", "!=", False), ("plan_line_id", "=", False),
+        ], order="id")._clinic_link_plan()

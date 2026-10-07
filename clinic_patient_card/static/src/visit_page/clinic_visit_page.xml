@@ -53,13 +53,14 @@
             <button t-att-class="state.tab === 'billing' ? 'active' : ''"
                     t-on-click="() => state.tab = 'billing'"
                     t-if="state.data.is_admin">ანგარიშსწორება</button>
-            <button class="disabled" title="მალე">გახარჯული მასალები</button>
-            <button class="disabled" title="მალე">EHR სინქრონიზაცია</button>
+            <!-- doctor-only placeholders (the administrator does not need them) -->
+            <button class="disabled" title="მალე" t-if="!state.data.is_admin">გახარჯული მასალები</button>
+            <button class="disabled" title="მალე" t-if="!state.data.is_admin">EHR სინქრონიზაცია</button>
         </div>
 
         <!-- ===== procedures tab ===== -->
-        <!-- ===== health warning (red) where the doctor starts the service (Procedures tab) ===== -->
-        <div class="cvp_health" t-if="state.tab === 'procedures' and !state.data.is_admin"
+        <!-- ===== health warning (red): on every tab, for doctor and admin alike ===== -->
+        <div class="cvp_health"
              t-att-class="healthSevere ? 'cvp_health_hot' : ''">
             <span class="cvp_h_item" t-if="state.data.patient.health.pregnancy_applies">
                 <t t-if="state.data.patient.health.pregnancy === 'yes'"><img class="cvp_h_ico" src="/clinic_patient_card/static/src/img/pregnant.svg" alt=""/> <b>ორსულია</b></t>
@@ -102,6 +103,31 @@
                               placeholder="ჩაწერე ტექსტი…"/>
                     <button class="btn btn-primary w-100 mt-2"
                             t-on-click="saveSection">შენახვა</button>
+                    <!-- examination results: files too (one or several), like the allergy test -->
+                    <div class="cvp_algdocs mt-4" t-if="state.section === 'clinic_exam_results'">
+                        <div class="cvp_ctitle">გამოკვლევის შედეგების ფაილები</div>
+                        <label class="btn cvp_finishbtn cvp_upload">
+                            📎 შედეგის ატვირთვა
+                            <input type="file" multiple="multiple" class="d-none"
+                                   t-on-change="uploadExamDocs"/>
+                        </label>
+                        <table class="cvp_table" t-if="(state.data.exam_docs || []).length">
+                            <thead><tr>
+                                <th>ფაილი</th><th>ატვირთვის დრო</th><th>ვინ ატვირთა</th><th/>
+                            </tr></thead>
+                            <tbody>
+                                <tr t-foreach="state.data.exam_docs" t-as="dc" t-key="dc.id">
+                                    <td><a t-att-href="'/web/content/clinic.patient.document/' + dc.id + '/attachment?download=true'"
+                                           t-esc="dc.filename"/></td>
+                                    <td t-esc="dc.uploaded_at"/>
+                                    <td t-esc="dc.uploaded_by"/>
+                                    <td><button class="cvp_del"
+                                                t-on-click="() => this.removeExamDoc(dc)">🗑</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div t-else="" class="text-muted mt-2">ფაილი არ არის ატვირთული</div>
+                    </div>
                 </div>
 
                 <div t-elif="state.section === 'complaints'" class="cvp_secedit">
@@ -209,6 +235,12 @@
                         </tbody>
                     </table>
                     <div t-else="" class="text-muted mt-3">ჩანაწერი არ მოიძებნა</div>
+                    <!-- the sheet: print / PDF / e-mail to the patient -->
+                    <div class="d-flex flex-wrap gap-2 mt-3 o_clinic_quick_btns" t-if="state.data.prescriptions.length">
+                        <button type="button" class="btn btn-secondary" t-on-click="printRx">🖨 ბეჭდვა</button>
+                        <button type="button" class="btn btn-secondary" t-on-click="pdfRx">⬇ PDF</button>
+                        <button type="button" class="btn btn-secondary" t-on-click="mailRx">✉ მეილზე გაგზავნა</button>
+                    </div>
                 </div>
 
                 <div t-elif="state.section === 'allergy'" class="cvp_secedit">
@@ -229,15 +261,21 @@
                     <button class="btn w-100 cvp_finishbtn"
                             t-on-click="addAllergy">დაამატეთ</button>
                     <table class="cvp_table" t-if="state.data.allergies.length">
+                        <!-- the same columns as the patient card's allergy list -->
                         <thead><tr>
-                            <th>მედიკამენტი ან სხვა</th><th>კომპონენტი</th>
-                            <th>დაზუსტება</th><th/>
+                            <th>ტიპი</th><th>ნივთიერება</th><th>რეაქცია</th>
+                            <th>სიმძიმე</th><th>ალერგიული სინჯი</th><th>სინჯის შედეგი</th>
+                            <th>შენიშვნა</th><th/>
                         </tr></thead>
                         <tbody>
                             <t t-foreach="state.data.allergies" t-as="al" t-key="al.id">
                                 <tr>
-                                    <td t-esc="al.name"/>
+                                    <td t-esc="al.type"/>
+                                    <td class="fw-bold" t-esc="al.name"/>
                                     <td t-esc="al.reaction"/>
+                                    <td t-esc="al.severity"/>
+                                    <td t-esc="al.test_done ? '✓ ჩატარდა' : ''"/>
+                                    <td t-esc="al.test_result"/>
                                     <td t-esc="al.note"/>
                                     <td><button class="cvp_del"
                                                 t-on-click="() => this.removeAllergy(al)">🗑</button></td>
@@ -277,7 +315,8 @@
                     <div class="cvp_odo_title">აირჩიეთ კბილი დიაგნოზის დასამატებლად</div>
                     <ClinicToothChart partnerId="state.data.patient.id" selected="state.tooth"
                                       version="state.chartVer" onSelect="(n) => this.pickTooth(n)"/>
-                    <div class="cvp_odo">
+                    <!-- milk teeth (51–85): only for a child under 14 -->
+                    <div class="cvp_odo" t-if="state.data.patient.child">
                         <t t-foreach="fdiRows" t-as="row" t-key="row_index">
                             <div t-att-class="'cvp_row ' + row.cls">
                                 <div class="cvp_half">

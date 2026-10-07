@@ -608,6 +608,7 @@ msgstr "ფინანსური სტატუსი"
 #. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__is_first_visit
 #: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__is_first_visit
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__calendar_event__clinic_visit_kind__first
 msgid "First Visit"
 msgstr "პირველადი ვიზიტი"
 
@@ -1219,11 +1220,15 @@ msgstr "პაროდონტიტის რისკი"
 
 #. module: clinic_patient_card
 #: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_partner_form_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_appointment.py:0
 msgid "Personal No."
 msgstr "პირადი ნომერი"
 
 #. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_clinic_patient_phone__phone
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_appointment.py:0
 msgid "Phone"
 msgstr "ტელეფონი"
 
@@ -1858,3 +1863,75 @@ msgstr "დასაბეჭდი სახელი"
 #: model_terms:ir.ui.view,arch_db:clinic_patient_card.view_clinic_treatment_plan_form
 msgid "Name as printed…"
 msgstr "დასაბეჭდი სახელი…"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields.selection,name:clinic_patient_card.selection__calendar_event__clinic_visit_kind__repeat
+msgid "Repeat Visit"
+msgstr "განმეორებითი ვიზიტი"
+
+#. module: clinic_patient_card
+#: model:ir.model.fields,field_description:clinic_patient_card.field_calendar_event__clinic_visit_kind
+msgid "Visit Kind"
+msgstr "პირველადი / განმეორებითი"
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_appointment.py:0
+msgid "The visit page opens once the patient is marked Arrived."
+msgstr "ვიზიტის გვერდი იხსნება მას შემდეგ, რაც პაციენტი „მოსულად“ მოინიშნება."
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_appointment.py:0
+msgid "A visit whose treatment has started cannot be cancelled."
+msgstr "ვიზიტი, რომლის მკურნალობაც დაწყებულია, ვეღარ გაუქმდება."
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_appointment.py:0
+#, python-format
+msgid "Cannot start the visit — fill in the patient's data first: %s"
+msgstr "ვიზიტი ვერ დაიწყება — ჯერ პაციენტის ბარათში შეავსე: %s"
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_appointment.py:0
+#, python-format
+msgid "Cannot start the procedure — fill in on the patient card first: %s."
+msgstr "პროცედურა ვერ დაიწყება — ჯერ პაციენტის ბარათში შეავსე: %s."
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/res_partner.py:0
+msgid "Pregnancy (yes/no)"
+msgstr "ორსულობა (კი/არა — დღევანდელი პასუხი)"
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/res_partner.py:0
+msgid "Allergies (yes/no)"
+msgstr "ალერგია (კი/არა)"
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_appointment.py:0
+msgid "Birth Date"
+msgstr "დაბადების თარიღი"
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_tooth.py:0
+msgid "This procedure line no longer exists."
+msgstr "ეს ჩანაწერი აღარ არსებობს."
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_tooth.py:0
+msgid "This procedure belongs to a closed visit and cannot be changed here."
+msgstr "ეს პროცედურა დახურულ ვიზიტს ეკუთვნის და აქ ვეღარ შეიცვლება."
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_visit_medical.py:0
+msgid "Add at least one prescription / recommendation first."
+msgstr "ჯერ დაამატე მინიმუმ ერთი დანიშნულება / რეკომენდაცია."

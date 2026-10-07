@@ -2,9 +2,9 @@
 <templates xml:space="preserve">
     <t t-name="clinic_patient_card.GenderIcons">
         <div class="o_clinic_gender_icons d-flex flex-wrap gap-2">
-            <t t-foreach="options" t-as="opt" t-key="opt[0]">
+            <t t-foreach="visibleOptions" t-as="opt" t-key="opt[0]">
                 <div t-att-class="'o_gender_card o_gender_' + opt[0] + (currentValue === opt[0] ? ' active' : '')"
-                     t-att-title="opt[1]"
+                     t-att-title="currentValue === opt[0] and !props.readonly ? opt[1] + ' — შესაცვლელად დააჭირე' : opt[1]"
                      t-on-click="() => this.pick(opt[0])">
                     <div class="o_gender_check">
                         <i class="fa fa-check"/>

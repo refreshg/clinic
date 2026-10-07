@@ -23,9 +23,9 @@
     </record>
 
     <!-- A pregnancy answer is for one visit day only: the next day it is forgotten
-         and the patient is asked again. -->
+         and the patient is asked again. Allergy answers: after 6 months (D-44). -->
     <record id="cron_clinic_reset_pregnancy" model="ir.cron">
-        <field name="name">Clinic: forget yesterday's pregnancy answers</field>
+        <field name="name">Clinic: forget stale pregnancy (1 day) / allergy (6 months) answers</field>
         <field name="model_id" ref="base.model_res_partner"/>
         <field name="state">code</field>
         <field name="code">model._cron_reset_stale_pregnancy()</field>
@@ -44,4 +44,21 @@
         <field name="interval_type">weeks</field>
         <field name="active" eval="True"/>
     </record>
+
+    <!-- D-44: existing allergy answers get today's stamp (idempotent) -->
+    <function model="res.partner" name="_clinic_stamp_allergy_answers"/>
+
+    <!-- D-45: completed visits needed for "Regular Patient" — temporary 5 until
+         the clinic decides; editable in Settings > Technical > System Parameters
+         (then run the recount below again via an upgrade) -->
+    <data noupdate="1">
+        <record id="param_regular_patient_visits" model="ir.config_parameter">
+            <field name="key">clinic.regular_patient_visits</field>
+            <field name="value">5</field>
+        </record>
+    </data>
+    <function model="res.partner" name="_clinic_recompute_visit_flags"/>
+
+    <!-- D-47: link the visit rows already on file to the treatment-plan rows (idempotent) -->
+    <function model="clinic.procedure.history" name="_clinic_link_existing_plans"/>
 </odoo>

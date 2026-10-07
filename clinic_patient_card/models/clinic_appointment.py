@@ -66,7 +66,9 @@ class CalendarEvent(models.Model):
             p = ev.patient_id
             preg = bool(p and p.gender == "female"
                         and (ev.visit_pregnancy or p.pregnancy_answer) == "yes")
-            allergic = bool(p and p.allergy_answer == "yes")
+            # an expired answer (D-44) keeps the warning while allergies are on file
+            allergic = bool(p and (p.allergy_answer == "yes"
+                                   or (not p.allergy_answer and p.allergy_ids)))
             info = False
             if allergic:
                 info = ", ".join(
@@ -202,9 +204,17 @@ class CalendarEvent(models.Model):
         self.write(vals)
         return True
 
+    # the visit page exists only once reception marked the patient Arrived (user 2026-10-07)
+    _CLINIC_PAGE_STATES = ("arrived", "in_progress", "done", "paid")
+
+    def _check_visit_page_open(self):
+        if self.clinic_state not in self._CLINIC_PAGE_STATES:
+            raise UserError(_("The visit page opens once the patient is marked Arrived."))
+
     def action_open_visit_page(self):
         """Open the Dentos-style visit working page (OWL, D3)."""
         self.ensure_one()
+        self._check_visit_page_open()
         return {
             "type": "ir.actions.client",
             "tag": "clinic_visit_page",
@@ -217,6 +227,7 @@ class CalendarEvent(models.Model):
         """One-round-trip payload for the visit page."""
         ev = self.browse(visit_id)
         ev.ensure_one()
+        ev._check_visit_page_open()
         p = ev.patient_id
         procs = ev.env["clinic.procedure.history"].search_read(
             [("appointment_id", "=", ev.id)],
@@ -240,16 +251,27 @@ class CalendarEvent(models.Model):
             ["rec_type", "medicament", "period", "qty", "directions"],
             order="id",
         )
-        allergies = p.allergy_ids.read(["name", "reaction", "note"]) if p else []
-        # uploaded allergy documents (file + when / by whom)
-        allergy_docs = [{
-            "id": d.id, "name": d.name, "filename": d.filename or d.name,
-            "uploaded_at": fields.Datetime.to_string(
-                fields.Datetime.context_timestamp(ev, d.create_date)) if d.create_date else "",
-            "uploaded_by": d.uploaded_by_id.name or "",
-        } for d in ev.env["clinic.patient.document"].search(
-            [("partner_id", "=", p.id), ("doc_type", "=", "allergy_doc")],
-            order="id desc")] if p else []
+        # every column the card's allergy list has (filled by the admin or the doctor)
+        Allergy = ev.env["clinic.patient.allergy"]
+        a_type = dict(Allergy._fields["allergy_type"]._description_selection(ev.env))
+        a_sev = dict(Allergy._fields["severity"]._description_selection(ev.env))
+        allergies = [{
+            "id": a.id, "name": a.name or "", "reaction": a.reaction or "", "note": a.note or "",
+            "type": a_type.get(a.allergy_type, ""), "severity": a_sev.get(a.severity, ""),
+            "test_done": a.test_done, "test_result": a.test_result or "",
+        } for a in p.allergy_ids] if p else []
+        # uploaded allergy documents / examination results (file + when / by whom)
+        def docs_of(doc_type):
+            return [{
+                "id": d.id, "name": d.name, "filename": d.filename or d.name,
+                "uploaded_at": fields.Datetime.to_string(
+                    fields.Datetime.context_timestamp(ev, d.create_date)) if d.create_date else "",
+                "uploaded_by": d.uploaded_by_id.name or "",
+            } for d in ev.env["clinic.patient.document"].search(
+                [("partner_id", "=", p.id), ("doc_type", "=", doc_type)],
+                order="id desc")] if p else []
+        allergy_docs = docs_of("allergy_doc")
+        exam_docs = docs_of("exam_result")
         complaint_catalog = ev.env["clinic.complaint"].search_read(
             [], ["name"], order="name")
         objective = {
@@ -275,6 +297,7 @@ class CalendarEvent(models.Model):
             "prescriptions": prescriptions,
             "allergies": allergies,
             "allergy_docs": allergy_docs,
+            "exam_docs": exam_docs,
             "visit": {
                 "id": ev.id,
                 "start": ev.start and fields.Datetime.to_string(ev.start),
@@ -295,6 +318,8 @@ class CalendarEvent(models.Model):
                 "vat": p.vat or "",
                 "phone": p.phone or "",
                 "birthdate": p.birthdate and fields.Date.to_string(p.birthdate) or "",
+                # milk teeth on the visit page only for a child (under 14; user 2026-10-07)
+                "child": bool(p.birthdate and p.age < 14),
                 "insurance": p.insurance_company_id.name or "",
                 "allergies": p.allergy_ids.mapped("display_name"),
                 "balance": 0.0,
@@ -410,6 +435,11 @@ class CalendarEvent(models.Model):
         string="Terminal Part", currency_field="currency_id", readonly=True, copy=False,
     )
     # Dispensary programme: patients booked for a 6-month control visit.
+    # Booking chooser (D-43): the board asks "existing or new patient?" first;
+    # the answer is kept on the visit (the card flags are counted, D-45).
+    clinic_visit_kind = fields.Selection(
+        [("first", "First Visit"), ("repeat", "Repeat Visit")],
+        string="Visit Kind", copy=False)
     is_dispensary = fields.Boolean(string="Dispensary Control", copy=False)
     dispensary_notified = fields.Boolean(copy=False)  # 14-day reminder sent
     # Reviewer asks that reschedules / duration corrections stay visible.
@@ -735,6 +765,10 @@ class CalendarEvent(models.Model):
     _CLINIC_TRACK_STATES = ("booked", "confirmed", "arrived", "in_progress")
 
     def write(self, vals):
+        # a visit whose treatment has started (or ended) cannot be cancelled
+        if vals.get("clinic_state") == "cancelled" and any(
+                ev.is_clinic and ev.clinic_state in ("in_progress", "done", "paid") for ev in self):
+            raise UserError(_("A visit whose treatment has started cannot be cancelled."))
         # Flag reschedules / manual duration corrections on clinic visits so the
         # calendar can show them. No-op for non-clinic events (the recurrence
         # engine rewrites start/stop internally) and for our own flag writes.
@@ -845,11 +879,18 @@ class CalendarEvent(models.Model):
         p = self.patient_id
         if not (self.is_clinic and p and p.pregnancy_answer):
             return
-        busy = self.sudo().search_count([
-            ("is_clinic", "=", True), ("patient_id", "=", p.id), ("id", "!=", self.id),
-            ("clinic_state", "in", ("arrived", "in_progress"))])
+        busy = self.sudo().search_count(
+            self._clinic_treated_now_domain() + [("patient_id", "=", p.id), ("id", "!=", self.id)])
         if not busy:
             p.sudo().write({"pregnancy_answer": False, "is_pregnant": False})
+
+    @api.model
+    def _clinic_treated_now_domain(self):
+        """Visits 'being treated right now': arrived / in progress AND started in
+        the last 12 hours — an old visit left open in those states (never closed)
+        must not keep yesterday's health answers alive forever."""
+        return [("is_clinic", "=", True), ("clinic_state", "in", ("arrived", "in_progress")),
+                ("start", ">=", fields.Datetime.now() - timedelta(hours=12))]
 
     def _clinic_reset_pregnancy(self):
         """A new booking asks pregnancy afresh: clear the card's answer for the
@@ -860,9 +901,8 @@ class CalendarEvent(models.Model):
             p = ev.patient_id
             if not (ev.is_clinic and p and p.gender == "female" and p.pregnancy_answer):
                 continue
-            busy = Event.search_count([
-                ("is_clinic", "=", True), ("patient_id", "=", p.id), ("id", "!=", ev.id),
-                ("clinic_state", "in", ("arrived", "in_progress"))])
+            busy = Event.search_count(
+                self._clinic_treated_now_domain() + [("patient_id", "=", p.id), ("id", "!=", ev.id)])
             if not busy:
                 p.sudo().write({"pregnancy_answer": False, "is_pregnant": False})
 
@@ -902,7 +942,9 @@ class CalendarEvent(models.Model):
             ev._clinic_clear_card_pregnancy()
             for line in ev.procedure_line_ids:
                 vals = {}
-                if line.status != "done":
+                # D-47: a line the doctor left "in progress" (not finished, continues
+                # on the next visit) stays so; postponed / cancelled are kept too
+                if line.status == "planned":
                     vals["status"] = "done"
                 if not line.procedure_date:
                     vals["procedure_date"] = today

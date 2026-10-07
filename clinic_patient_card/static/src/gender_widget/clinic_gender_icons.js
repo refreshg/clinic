@@ -15,6 +15,13 @@ export class ClinicGenderIcons extends Component {
         return this.props.record.fields[this.props.name].selection || [];
     }
 
+    // once a gender is picked only that card stays; clicking it again clears
+    // the pick and brings the other cards back
+    get visibleOptions() {
+        const value = this.currentValue;
+        return value ? this.options.filter((opt) => opt[0] === value) : this.options;
+    }
+
     get currentValue() {
         return this.props.record.data[this.props.name];
     }

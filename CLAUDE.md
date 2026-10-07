@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-06, commit: ac54c92 (+ uncommitted work) -->
+<!-- last-synced: 2026-10-07, commit: 0e91ff5 (+ uncommitted work) -->
 # Clinic — project notes for Claude
 
 ## Platform
@@ -9,14 +9,15 @@
   `display_name` not `name_get()`; `env.cr/context/uid`; JSON-2 API available.
 
 ## Product / plan (history lives in docs/ — don't re-read it here)
-- `docs/PRD.md` = source of truth for requirements; `docs/DECISIONS.md` = ADRs D-1…D-42.
+- `docs/PRD.md` = source of truth for requirements; `docs/DECISIONS.md` = ADRs D-1…D-48.
 - DONE & live, user-tested: Phases 1–4 + patient card/dashboard/shop/supplier portal;
   reviewer batch 28.08.26 (v30–46); reviewer batch #2 ჯავშნები+მაღაზია/მარაგები (v47–55,
   D-16…D-20 incl. supplier warehouses); Soft-UI restyles (v55.x, D-21); Dentos-parity
   batch — booking popup, quick registration, consents with signature, OWL visit page,
-  billing, coloured board (v56–60.4, D-22/D-23); tooth chart, imaging + radiologist (D-35/36); supply shop v3 (D-38..D-42).
+  billing, coloured board (v56–60.4, D-22/D-23); tooth chart, imaging + radiologist (D-35/36); supply shop v3 (D-38..D-42); booking chooser,
+  computed patient flags, tooth plan with visit-driven status, perio chart v1 (D-43..D-48, not yet browser-checked).
 - Deferred: emails + SMS (clinic must decide what/when), ka.po regen (M2, first
-  unblocked), patient-card page write-back, Form-100, EHR sync, periodontal chart.
+  unblocked), patient-card page write-back, Form-100, EHR sync, perio chart v2, treatment-plan translation.
 - Roles: Clinic Administrator / Doctor / Supplier; doctors see only their own visits
   (global ir.rule) and only their own board column; admin sees all.
 
@@ -63,9 +64,9 @@
 
 ## Commands (dev loop = live LAN server; NO local Odoo; passwords in local memory)
 - Package: `tar --force-local -czf module.tgz -C <repo> --exclude='__pycache__' --exclude='patient-card-ui' clinic_patient_card`
-- Ship: `scp module.tgz fmg@192.168.0.235:/tmp/clinic_module.tgz`, extract to `/opt/odoo19/addons/`
-- Upgrade: `docker exec odoo19-odoo-1 odoo -d odoo -u clinic_patient_card --stop-after-init --no-http --db_password=<local memory>`
-- Windows: no sshpass, `pscp` times out — ship via `cat m.tgz | plink -batch -pw <pw> host "cat > /tmp/clinic_module.tgz"`.
+- Ship: `scp module.tgz fmg@192.168.0.235:/tmp/clinic_module.tgz`, extract with `sudo -S tar` into `/opt/odoo19/addons/` (files are not owned by fmg)
+- Upgrade: `docker exec odoo19-odoo-1 odoo -d odoo -u clinic_patient_card --stop-after-init --no-http --db_password=<local memory>` (+ `--i18n-overwrite` when ka.po changed)
+- Windows: no sshpass, `pscp` times out — ship via `cat m.tgz | plink -batch -hostkey <fp> -pw <pw> host "cat > /tmp/clinic_module.tgz"` (fp in local memory).
 - Flaky VPN: run upload, extract and upgrade as SEPARATE plink calls (and retry); one long pipeline drops silently.
 - QWeb PDF: wrap the body in `<div class="article" t-att-data-oe-model=… t-att-data-oe-id=…>` or wkhtmltopdf garbles Georgian / € (Latin-1).
 - Restart: `cd /opt/odoo19 && docker compose restart odoo` · Logs: `docker logs -f odoo19-odoo-1`
