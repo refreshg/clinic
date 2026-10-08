@@ -636,6 +636,8 @@ msgstr "პაციენტის შესახებ თავისუფ�
 #. module: clinic_patient_card
 #: model:ir.model.fields,field_description:clinic_patient_card.field_res_partner__gender
 #: model:ir.model.fields,field_description:clinic_patient_card.field_res_users__gender
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_med_card.py:0
 msgid "Gender"
 msgstr "სქესი"
 
@@ -1935,3 +1937,45 @@ msgstr "ეს პროცედურა დახურულ ვიზიტ
 #: code:addons/clinic_patient_card/models/clinic_visit_medical.py:0
 msgid "Add at least one prescription / recommendation first."
 msgstr "ჯერ დაამატე მინიმუმ ერთი დანიშნულება / რეკომენდაცია."
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_med_card.py:0
+msgid "Only clinic doctors and administrators can open the medical card."
+msgstr "სამედიცინო ბარათს მხოლოდ კლინიკის ექიმი და ადმინისტრატორი ხსნის."
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_med_card.py:0
+msgid "Address"
+msgstr "მისამართი"
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_med_card.py:0
+msgid "Allergy answer (expired or not given)"
+msgstr "ალერგიის პასუხი (არ არის ან ვადაგასულია)"
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_med_card.py:0
+msgid "No visit yet — the examination sheet is empty"
+msgstr "ვიზიტი ჯერ არ ყოფილა — გასინჯვის ფურცელი ცარიელია"
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_med_card.py:0
+msgid "First visit: complaints"
+msgstr "პირველი ვიზიტი: ჩივილები"
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_med_card.py:0
+msgid "First visit: objective exam checkboxes"
+msgstr "პირველი ვიზიტი: ობიექტური გამოკვლევის უჯრები"
+
+#. module: clinic_patient_card
+#. odoo-python
+#: code:addons/clinic_patient_card/models/clinic_med_card.py:0
+msgid "First visit: ICD-10 diagnosis"
+msgstr "პირველი ვიზიტი: ICD-10 დიაგნოზი"

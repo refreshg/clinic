@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- D-49: the patient's medical card = Ministry form №IV-220/ა (Annex N1) +
+         examination sheet №IV-220-1/ა (Annex N2) + next-visits page; built live from
+         the records on every print (res.partner._clinic_med_card_data) -->
+    <record id="paperformat_clinic_med_card" model="report.paperformat">
+        <field name="name">Clinic Medical Card</field>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">12</field>
+        <field name="margin_bottom">12</field>
+        <field name="margin_left">14</field>
+        <field name="margin_right">14</field>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="action_report_clinic_med_card" model="ir.actions.report">
+        <field name="name">სამედიცინო ბარათი</field>
+        <field name="model">res.partner</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">clinic_patient_card.report_clinic_med_card</field>
+        <field name="report_file">clinic_patient_card.report_clinic_med_card</field>
+        <field name="print_report_name">'სტომატოლოგიური პაციენტის სამედიცინო ბარათი - %s' % (object.vat or object.name)</field>
+        <field name="paperformat_id" ref="paperformat_clinic_med_card"/>
+        <field name="group_ids" eval="[(6, 0, [ref('clinic_patient_card.group_clinic_admin'), ref('clinic_patient_card.group_clinic_doctor')])]"/>
+    </record>
+
+    <!-- one checkbox of the form -->
+    <template id="med_card_box">
+        <span t-att-style="'display:inline-block; width:15px; height:15px; border:1px solid #333; text-align:center; line-height:14px; font-size:12px; vertical-align:middle; font-weight:bold;'"><t t-if="on">✓</t></span>
+    </template>
+
+    <template id="report_clinic_med_card">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="d" t-value="o._clinic_med_card_data()"/>
+                <t t-set="lbl" t-value="'font-weight:bold;'"/>
+                <t t-set="line" t-value="'border-bottom:1px solid #222; padding:2px 6px; min-height:20px;'"/>
+                <div class="article" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id">
+                <div class="page" style="font-family: 'DejaVu Sans', Arial, sans-serif; font-size:12.5px; color:#111;">
+
+                    <!-- ===== cover ===== -->
+                    <div style="position:relative; height:265mm; overflow:hidden;">
+                        <svg style="position:absolute; left:0; top:0;" width="100%" height="100%" viewBox="0 0 100 140" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                            <polygon points="0,0 14,0 100,105 100,118" fill="#e9eaed"/>
+                            <polygon points="0,13 0,15 66,95 68,93" fill="#d9dbe0"/>
+                            <polygon points="100,62 100,140 14,140" fill="#121c2e"/>
+                        </svg>
+                        <div style="position:absolute; left:5%; top:52%;">
+                            <div style="font-size:20px;">პაციენტის</div>
+                            <div style="font-size:34px; font-weight:bold; line-height:1.15;">ისტორიის<br/>ბარათი</div>
+                            <div style="font-size:18px; font-weight:bold; margin-top:4px;">N. <t t-out="d['card_no']"/></div>
+                        </div>
+                        <div style="position:absolute; right:4%; top:69%; text-align:right; color:#fff;">
+                            <div style="font-size:16px;">პაციენტი:</div>
+                            <div style="font-size:24px; font-weight:bold; line-height:1.2; white-space:pre-line;" t-out="d['name'].replace(' ', '\n', 1)"/>
+                            <div style="font-size:16px; margin-top:18px;" t-out="d['vat']"/>
+                            <div style="font-size:16px; margin-top:12px;" t-out="d['phone']"/>
+                        </div>
+                    </div>
+
+                    <!-- ===== Annex N1 — form IV-220/ა ===== -->
+                    <div style="page-break-before:always;">
+                        <table style="width:100%;"><tr>
+                            <td style="width:60%; vertical-align:top;">
+                                <div style="font-weight:bold; font-size:14px; border-bottom:1px solid #111; display:inline-block; padding-bottom:2px;" t-out="d['company']"/>
+                                <div style="font-style:italic; font-size:11px; text-align:center; width:80%;">სტომატოლოგიური მომსახურების მიმწოდებელი<br/>პირის/დაწესებულების დასახელება</div>
+                            </td>
+                            <td style="text-align:right; vertical-align:top; font-style:italic; font-weight:bold; font-size:14px;">დანართი - N1<br/><br/>ფორმა №IV-220/ა</td>
+                        </tr></table>
+                        <h4 style="text-align:center; font-weight:bold; margin:26px 0 22px;">სტომატოლოგიური პაციენტის სამედიცინო ბარათი N<t t-out="d['card_no']"/></h4>
+                        <table style="width:100%; border-collapse:collapse; line-height:2.0;">
+                            <tr><td colspan="4"><span t-att-style="lbl">გვარი,სახელი</span> <span t-att-style="line + 'display:inline-block; width:80%;'" t-out="d['name']"/></td></tr>
+                            <tr><td colspan="4"><span t-att-style="lbl">სქესი</span> <span t-att-style="line + 'display:inline-block; width:25%;'" t-out="d['gender']"/></td></tr>
+                            <tr>
+                                <td style="width:20%;">დაბადების თარიღი</td><td t-att-style="line + 'width:35%;'" t-out="d['birthdate']"/>
+                                <td style="width:15%; text-align:right; padding-right:8px;">ტელეფონი</td><td t-att-style="line" t-out="d['phone']"/>
+                            </tr>
+                            <tr><td colspan="2" t-att-style="lbl">პირადი ნომერი (ასეთის არსებობის შემთხვევაში)</td><td colspan="2" t-att-style="line" t-out="d['vat']"/></tr>
+                            <tr><td colspan="4"><span t-att-style="lbl">მისამართი</span> <span t-att-style="line + 'display:inline-block; width:85%;'" t-out="d['address']"/></td></tr>
+                            <tr><td colspan="4"><span t-att-style="lbl">სამუშაო ადგილი, პროფესია</span> <span t-att-style="line + 'display:inline-block; width:64%;'" t-out="d['work']"/></td></tr>
+                        </table>
+                        <div t-att-style="lbl + 'margin-top:26px;'">ალერგია (მათ შორის საანესთეზიო საშუალებებზე):</div>
+                        <div t-att-style="line + 'white-space:pre-line; margin-top:4px;'" t-out="d['allergy']"/>
+                        <div t-att-style="lbl + 'margin-top:22px;'">გადატანილი ან/და თანმხლები დაავადებები, მდგომარეობები:</div>
+                        <div t-att-style="line + 'white-space:pre-line; margin-top:4px;'" t-out="d['diseases']"/>
+                        <table style="width:100%; margin-top:22px; line-height:2.0;">
+                            <tr><td t-att-style="lbl + 'width:30%;'">სადაზღვევო პოლისის ნომერი</td><td t-att-style="line" t-out="d['policy']"/></tr>
+                            <tr><td t-att-style="lbl">სადაზღვევო კომპანია</td><td t-att-style="line" t-out="d['insurer']"/></tr>
+                        </table>
+                    </div>
+
+                    <!-- ===== Annex N2 — form IV-220-1/ა (first visit) ===== -->
+                    <t t-set="n" t-value="d['n2']"/>
+                    <div style="page-break-before:always;">
+                        <table style="width:100%;"><tr>
+                            <td style="width:60%; vertical-align:top;">
+                                <div style="font-weight:bold; font-size:14px; border-bottom:1px solid #111; display:inline-block; padding-bottom:2px;" t-out="d['company']"/>
+                                <div style="font-style:italic; font-size:11px; text-align:center; width:80%;">სტომატოლოგიური მომსახურების მიმწოდებელი<br/>პირის/დაწესებულების დასახელება</div>
+                            </td>
+                            <td style="text-align:right; vertical-align:top; font-style:italic; font-weight:bold; font-size:14px;">დანართი - N2<br/><br/>ფორმა №IV-220-1/ა</td>
+                        </tr></table>
+                        <h4 style="text-align:center; font-weight:bold; margin:22px 0 16px;">პაციენტის გასინჯვის ფურცელი</h4>
+                        <div><span t-att-style="lbl">თარიღი</span> <span t-att-style="line + 'display:inline-block; width:30%;'" t-out="n.get('date', '')"/></div>
+                        <div t-att-style="lbl + 'margin-top:12px;'">ჩივილები (მომართვის მიზეზი):</div>
+                        <div style="margin-top:6px;"><span t-att-style="lbl">დაავადებული კბილ(ებ)ი</span> <span t-att-style="line + 'display:inline-block; min-width:30%;'" t-out="n.get('teeth_text', '')"/></div>
+                        <t t-set="cl" t-value="n.get('complaints') or []"/>
+                        <table style="width:100%; margin-top:6px; line-height:1.9;">
+                            <tr t-foreach="range(9)" t-as="i">
+                                <td style="width:42%;" t-out="cl[i][0] if cl else ''"/>
+                                <td style="width:8%;"><t t-call="clinic_patient_card.med_card_box"><t t-set="on" t-value="cl and cl[i][1]"/></t></td>
+                                <td style="width:42%; padding-left:12px;" t-out="cl[i + 9][0] if cl else ''"/>
+                                <td><t t-call="clinic_patient_card.med_card_box"><t t-set="on" t-value="cl and cl[i + 9][1]"/></t></td>
+                            </tr>
+                        </table>
+                        <div><span>სხვა</span> <span t-att-style="line + 'display:inline-block; min-width:60%;'" t-out="n.get('complaint_other', '')"/></div>
+                        <div t-att-style="lbl + 'margin-top:12px;'">ანამნეზი</div>
+                        <div t-att-style="line + 'white-space:pre-line;'" t-out="n.get('anamnesis', '')"/>
+                        <div t-att-style="lbl + 'margin-top:12px;'">ობიექტური გამოკვლევები</div>
+                        <div>პირის ღრუს დათვალიერება:</div>
+                        <table style="width:100%; margin-top:4px;"><tr>
+                            <td style="width:34%; vertical-align:top; line-height:1.55;">
+                                <div>დეფექტის ლოკალიზაცია <span t-att-style="line + 'display:inline-block; min-width:40%;'" t-out="n.get('defects', '')"/></div>
+                                <div>კარიესი - კ</div><div>არაკარისეული დაავადება - აკ</div><div>პულპიტი - პ</div>
+                                <div>პერიოდონტიტი - პტ</div><div>ბჟენი - ბ</div><div>ხელოვნური კბილი - ხკ</div>
+                                <div>ხელოვნური გვირგვინი - ხგ</div><div>კბილის მორყევის ხარისხი - I</div>
+                                <div>კბილის მორყევის ხარისხი - II</div><div>კბილის მორყევის ხარისხი - III</div>
+                                <div>ექსტრაგირებული კბილი - 0</div><div>რეტენციული კბილი - რკ</div>
+                                <div>ფესვი - ფ</div><div>იმპლანტი - ი</div><div>ადენტია - ა</div>
+                            </td>
+                            <td style="vertical-align:top;">
+                                <!-- tooth scheme with the legend's letter codes (current chart) -->
+                                <t t-set="tc" t-value="d['teeth']"/>
+                                <t t-foreach="[(18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28), (55, 54, 53, 52, 51, 61, 62, 63, 64, 65), (85, 84, 83, 82, 81, 71, 72, 73, 74, 75), (48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38)]" t-as="row">
+                                    <table style="border-collapse:collapse; margin:0 auto 8px auto; font-size:11px;">
+                                        <tr>
+                                            <td t-foreach="row" t-as="f" t-att-style="'border:1px solid #888; width:26px; text-align:center; background:#f2f3f5; font-weight:bold;' + ('border-right:2px solid #111;' if f in (11, 51, 81, 41) else '')" t-out="f"/>
+                                        </tr>
+                                        <tr>
+                                            <td t-foreach="row" t-as="f" t-att-style="'border:1px solid #888; height:20px; text-align:center; color:#b3261e; font-weight:bold;' + ('border-right:2px solid #111;' if f in (11, 51, 81, 41) else '')" t-out="tc.get(f, '')"/>
+                                        </tr>
+                                    </table>
+                                </t>
+                            </td>
+                        </tr></table>
+                        <div style="margin-top:10px;"><span t-att-style="lbl">თანკბილვა</span> <span t-att-style="line + 'display:inline-block; min-width:50%;'" t-out="n.get('bite', '')"/></div>
+                        <div style="margin-top:8px;"><span t-att-style="lbl">პირის ღრუს ლორწოვანი გარსის მდგომარეობა:</span> <span t-att-style="line + 'display:inline-block; min-width:30%;'" t-out="n.get('mucosa', '')"/></div>
+                        <div style="page-break-inside:avoid;">
+                        <div t-att-style="lbl + 'margin-top:8px;'">პაროდონტის მდგომარეობა</div>
+                        <t t-set="pe" t-value="n.get('perio') or []"/>
+                        <t t-set="pl" t-value="n.get('plaque') or []"/>
+                        <table style="width:100%; line-height:1.7; page-break-inside:avoid;">
+                            <tr t-foreach="range(9)" t-as="i">
+                                <td style="width:38%;" t-out="pe[i][0] if pe else ''"/>
+                                <td style="width:8%;"><t t-call="clinic_patient_card.med_card_box"><t t-set="on" t-value="pe and pe[i][1]"/></t></td>
+                                <td style="width:10%; font-weight:bold;"><t t-if="i == 0">ნადები:</t></td>
+                                <td style="width:34%;" t-out="pl[i][0] if pl and i &lt; 6 else ''"/>
+                                <td><t t-if="i &lt; 6"><t t-call="clinic_patient_card.med_card_box"><t t-set="on" t-value="pl and pl[i][1]"/></t></t></td>
+                            </tr>
+                        </table>
+                        </div>
+                        <div style="margin-top:8px;"><span t-att-style="lbl">პაროდონტული ჯიბის სიღრმე</span> <span t-att-style="line + 'display:inline-block; min-width:40%;'" t-out="n.get('pocket', '')"/></div>
+                        <div style="margin-top:6px;"><span t-att-style="lbl">სხვა</span> <span t-att-style="line + 'display:inline-block; min-width:70%;'" t-out="n.get('obj_other', '')"/></div>
+                        <div t-att-style="lbl + 'margin-top:10px;'">გამოკვლევის გეგმა:</div>
+                        <t t-set="pn" t-value="n.get('plan') or []"/>
+                        <table style="width:100%; line-height:1.9; page-break-inside:avoid;">
+                            <tr t-foreach="range(6)" t-as="i">
+                                <td style="width:42%;" t-out="pn[i][0] if pn else ''"/>
+                                <td style="width:8%;"><t t-call="clinic_patient_card.med_card_box"><t t-set="on" t-value="pn and pn[i][1]"/></t></td>
+                                <td style="width:42%; padding-left:12px;">
+                                    <t t-if="i &lt; 4" t-out="pn[i + 6][0] if pn else ''"/>
+                                    <t t-elif="i == 4">სხვა <span t-att-style="line + 'display:inline-block; min-width:60%;'" t-out="n.get('plan_other', '')"/></t>
+                                </td>
+                                <td><t t-if="i &lt; 4"><t t-call="clinic_patient_card.med_card_box"><t t-set="on" t-value="pn and pn[i + 6][1]"/></t></t></td>
+                            </tr>
+                        </table>
+                        <div t-att-style="lbl + 'margin-top:12px;'">კონსულტაცია/გამოკვლევის შედეგი:</div>
+                        <div t-att-style="line + 'white-space:pre-line;'" t-out="n.get('result', '')"/>
+                        <div t-att-style="lbl + 'margin-top:12px;'">საბოლოო დიაგნოზი (ICD –10)</div>
+                        <div t-att-style="line + 'white-space:pre-line;'" t-out="n.get('diagnosis', '')"/>
+                        <div t-att-style="lbl + 'margin-top:12px;'">მკურნალობა</div>
+                        <div t-att-style="line + 'white-space:pre-line;'" t-out="n.get('treatment', '')"/>
+                    </div>
+
+                    <!-- ===== next visits + epicrisis + advice ===== -->
+                    <div style="page-break-before:always;">
+                        <div t-att-style="lbl">მომდევნო ვიზიტი:</div>
+                        <table style="width:100%; border-collapse:collapse; margin-top:6px;">
+                            <thead><tr>
+                                <th style="border:1px solid #111; padding:6px; width:16%; text-align:center; font-weight:normal;">თარიღი</th>
+                                <th style="border:1px solid #111; padding:6px; text-align:center; font-weight:normal;">ანამნეზი, სტატუსი, დიაგნოზი, ჩატარებული მკურნალობა,დანიშნულება</th>
+                                <th style="border:1px solid #111; padding:6px; width:16%; text-align:center; font-weight:normal;">მკურნალი ექიმი</th>
+                            </tr></thead>
+                            <tbody>
+                                <tr t-foreach="d['rows']" t-as="r" style="page-break-inside:avoid;">
+                                    <td style="border:1px solid #111; padding:6px; vertical-align:top; text-align:center;" t-out="r['date']"/>
+                                    <td style="border:1px solid #111; padding:6px; vertical-align:top; white-space:pre-line;" t-out="r['text']"/>
+                                    <td style="border:1px solid #111; padding:6px; vertical-align:top;" t-out="r['doctor']"/>
+                                </tr>
+                                <tr t-if="not d['rows']"><td colspan="3" style="border:1px solid #111; height:300px;"/></tr>
+                            </tbody>
+                        </table>
+                        <div t-att-style="lbl + 'margin-top:16px;'">მკურნალობის შედეგი (ეპიკრიზი)</div>
+                        <div t-att-style="line + 'white-space:pre-line;'" t-out="d['epicrisis']"/>
+                        <div t-att-style="lbl + 'margin-top:14px;'">რჩევა-დარიგება/დანიშნულება</div>
+                        <div t-foreach="d['advice']" t-as="a" t-att-style="line" t-out="a"/>
+                        <div style="margin-top:30px; font-size:10px; color:#666;">ამობეჭდილია: <t t-out="d['printed']"/> · <t t-out="d['printed_by']"/></div>
+                    </div>
+                </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

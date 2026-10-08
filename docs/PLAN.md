@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-07, commit: 7f9b391 -->
+<!-- last-synced: 2026-10-08, commit: f031de9 (+ uncommitted work) -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -110,10 +110,19 @@ templates + per-day lines (Community has no planning app) — D-29.
 - [x] W6 card tooth chart + plan table, status from the visits, partial treatment stays "in progress" across visits (D-46/D-47)
 - [x] W7 prescription: print / PDF / e-mail with the clinic header (B60)
 - [x] W8 periodontal chart v1 on the Medical tab (D-48)
-- [ ] W browser check by the user (chooser + quick registration, card flags, allergy expiry test on P000152, tooth plan across two visits, perio grid, prescription PDF look)
+- [x] W browser check by the user (confirmed 2026-10-08: all works) (chooser + quick registration, card flags, allergy expiry test on P000152, tooth plan across two visits, perio grid, prescription PDF look)
 - [ ] W next: perio chart v2 — lines over the tooth drawing, PDF, recession classifications, opening from the visit page
 - [ ] W open (clinic): regular-patient threshold (param = 5 for now); outgoing mail server + patient e-mails; treatment-plan translation ka / en / ru (Claude API recommended — key, cost, privacy) — postponed by the user
 - [ ] W open (user): Elene Janezashvili's visits #341 (arrived 10-06) and #335 (in progress 10-05) are still open — close or cancel
+
+## Milestone X — Medical card IV-220/ა, complaints, treatment plan for non-clients (2026-10-08, requested by the user)
+- [x] X1 complaints catalog = the clinic's 38 + 4 form items, mapped to the form's checkboxes; Configuration → ჩივილები; old seeds deleted (D-49)
+- [x] X2 visit page: complaints as tick boxes, affected teeth, objective-exam checkbox groups; "პროფესია" on the card
+- [x] X3 medical card PDF (cover, N1, N2, next visits) built live; "🩺 სამედიცინო ბარათი" tab with missing-data list; 🩺 on the Patients kanban (D-49)
+- [x] X4 treatment plan without the patient link (D-50); company renamed
+- [x] X browser test by the user with a new patient (ნიტა ლაბაძე, visit #361) — passed
+- [ ] X open (clinic): check the complaint → checkbox mapping (15 items print under "სხვა"); Talal plan questions (14) and translation questions (3-9)
+- [ ] X next: translation ka / en / ru of all documents with Google Cloud Translation (languages + documents answered; waiting for the account + privacy answer)
 
 ## Small chores (any time)
 - [ ] Clinic to confirm: insurer + city lists (written from memory), "primary/unique" definitions, what "non-resident" means (PRD §9)
@@ -122,6 +131,6 @@ templates + per-day lines (Community has no planning app) — D-29.
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-10-07: milestone W (booking chooser, computed patient flags, 6-month allergy answer, tooth plan with visit-driven status, perio chart v1, prescription print / PDF / e-mail, status colours; D-43..D-48) — deployed live, committed + pushed as 7f9b391; version bumped to 19.0.65.0 (bump not yet deployed / committed).
-Next: user browser-checks milestone W (W browser check above), then supplier walk-through step 13 (milestone V); perio chart v2 when asked.
-Watch out: the server still reports 19.0.64 until the next upgrade (run it with --i18n-overwrite when ka.po changed); no SMTP server yet, so prescription e-mails are only recorded; perio GM sign (positive = recession) unconfirmed; Elene's visits #341 / #335 still open; duplicate shop test orders S00070/71/72 + P00051/53/54 remain; admin must NOT carry group_clinic_doctor.
+Last session 2026-10-08: milestone X (complaints mapped to form IV-220-1/ა, objective checkboxes, live medical card PDF + tab + kanban 🩺, treatment plan for non-clients; D-49/D-50) — deployed live on 19.0.65, browser-tested, NOT committed; milestone W confirmed by the user.
+Next: commit + push milestone X; then the user's pick among the open decisions (perio chart v2, X-ray list, arrival popup…) or translation once the clinic answers.
+Watch out: complaint mapping is my reading — clinic to check; old 8 complaints were deleted directly on the server (not re-created by data); an XML record field removed from a file keeps its DB value on upgrade — set it explicitly; no SMTP server; admin must NOT carry group_clinic_doctor.

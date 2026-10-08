@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-07, commit: 7f9b391 -->
+<!-- last-synced: 2026-10-08, commit: f031de9 (+ uncommitted work) -->
 # Technical spec — clinic_patient_card (whole module, v19.0.55.1.0)
 
 Scope: everything live. AC-n refs point to `docs/PRD.md §13` (remaining work only, per user
@@ -259,6 +259,16 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | quick registration | name, surname, mobile, insurance + foreign toggle; `name_latin` required when `is_foreign` |
 | clinic.treatment.plan (+ .line) (new) | printable "TREATMENT PLAN": patient_name (typed), optional patient_id, date, doctor lines `clinic.treatment.plan.doctor` (profession + doctor + printed name, removable, "Add doctor"; D-33) + chief_doctor, free-text lines (visit / department / tooth / procedure / unit price / price), note, schedule, 2 totals, payment note; lines auto-pulled from the patient's `planned` procedures (`procedure_history_id` prevents duplicates); QWeb PDF with logo + contact icons (data URIs), repeating header via paperformat, fixed header + "Approved by" block; Clinic menu "მკურნალობის გეგმა"; ACL admin + doctor rwcu |
 
+### 2026-10-08 additions (uncommitted on top of f031de9)
+| area | additions |
+|---|---|
+| clinic.complaint | `sequence`, `form_item` (one of the 18 complaint checkboxes of form IV-220-1/ა, empty → "სხვა"); `_order = sequence, name`; seed `data/clinic_complaint_form_seed.xml` = the clinic's 38-item list + 4 form-only items (noupdate); the old seed keeps only `complaint_plaque` (a form checkbox) — 43 complaints; Configuration → ჩივილები (admin, editable list, filters "ფორმის უჯრის გარეშე" / "დაარქივებული") (D-49) |
+| calendar.event | `clinic_complaint_teeth` (Char, "დაავადებული კბილ(ებ)ი"), `clinic_obj_checks` (Json: perio / plaque / plan keys of the form), `clinic_form_vocab()`; visit-page payload adds `complaints.teeth`, `form_vocab`, `obj_checks`; the complaint catalog sent to the page = active items + the visit's own (sequence order) |
+| res.partner | `function` shown as "პროფესია" on the card (std field); medical card: `_clinic_med_card_data` (live dict for the report; sudo over all visits; doctor / admin only), `clinic_med_card_missing` (what the form lacks), `action_med_card_pdf` (models/clinic_med_card.py) |
+| report | `report_clinic_med_card` on res.partner: cover + Annex N1 (IV-220/ა) + Annex N2 (IV-220-1/ა, FIRST visit that took place) + next-visits table, epicrisis + advice of the last visit; tooth scheme = current chart pictures as the legend's letter codes + mobility from the latest perio chart; own paperformat; `group_ids` admin + doctor |
+| UI | visit page: complaints as tick boxes (saved on tick), affected-teeth field, three checkbox groups in the objective exam; patient form tab "🩺 სამედიცინო ბარათი" (widget `clinic_med_card`: missing list, PDF / print / refresh, live HTML preview); 🩺 PDF link on the Patients kanban |
+| clinic.treatment.plan | form / list / search no longer show `patient_id` nor the "pull planned procedures" button — plans are written for non-clients (D-50) |
+
 ### 2026-10-07 additions (uncommitted on top of 0e91ff5)
 | area | additions |
 |---|---|
@@ -316,6 +326,9 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | B59 | tooth row added on the card (chart click / + add) | — | planned plan row; a visit row with the same tooth + procedure links to it; status follows the visit rows (planned → in progress → done); rows of closed visits read-only (D-46/D-47) | custom over clinic.procedure.history |
 | B60 | prescription print / PDF / e-mail on the visit page | ≥1 prescription | std report action / `/report/pdf` tab / std mail composer with the PDF (no SMTP server yet → recorded only) | std report + mail composer |
 | B61 | periodontal exam saved | doctor | json stored, summary recomputed (D-48) | custom model |
+| B62 | complaint ticked on the visit page | doctor | written at once to `clinic_complaint_ids`; its `form_item` ticks the form checkbox on the medical card, items without one print under "სხვა" (D-49) | custom mapping over the catalog |
+| B63 | medical card opened / printed | admin or doctor (else AccessError) | built live from the records — no stored copy; missing-data list recomputed every time (D-49) | std QWeb report engine |
+| B64 | treatment plan created | — | everything typed (no patient link, no pull) (D-50) | custom document |
 | B31 | supplier toggles 👁/🚫 on a product | own product | clinic_shop_published soft-hide — offers skipped by clinic_shop_data, vendor line kept | custom flag (batch #2) |
 | B32 | Place Order from a request | vendor lacks a supplierinfo on the product | the line is auto-created (last price) — ordering FROM a vendor makes them a vendor OF the product; without it the supplier's own order crashed on the unreadable product | custom glue (v19.0.53.21) |
 | B33 | supplier warehouse chain | D-19 | count (std quant Apply) → In Transit ships to the transit shelf → clinic receipt drains transit (property_stock_supplier) → returns land back in their warehouse; shop/pre-order qty = SUPPLIER's own stock | std locations/quants/pickings + thin glue (D-19) |
@@ -400,6 +413,10 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | prescription print / mail | std QWeb report + mail composer | yes | reused; only the sheet template + buttons are custom (B60) |
 | periodontal chart | none in Community | no | `clinic.perio.chart` + OWL grid (D-48) |
 | one-click image / allergy upload | std image / binary widgets (hover pencil, 2-step list) | partial | small widgets `clinic_image_click`, `clinic_allergy_upload` (no D-entry yet) |
+| official medical card (IV-220/ა) | std QWeb report engine | yes (engine) | template + live data builder (D-49) |
+| complaint ↔ form checkbox | none | no | `clinic.complaint.form_item` (D-49) |
+| objective-exam checkboxes | none | no | `calendar.event.clinic_obj_checks` json (D-49) |
+| profession on the card | `res.partner.function` (std) | yes | reused, label only |
 
 ## Views / UI
 | view / action | xml id | key points |
@@ -438,6 +455,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 | Booking form (2026-10-07) | visit form inherit | "existing / new patient" chooser (xl dialog) before it; new-patient button hidden once the chooser decided; visit-page button only from arrived; Cancel only before treatment; status bar + workflow buttons in the legend colours (light tint, next step full colour; Start keeps std primary); quick buttons light Odoo-purple tint |
 | Planning board colours | `clinic_planning.scss` | cards painted with the status-legend palette (one `$cp_state_colors` map) |
 | Patient form (2026-10-07) | partner form inherit | red pregnancy / allergy banner; Notes tab hidden for patients; gender: only the picked card shows; allergy-test upload button + list under the allergy answer; inactive tabs light purple; Medical tab: tooth chart + plan table (auto status), old manual statuses below, periodontal chart |
+| Visit page / medical card (2026-10-08) | `clinic_visit_page`, `clinic_med_card` | complaints as tick boxes + affected teeth; objective exam checkbox groups (form IV-220-1/ა); tab "🩺 სამედიცინო ბარათი" on the patient form; 🩺 link on the Patients kanban; Configuration → ჩივილები |
 | Visit page (2026-10-07) | `clinic_visit_page` | health banner on every tab; materials / EHR tabs doctor-only; milk teeth only for a child < 14; exam-result files upload; allergy table with all card columns; prescription 🖨 / ⬇ PDF / ✉ |
 
 ## Security
@@ -456,6 +474,7 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 - `clinic.patient.allergy`: user read; doctor rwcu; admin rwcu (added 2026-09-30 so the
   registration form can save allergies).
 - `clinic.treatment.plan.doctor`: admin + doctor rwcu. `clinic.perio.chart`: doctor rwcu, admin read (D-48).
+- Medical card (D-49): report `group_ids` admin + doctor; `_clinic_check_med_card_access` refuses anyone else (suppliers verified); data read with sudo so a doctor's card holds other doctors' visits too.
 - Supplier product/template rules are WRITE-scoped only since v19.0.53.22 (D-20): reading
   any product never crashes their pages; My Inventory is a separately scoped action.
   Supplier location rule: edit own subtree only. Server actions behind supplier menus
@@ -562,6 +581,9 @@ default_get skips sale_pdf_quote_builder's salesman-gated default for non-salesm
 - 2026-10-07: closing a visit no longer forces every procedure line to done — "in progress" lines stay (D-47).
 - 2026-10-07: "being treated now" = arrived / in progress AND started within 12 h; old visits left open had kept yesterday's pregnancy answer alive and blocked "Arrived".
 - 2026-10-07: the visit page opens only from "Arrived" on; a visit in progress / done / paid can't be cancelled.
+- 2026-10-08: the first complaint seed (9 items, D-22) is replaced by the clinic's own list; 8 old items deleted on the server at the user's request (one visit lost one tick), only "ქვისა და რბილი ნადების არსებობა" kept.
+- 2026-10-08: the treatment plan no longer links to a patient on the form (D-50) — D-32's auto-pull of planned procedures is unused.
+- 2026-10-08: the company was renamed "My Company" → "შპს მეტრეველის სტომატოლოგიური ცენტრი" (data change, printed on the medical card).
 
 ## Tests
 Decision (2026-09-03, user): **no automated suite** — verification = live JSON-RPC scenarios +

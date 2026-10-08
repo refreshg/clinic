@@ -140,23 +140,19 @@
                     </div>
                     <div class="cvp_field mb-2">
                         <label>ჩივილები</label>
-                        <div class="d-flex gap-2">
-                            <select class="flex-grow-1" t-model.number="state.compDraft.pick">
-                                <option value="">აირჩიეთ ჩივილები</option>
-                                <t t-foreach="state.data.complaint_catalog" t-as="c" t-key="c.id">
-                                    <option t-att-value="c.id" t-esc="c.name"/>
-                                </t>
-                            </select>
-                            <button class="btn btn-primary" t-on-click="addComplaint">＋</button>
+                        <!-- tick boxes (user 2026-10-08); a tick saves at once -->
+                        <div class="cvp_complist">
+                            <label t-foreach="state.data.complaint_catalog" t-as="c" t-key="c.id"
+                                   t-att-class="'cvp_chk' + (isComplaint(c.id) ? ' on' : '')">
+                                <input type="checkbox" t-att-checked="isComplaint(c.id)"
+                                       t-on-change="() => this.toggleComplaint(c.id)"/>
+                                <t t-esc="c.name"/>
+                            </label>
                         </div>
-                        <div class="cvp_chips mt-2" t-if="state.data.complaints.ids.length">
-                            <t t-foreach="state.data.complaints.ids" t-as="cid" t-key="cid">
-                                <span class="cvp_chip">
-                                    <t t-esc="complaintName(cid)"/>
-                                    <button t-on-click="() => this.removeComplaint(cid)">✕</button>
-                                </span>
-                            </t>
-                        </div>
+                    </div>
+                    <div class="cvp_field mb-2">
+                        <label>დაავადებული კბილ(ებ)ი</label>
+                        <input type="text" t-model="state.compDraft.teeth" placeholder="მაგ. 16, 26"/>
                     </div>
                     <div class="cvp_field mb-2">
                         <label>სხვა</label>
@@ -171,6 +167,33 @@
                 </div>
 
                 <div t-elif="state.section === 'objective'" class="cvp_secedit">
+                    <!-- D-49: the checkbox groups of form IV-220-1/ა -->
+                    <div class="cvp_checks mb-3">
+                        <div class="cvp_checkgrp">
+                            <div class="cvp_ctitle">პაროდონტის მდგომარეობა</div>
+                            <label t-foreach="state.data.form_vocab.perio" t-as="o" t-key="o[0]" class="cvp_chk">
+                                <input type="checkbox" t-att-checked="isChecked('perio', o[0])"
+                                       t-on-change="() => this.toggleCheck('perio', o[0])"/>
+                                <t t-esc="o[1]"/>
+                            </label>
+                        </div>
+                        <div class="cvp_checkgrp">
+                            <div class="cvp_ctitle">ნადები</div>
+                            <label t-foreach="state.data.form_vocab.plaque" t-as="o" t-key="o[0]" class="cvp_chk">
+                                <input type="checkbox" t-att-checked="isChecked('plaque', o[0])"
+                                       t-on-change="() => this.toggleCheck('plaque', o[0])"/>
+                                <t t-esc="o[1]"/>
+                            </label>
+                        </div>
+                        <div class="cvp_checkgrp">
+                            <div class="cvp_ctitle">გამოკვლევის გეგმა</div>
+                            <label t-foreach="state.data.form_vocab.plan" t-as="o" t-key="o[0]" class="cvp_chk">
+                                <input type="checkbox" t-att-checked="isChecked('plan', o[0])"
+                                       t-on-change="() => this.toggleCheck('plan', o[0])"/>
+                                <t t-esc="o[1]"/>
+                            </label>
+                        </div>
+                    </div>
                     <div class="cvp_objgrid">
                         <t t-foreach="objFields" t-as="f" t-key="f[0]">
                             <div class="cvp_field mb-2">

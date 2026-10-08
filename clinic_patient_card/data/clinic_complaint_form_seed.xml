@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- D-49: the clinic's complaint list (ჩივილები.pdf, 2026-10-08) + the 4 checkboxes of
+     form IV-220-1/ა it has no item for; form_item = the form checkbox it ticks.
+     noupdate: the clinic may rename / re-map / archive items in Configuration. -->
+<odoo noupdate="1">
+    <record id="complaint_f01" model="clinic.complaint">
+        <field name="name">კბილის უნებლიე ტკივილი</field>
+        <field name="sequence">10</field>
+        <field name="form_item">spontaneous</field>
+    </record>
+    <record id="complaint_f02" model="clinic.complaint">
+        <field name="name">მგრძნობელობა ცივზე</field>
+        <field name="sequence">20</field>
+        <field name="form_item">irritant</field>
+    </record>
+    <record id="complaint_f03" model="clinic.complaint">
+        <field name="name">მგრძნობელობა ცხელზე</field>
+        <field name="sequence">30</field>
+        <field name="form_item">irritant</field>
+    </record>
+    <record id="complaint_f04" model="clinic.complaint">
+        <field name="name">მგრძნობელობა ტკბილზე ან ჰაერზე</field>
+        <field name="sequence">40</field>
+        <field name="form_item">irritant</field>
+    </record>
+    <record id="complaint_f05" model="clinic.complaint">
+        <field name="name">ტკივილი, რომელიც სხვა ადგილზე ვრცელდება (ყური, საფეთქელი, ყბა)</field>
+        <field name="sequence">50</field>
+    </record>
+    <record id="complaint_f06" model="clinic.complaint">
+        <field name="name">ჩაკბენისას ან დაჭერისას ტკივილი (კონკრეტულ კბილზე)</field>
+        <field name="sequence">60</field>
+        <field name="form_item">bite_pain</field>
+    </record>
+    <record id="complaint_f07" model="clinic.complaint">
+        <field name="name">ღრძილებიდან სისხლდენა (კბილების წმენდისას, თავისით)</field>
+        <field name="sequence">70</field>
+        <field name="form_item">gum_bleeding</field>
+    </record>
+    <record id="complaint_f08" model="clinic.complaint">
+        <field name="name">ღრძილების შეშუპება ან სიწითლე</field>
+        <field name="sequence">80</field>
+    </record>
+    <record id="complaint_f09" model="clinic.complaint">
+        <field name="name">ღრძილების დაწევა ან კბილის ყელის გაშიშვლება</field>
+        <field name="sequence">90</field>
+    </record>
+    <record id="complaint_f10" model="clinic.complaint">
+        <field name="name">უსიამოვნო სუნი ან გემო პირის ღრუში</field>
+        <field name="sequence">100</field>
+        <field name="form_item">halitosis</field>
+    </record>
+    <record id="complaint_f11" model="clinic.complaint">
+        <field name="name">წყლულები, თეთრი/წითელი ლაქები ან სხვა დაზიანებები</field>
+        <field name="sequence">110</field>
+    </record>
+    <record id="complaint_f12" model="clinic.complaint">
+        <field name="name">პირის სიმშრალე</field>
+        <field name="sequence">120</field>
+    </record>
+    <record id="complaint_f13" model="clinic.complaint">
+        <field name="name">გაბზარული კბილი</field>
+        <field name="sequence">130</field>
+    </record>
+    <record id="complaint_f14" model="clinic.complaint">
+        <field name="name">ბჟენის დაზიანება</field>
+        <field name="sequence">140</field>
+        <field name="form_item">filling</field>
+    </record>
+    <record id="complaint_f15" model="clinic.complaint">
+        <field name="name">გვირგვინის ან ვინირის დაზიანება</field>
+        <field name="sequence">150</field>
+        <field name="form_item">crown</field>
+    </record>
+    <record id="complaint_f16" model="clinic.complaint">
+        <field name="name">კბილის მორყევა</field>
+        <field name="sequence">160</field>
+        <field name="form_item">mobility</field>
+    </record>
+    <record id="complaint_f17" model="clinic.complaint">
+        <field name="name">საღეჭი ფუნქციის პრობლემა (ერთ მხარეს ღეჭვა, გაძნელებული ღეჭვა)</field>
+        <field name="sequence">170</field>
+        <field name="form_item">chewing</field>
+    </record>
+    <record id="complaint_f18" model="clinic.complaint">
+        <field name="name">კბილის არარსებობა და აღდგენის მოთხოვნა</field>
+        <field name="sequence">180</field>
+        <field name="form_item">adentia</field>
+    </record>
+    <record id="complaint_f19" model="clinic.complaint">
+        <field name="name">ყბის სახსრის ტკივილი, ხმა (ტკაცუნი)</field>
+        <field name="sequence">190</field>
+        <field name="form_item">tmj</field>
+    </record>
+    <record id="complaint_f20" model="clinic.complaint">
+        <field name="name">პირის გაღების გაძნელება</field>
+        <field name="sequence">200</field>
+        <field name="form_item">tmj</field>
+    </record>
+    <record id="complaint_f21" model="clinic.complaint">
+        <field name="name">ბრუქსიზმი</field>
+        <field name="sequence">210</field>
+    </record>
+    <record id="complaint_f22" model="clinic.complaint">
+        <field name="name">თავის ტკივილი დილით</field>
+        <field name="sequence">220</field>
+    </record>
+    <record id="complaint_f23" model="clinic.complaint">
+        <field name="name">თანკბილვის ცვლილება ან დისკომფორტი</field>
+        <field name="sequence">230</field>
+    </record>
+    <record id="complaint_f24" model="clinic.complaint">
+        <field name="name">კბილების ფერი</field>
+        <field name="sequence">240</field>
+        <field name="form_item">aesthetic</field>
+    </record>
+    <record id="complaint_f25" model="clinic.complaint">
+        <field name="name">კბილების ფორმა ან ზომა</field>
+        <field name="sequence">250</field>
+        <field name="form_item">aesthetic</field>
+    </record>
+    <record id="complaint_f26" model="clinic.complaint">
+        <field name="name">კბილებს შორის დიასტემა ან უთანასწორობა</field>
+        <field name="sequence">260</field>
+        <field name="form_item">aesthetic</field>
+    </record>
+    <record id="complaint_f27" model="clinic.complaint">
+        <field name="name">ღრძილის ხაზი ან „ღრძილოვანი ღიმილი“</field>
+        <field name="sequence">270</field>
+        <field name="form_item">aesthetic</field>
+    </record>
+    <record id="complaint_f28" model="clinic.complaint">
+        <field name="name">ძველი ვინირი ან გვირგვინი, რომელიც აღარ მოსწონს</field>
+        <field name="sequence">280</field>
+        <field name="form_item">aesthetic</field>
+    </record>
+    <record id="complaint_f29" model="clinic.complaint">
+        <field name="name">ღიმილის ზოგადი უკმაყოფილება</field>
+        <field name="sequence">290</field>
+        <field name="form_item">aesthetic</field>
+    </record>
+    <record id="complaint_f30" model="clinic.complaint">
+        <field name="name">ღიმილის დაფარვა ფოტოზე ან საუბრისას</field>
+        <field name="sequence">300</field>
+        <field name="form_item">aesthetic</field>
+    </record>
+    <record id="complaint_f31" model="clinic.complaint">
+        <field name="name">კბილების გაცვეთა</field>
+        <field name="sequence">310</field>
+    </record>
+    <record id="complaint_f32" model="clinic.complaint">
+        <field name="name">შიში ან შფოთვა სტომატოლოგთან მისვლისას</field>
+        <field name="sequence">320</field>
+    </record>
+    <record id="complaint_f33" model="clinic.complaint">
+        <field name="name">სახის ან ყბის შეშუპება</field>
+        <field name="sequence">330</field>
+    </record>
+    <record id="complaint_f34" model="clinic.complaint">
+        <field name="name">სიცხე ტკივილთან ერთად</field>
+        <field name="sequence">340</field>
+    </record>
+    <record id="complaint_f35" model="clinic.complaint">
+        <field name="name">ყლაპვისა ან სუნთქვის გაძნელება</field>
+        <field name="sequence">350</field>
+    </record>
+    <record id="complaint_f36" model="clinic.complaint">
+        <field name="name">ძლიერი ტკივილი, რომელიც ტკივილგამაყუჩებლით არ გადის</field>
+        <field name="sequence">360</field>
+        <field name="form_item">acute</field>
+    </record>
+    <record id="complaint_f37" model="clinic.complaint">
+        <field name="name">დაზიანებისა ან დარტყმის შემდეგ ჩატეხილი ან მოძრავი კბილი</field>
+        <field name="sequence">370</field>
+    </record>
+    <record id="complaint_f38" model="clinic.complaint">
+        <field name="name">ესთეტიკური დისკომფორტი</field>
+        <field name="sequence">380</field>
+        <field name="form_item">aesthetic</field>
+    </record>
+    <record id="complaint_f39" model="clinic.complaint">
+        <field name="name">ყრუ ხასიათის ტკივილი</field>
+        <field name="sequence">390</field>
+        <field name="form_item">dull</field>
+    </record>
+    <record id="complaint_f40" model="clinic.complaint">
+        <field name="name">ღამის ტკივილი</field>
+        <field name="sequence">400</field>
+        <field name="form_item">night</field>
+    </record>
+    <record id="complaint_f41" model="clinic.complaint">
+        <field name="name">ფესვი</field>
+        <field name="sequence">410</field>
+        <field name="form_item">root</field>
+    </record>
+    <record id="complaint_f42" model="clinic.complaint">
+        <field name="name">სახის ასიმეტრია</field>
+        <field name="sequence">420</field>
+        <field name="form_item">asymmetry</field>
+    </record>
+</odoo>

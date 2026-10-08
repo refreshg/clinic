@@ -36,10 +36,11 @@ const SECTIONS = [
 const OBJ_FIELDS = [
     ["clinic_obj_bite", _t("თანკბილვა")],
     ["clinic_obj_mucosa", _t("პირის ღრუს ლორწოვანი გარსის მდგომარეობა")],
-    ["clinic_obj_periodontium", _t("პაროდონტის მდგომარეობა")],
+    // the checkbox groups of form IV-220-1/ა are above; these texts are their "სხვა" (D-49)
+    ["clinic_obj_periodontium", _t("პაროდონტის მდგომარეობა — სხვა")],
     ["clinic_obj_pocket_depth", _t("პაროდონტული ჯიბის სიღრმე")],
-    ["clinic_obj_plaque", _t("ნადები")],
-    ["clinic_obj_exam_plan", _t("გამოკვლევის გეგმა")],
+    ["clinic_obj_plaque", _t("ნადები — სხვა")],
+    ["clinic_obj_exam_plan", _t("გამოკვლევის გეგმა — სხვა")],
     ["clinic_obj_other", _t("სხვა")],
 ];
 
@@ -91,6 +92,7 @@ export class ClinicVisitPage extends Component {
             payCardType: 0,
             compDraft: {},
             objDraft: {},
+            objChecks: { perio: [], plaque: [], plan: [] },
             rxDraft: {},
             algDraft: {},
         });
@@ -128,7 +130,8 @@ export class ClinicVisitPage extends Component {
                 return !!(d.complaints.ids.length || d.complaints.other
                     || (d.complaints.anamnesis || "").trim());
             case "objective":
-                return Object.values(d.objective).some((v) => (v || "").trim());
+                return Object.values(d.objective).some((v) => (v || "").trim())
+                    || Object.values(d.obj_checks || {}).some((l) => (l || []).length);
             case "prescription":
                 return !!d.prescriptions.length;
             case "allergy":
@@ -150,10 +153,14 @@ export class ClinicVisitPage extends Component {
                 case_type: d.complaints.case_type || "planned",
                 other: d.complaints.other,
                 anamnesis: d.complaints.anamnesis,
+                teeth: d.complaints.teeth || "",
                 pick: false,
             };
         } else if (meta.kind === "objective") {
             this.state.objDraft = { ...d.objective };
+            const c = d.obj_checks || {};
+            this.state.objChecks = { perio: [...(c.perio || [])], plaque: [...(c.plaque || [])],
+                plan: [...(c.plan || [])] };
         } else if (meta.kind === "prescription") {
             this.state.rxDraft = { rec_type: "prescription", medicament: "",
                 period: "", qty: 1, directions: "" };
@@ -183,6 +190,19 @@ export class ClinicVisitPage extends Component {
         this.state.data.complaints.ids = ids;
         this.state.compDraft.pick = false;
     }
+    isComplaint(id) {
+        return this.state.data.complaints.ids.includes(id);
+    }
+    async toggleComplaint(id) {
+        if (this.isComplaint(id)) {
+            await this.removeComplaint(id);
+        } else {
+            const ids = [...this.state.data.complaints.ids, id];
+            await this.orm.write("calendar.event", [this.visitId],
+                { clinic_complaint_ids: [[6, 0, ids]] });
+            this.state.data.complaints.ids = ids;
+        }
+    }
     async removeComplaint(id) {
         const ids = this.state.data.complaints.ids.filter((x) => x !== id);
         await this.orm.write("calendar.event", [this.visitId],
@@ -195,18 +215,30 @@ export class ClinicVisitPage extends Component {
             clinic_case_type: d.case_type,
             clinic_complaints_other: d.other,
             clinic_complaints: d.anamnesis,
+            clinic_complaint_teeth: d.teeth,
         });
         Object.assign(this.state.data.complaints, {
-            case_type: d.case_type, other: d.other, anamnesis: d.anamnesis });
+            case_type: d.case_type, other: d.other, anamnesis: d.anamnesis, teeth: d.teeth });
         this.notification.add(_t("შენახულია"), { type: "success" });
     }
 
     // ---- objective exam --------------------------------------------------
     async saveObjective() {
+        const checks = this.state.objChecks;
         await this.orm.write("calendar.event", [this.visitId],
-            { ...this.state.objDraft });
+            { ...this.state.objDraft, clinic_obj_checks: checks });
         Object.assign(this.state.data.objective, this.state.objDraft);
+        this.state.data.obj_checks = JSON.parse(JSON.stringify(checks));
         this.notification.add(_t("შენახულია"), { type: "success" });
+    }
+    // D-49: the checkbox groups of form IV-220-1/ა (periodontium / plaque / exam plan)
+    isChecked(group, key) {
+        return (this.state.objChecks[group] || []).includes(key);
+    }
+    toggleCheck(group, key) {
+        const list = this.state.objChecks[group] || [];
+        this.state.objChecks[group] = list.includes(key)
+            ? list.filter((k) => k !== key) : [...list, key];
     }
 
     // ---- prescriptions table --------------------------------------------

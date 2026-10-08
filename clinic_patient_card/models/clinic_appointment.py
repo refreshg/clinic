@@ -272,8 +272,10 @@ class CalendarEvent(models.Model):
                 order="id desc")] if p else []
         allergy_docs = docs_of("allergy_doc")
         exam_docs = docs_of("exam_result")
-        complaint_catalog = ev.env["clinic.complaint"].search_read(
-            [], ["name"], order="name")
+        # active catalog (clinic order, D-49) + this visit's own picks even if archived
+        complaint_catalog = ev.env["clinic.complaint"].with_context(active_test=False).search_read(
+            ["|", ("active", "=", True), ("id", "in", ev.clinic_complaint_ids.ids)],
+            ["name", "active"], order="sequence, name")
         objective = {
             f: ev[f] or ""
             for f in ("clinic_obj_bite", "clinic_obj_mucosa",
@@ -291,7 +293,11 @@ class CalendarEvent(models.Model):
                 "ids": ev.clinic_complaint_ids.ids,
                 "other": ev.clinic_complaints_other or "",
                 "anamnesis": ev.clinic_complaints or "",
+                "teeth": ev.clinic_complaint_teeth or "",
             },
+            # D-49: the checkbox groups of form IV-220-1/ა and this visit's ticks
+            "form_vocab": ev.clinic_form_vocab(),
+            "obj_checks": ev.clinic_obj_checks or {},
             "complaint_catalog": complaint_catalog,
             "objective": objective,
             "prescriptions": prescriptions,

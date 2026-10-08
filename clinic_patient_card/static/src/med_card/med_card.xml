@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="clinic_patient_card.MedCard">
+    <div class="clinic_medcard" t-if="partnerId">
+        <div class="d-flex flex-wrap gap-2 mb-2 o_clinic_quick_btns">
+            <button type="button" class="btn btn-secondary" t-on-click="pdf">⬇ PDF</button>
+            <button type="button" class="btn btn-secondary" t-on-click="print">🖨 ბეჭდვა</button>
+            <button type="button" class="btn btn-secondary" t-on-click="refresh">↻ განახლება</button>
+        </div>
+        <div t-if="state.missing.length" class="mc_missing">
+            <b>ფორმას აკლია:</b>
+            <span t-foreach="state.missing" t-as="m" t-key="m_index" class="mc_miss" t-esc="m"/>
+        </div>
+        <div t-else="" class="mc_ok">✓ ფორმის ყველა ძირითადი ველი შევსებულია</div>
+        <iframe class="mc_preview" t-att-src="previewUrl"/>
+    </div>
+    <div t-else="" class="text-muted">ჯერ შეინახე პაციენტის ბარათი.</div>
+</t>
+
+</templates>

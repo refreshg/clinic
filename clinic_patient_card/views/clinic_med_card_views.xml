@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- D-49: complaints catalog with the checkbox of form IV-220-1/ა each one ticks
+         (the clinic checks / changes the mapping here) -->
+    <record id="view_clinic_complaint_list" model="ir.ui.view">
+        <field name="name">clinic.complaint.list</field>
+        <field name="model">clinic.complaint</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name" string="ჩივილი"/>
+                <field name="form_item" string="ფორმის უჯრა (IV-220-1/ა)"/>
+                <field name="active" widget="boolean_toggle" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- active complaints by default; the archived (replaced) ones behind a filter -->
+    <record id="view_clinic_complaint_search" model="ir.ui.view">
+        <field name="name">clinic.complaint.search</field>
+        <field name="model">clinic.complaint</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <filter name="no_form_box" string="ფორმის უჯრის გარეშე" domain="[('form_item', '=', False)]"/>
+                <separator/>
+                <filter name="archived" string="დაარქივებული" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_clinic_complaints" model="ir.actions.act_window">
+        <field name="name">ჩივილები</field>
+        <field name="res_model">clinic.complaint</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_clinic_complaint_search"/>
+        <!-- explicit: an omitted field keeps its old DB value on upgrade -->
+        <field name="context">{}</field>
+    </record>
+
+    <menuitem id="menu_clinic_complaints" name="ჩივილები"
+              parent="menu_clinic_config" action="action_clinic_complaints" sequence="55"
+              groups="clinic_patient_card.group_clinic_admin"/>
+
+    <!-- step 2: the medical card tab on the patient form (doctor + admin) -->
+    <record id="view_partner_form_med_card" model="ir.ui.view">
+        <field name="name">res.partner.form.clinic.med.card</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="clinic_med_card" string="🩺 სამედიცინო ბარათი" invisible="not is_patient"
+                      groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor">
+                    <widget name="clinic_med_card"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 🩺 on the Patients kanban card: opens the medical card PDF -->
+    <record id="view_clinic_patients_kanban_med_card" model="ir.ui.view">
+        <field name="name">res.partner.kanban.clinic.patients.med.card</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="clinic_patient_card.view_clinic_patients_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//footer/field[@name='activity_ids']" position="before">
+                <field name="is_patient" invisible="1"/>
+                <a t-if="record.is_patient.raw_value" class="o_clinic_medcard_link ms-2"
+                   t-att-href="'/report/pdf/clinic_patient_card.report_clinic_med_card/' + record.id.raw_value"
+                   target="_blank" title="სამედიცინო ბარათი (PDF)"
+                   groups="clinic_patient_card.group_clinic_admin,clinic_patient_card.group_clinic_doctor">🩺</a>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -258,6 +258,9 @@
                                 <field name="gender" widget="clinic_gender_icons"/>
                                 <field name="parent_id" string="სამუშაო ადგილი"
                                        invisible="not is_patient"/>
+                                <!-- form IV-220/ა "სამუშაო ადგილი, პროფესია" (std Job Position) -->
+                                <field name="function" string="პროფესია"
+                                       invisible="not is_patient"/>
                             </group>
                             <group>
                                 <!-- drives the visibility of every patient field; never shown

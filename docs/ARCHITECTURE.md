@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-07, commit: 7f9b391 -->
+<!-- last-synced: 2026-10-08, commit: f031de9 (+ uncommitted work) -->
 # Architecture — clinic_patient_card
 
 ## Components
@@ -43,6 +43,7 @@
 | Patient flags | `res.partner._compute_visit_flags` | First Visit / Repeat / Regular from completed visits (D-45) |
 | Prescription sheet | `models/clinic_visit_medical.py` + `report/clinic_prescription_report.xml` | QWeb PDF with the clinic header, print / download / std mail composer from the visit page |
 | Periodontal chart | `models/clinic_perio_chart.py` + `static/src/perio_chart/` (view widget) | one record per exam, json measurements, stored summary; editor grid on the Medical tab (D-48) |
+| Medical card | `models/clinic_med_card.py` + `report/clinic_med_card_report.xml` + `static/src/med_card/` | Ministry form IV-220/ა + IV-220-1/ა built live from the patient, visits, complaints (form checkbox mapping), objective checkboxes, tooth chart and perio chart; patient-form tab with missing list + preview, kanban 🩺 link (D-49) |
 
 ## Data flow
 ```mermaid
@@ -63,6 +64,8 @@ flowchart LR
     PCP[Patient card page / dashboard] --> RP
     BC[Booking chooser] --> CE
     PCW[Perio chart widget] --> PC[clinic.perio.chart]
+    MC[Medical card tab / PDF] --> RP
+    MC --> CE
   end
   PH -- plan_line_id --> PH
   CE -- bus: arrived/dispensary --> CH[chime service → staff toasts]

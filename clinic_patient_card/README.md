@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-07, commit: 7f9b391 -->
+<!-- last-synced: 2026-10-08, commit: f031de9 (+ uncommitted work) -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
@@ -62,6 +62,10 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
 - **Regular patient threshold**: Settings → Technical → System Parameters →
   `clinic.regular_patient_visits` (completed visits, 5 for now — the clinic has not decided);
   upgrade the module after changing it to recount (First Visit / Repeat / Regular are computed).
+- **Complaints** (Configuration → ჩივილები, admin): the clinic's list; each item's "ფორმის უჯრა" column says which
+  checkbox of form IV-220-1/ა it ticks on the medical card (empty = printed under "სხვა") — the clinic should check it.
+- **Medical card** (patient form → "🩺 სამედიცინო ბარათი", or 🩺 on the Patients kanban; doctors + admins): never typed —
+  built from the card and the visits on every open; the header prints the company name (Settings → Companies).
 - **Prescription e-mail** (visit page ✉): needs an outgoing mail server (Settings → Technical →
   Outgoing Mail Servers) and the patient's e-mail on the card — neither is set up yet.
 - **Supply shop**: the category tree is seeded from `models/clinic_shop_tree.py` on every upgrade
@@ -92,7 +96,10 @@ with a supplier portal (PO↔SO), waitlist/dispensary flow. UI in Georgian.
   SAME procedure product; a different procedure on the same tooth stays a separate row.
 - Periodontal chart (D-48) v1: grid + summary only — no lines over the tooth drawing, no PDF, no
   recession classifications yet; gingival margin sign convention (positive = recession) to be confirmed.
-- Treatment-plan translation (ka / en / ru) is postponed — needs a translation service (open question).
+- Translation of the documents (en / ru) is postponed — Google Cloud Translation planned (account + privacy answer pending).
+- Medical card (D-49): the examination sheet (N2) is the FIRST visit that took place; the tooth scheme shows the chart's
+  CURRENT state (not the day of that visit); fields the visit page does not record print empty.
+- Treatment plan (D-50): written for non-clients — no patient link, every amount and total is typed.
 - E-mail sending: none automatic — what/when is undecided (docs/PRD.md §9); only the manual
   prescription e-mail exists, and no SMTP server is configured. SMS likewise deferred (no provider chosen; batch #2).
 - Soft-UI patient-card page is read-only (tooth painting not persisted yet — PLAN M3);

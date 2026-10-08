@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-07, commit: 7f9b391 -->
+<!-- last-synced: 2026-10-08, commit: f031de9 (+ uncommitted work) -->
 # Clinic — project notes for Claude
 
 ## Platform
@@ -9,13 +9,13 @@
   `display_name` not `name_get()`; `env.cr/context/uid`; JSON-2 API available.
 
 ## Product / plan (history lives in docs/ — don't re-read it here)
-- `docs/PRD.md` = source of truth for requirements; `docs/DECISIONS.md` = ADRs D-1…D-48.
+- `docs/PRD.md` = source of truth for requirements; `docs/DECISIONS.md` = ADRs D-1…D-50.
 - DONE & live, user-tested: Phases 1–4 + patient card/dashboard/shop/supplier portal;
   reviewer batch 28.08.26 (v30–46); reviewer batch #2 ჯავშნები+მაღაზია/მარაგები (v47–55,
   D-16…D-20 incl. supplier warehouses); Soft-UI restyles (v55.x, D-21); Dentos-parity
   batch — booking popup, quick registration, consents with signature, OWL visit page,
   billing, coloured board (v56–60.4, D-22/D-23); tooth chart, imaging + radiologist (D-35/36); supply shop v3 (D-38..D-42); booking chooser,
-  computed patient flags, tooth plan with visit-driven status, perio chart v1 (D-43..D-48, not yet browser-checked).
+  computed patient flags, tooth plan with visit-driven status, perio chart v1 (D-43..D-48); medical card IV-220/ა (D-49).
 - Deferred: emails + SMS (clinic must decide what/when), ka.po regen (M2, first
   unblocked), patient-card page write-back, Form-100, EHR sync, perio chart v2, treatment-plan translation.
 - Roles: Clinic Administrator / Doctor / Supplier; doctors see only their own visits
@@ -46,7 +46,7 @@
 - Form compiler drops class attrs on `<sheet>` — scope CSS via an invisible marker
   div + `:has()` (D-21). Odoo 19 renames: ir.actions.server `group_ids`; readonly
   list fields need `force_save="1"`; domain always-false trick `(1,'=',0)` rejected —
-  use `('id','=',False)`.
+  use `('id','=',False)`. A field REMOVED from an XML record keeps its old DB value on upgrade — set it explicitly.
 
 ## How to work here
 - Use the **odoo-development** skill for Odoo questions; read `references/official/`
