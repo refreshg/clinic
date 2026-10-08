@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-07, commit: 0e91ff5 (+ uncommitted work) -->
+<!-- last-synced: 2026-10-07, commit: 7f9b391 -->
 # PLAN — clinic_patient_card: remaining roadmap
 
 All previously approved work is shipped (v19.0.46.0.0). This plan covers ONLY what's left,
@@ -122,6 +122,6 @@ templates + per-day lines (Community has no planning app) — D-29.
 
 ## Status
 Approved 2026-09-03 (user). NOTE: reviewer batch #2 (docs/ჯავშნები.docx + docs/მაღაზიამარაგები.docx) takes priority over M1-M6 — its approved phase plan lives in the session plan file; M1 (emails) and SMS stay deferred pending the clinic’s decision.
-Last session 2026-10-07: milestone W (see above), all deployed live on 19.0.64 and NOT committed (D-43..D-48 in DECISIONS). Earlier: Last session 2026-10-06: milestone V — supply shop v3 (category tree, home page + video banners with size / order, product window with options + own stock per variant + reviews, supplier My Orders screen, cart / RFQ stock guard) and a supplier-privacy fix (D-38..D-42); committed and pushed up to 0e91ff5; version bumped to 19.0.64.0 (this bump + handoff note not yet committed).
-Next (2026-10-07): user browser-checks milestone W; commit the session; perio chart v2 when asked. Earlier next: the manual walk-through step 13 — supplier delivery steps Availability → Preparing → Ready → In Transit (stock leaves) → Delivered on S00072, then the clinic side (receipt, rating with photos, return); decide the duplicate test orders, invoice timing and stock reservation; then M2 ka.po regen.
-Watch out: upgrades ran with --i18n-overwrite (module translations re-read from ka.po); the calendar "hours" / "or" terms are translated through cross-module entries in our ka.po; the perio GM sign convention (positive = recession) still needs a doctor's confirmation; duplicate test orders S00070/71/72 + P00051/53/54 and old demo "gloves" (8.00) are in the shop; patient-primary/unique PNGs and docs/Design preview are untracked on purpose; the tooth-chart layout choice is per browser; admin must NOT carry group_clinic_doctor.
+Last session 2026-10-07: milestone W (booking chooser, computed patient flags, 6-month allergy answer, tooth plan with visit-driven status, perio chart v1, prescription print / PDF / e-mail, status colours; D-43..D-48) — deployed live, committed + pushed as 7f9b391; version bumped to 19.0.65.0 (bump not yet deployed / committed).
+Next: user browser-checks milestone W (W browser check above), then supplier walk-through step 13 (milestone V); perio chart v2 when asked.
+Watch out: the server still reports 19.0.64 until the next upgrade (run it with --i18n-overwrite when ka.po changed); no SMTP server yet, so prescription e-mails are only recorded; perio GM sign (positive = recession) unconfirmed; Elene's visits #341 / #335 still open; duplicate shop test orders S00070/71/72 + P00051/53/54 remain; admin must NOT carry group_clinic_doctor.

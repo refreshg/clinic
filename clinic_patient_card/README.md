@@ -1,4 +1,4 @@
-<!-- last-synced: 2026-10-07, commit: 0e91ff5 (+ uncommitted work) -->
+<!-- last-synced: 2026-10-07, commit: 7f9b391 -->
 # clinic_patient_card
 
 Dental-clinic management on standard Odoo 19 Community: patient card on `res.partner`,
